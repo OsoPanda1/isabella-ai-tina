@@ -1,0 +1,2542 @@
+{
+  "generatedAt": "2026-10-04T17:01:54.993Z",
+  "policy": "Inventory only: no file is deleted or promoted to canonical authority automatically.",
+  "files": [
+    {
+      "path": ".github/pull_request_template.md",
+      "bytes": 591,
+      "sha256": "2780cadee98c057b0edb3dd417566156c7d50a10ffd57dccb1ce6d921cee0532",
+      "characters": 585,
+      "headings": 5,
+      "categories": [
+        "security"
+      ]
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 29578,
+      "sha256": "f9598613cc8b035761e218fecb4c61781381d16f928885e0f12aff51eb85a5ce",
+      "characters": 28469,
+      "headings": 1,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 1778,
+      "sha256": "6577aa0768c1162c9f9fbda079f244d3f3e2d2687c499f4aaac6853b2498205d",
+      "characters": 1741,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "operations",
+        "territory"
+      ]
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "bytes": 932,
+      "sha256": "57ac1f212b907c30ee9ce59363d16448da07d1615082465eda7efe42036b4c5b",
+      "characters": 908,
+      "headings": 4,
+      "categories": []
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "bytes": 1221,
+      "sha256": "228a036ca13a8d43d1aac8606b639d89fe65a6d419b7bb153c8709fef730e2cc",
+      "characters": 1198,
+      "headings": 3,
+      "categories": [
+        "api",
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "LICENSE-CONTROL.md",
+      "bytes": 1658,
+      "sha256": "eacaa7fc22f9cbfa082cb86d85a6f48975325f0fed3c411969f277078db592a6",
+      "characters": 1656,
+      "headings": 7,
+      "categories": []
+    },
+    {
+      "path": "LICENSE-SOVEREIGN.md",
+      "bytes": 4031,
+      "sha256": "9f7e9ea376bd4f059187acd24a04d80ad54003cc6c12870d0787fbca39ddbe3d",
+      "characters": 4021,
+      "headings": 0,
+      "categories": [
+        "architecture",
+        "governance",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "LICENSES.md",
+      "bytes": 1584,
+      "sha256": "0c26a359ac559daf4e8550f1b942d8f112cbc469e123340106aa53ad99f58634",
+      "characters": 1563,
+      "headings": 3,
+      "categories": [
+        "governance",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "README.md",
+      "bytes": 5591,
+      "sha256": "e04d5f8f7fa59dca1e7bd1a57288f963b5ca238b302d812c51253f3a516d87d5",
+      "characters": 5485,
+      "headings": 11,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "ROADMAP.md",
+      "bytes": 1298,
+      "sha256": "91004c421697750cd8fb0cff8343e40b456d769e00c7640d46b6c58c6ac1d47c",
+      "characters": 1267,
+      "headings": 4,
+      "categories": [
+        "governance",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "SECURITY.md",
+      "bytes": 1511,
+      "sha256": "2d21c604c5a6287775409ea3b09d316e491c7de3669c777e96d2dc04035c3dd7",
+      "characters": 1509,
+      "headings": 5,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "actualizacion.txt",
+      "bytes": 47603,
+      "sha256": "ac1a5ec168eccebf4fd10b084df9282c3ae913d72d6c97d2b9a3d2ab835bd57b",
+      "characters": 46603,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "authz-runtime/README.md",
+      "bytes": 1697,
+      "sha256": "da24180203e058bab27c17151451f1136ebb5970667e819b89d6594d05793081",
+      "characters": 1668,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "operations"
+      ]
+    },
+    {
+      "path": "authz-runtime/requirements.txt",
+      "bytes": 43,
+      "sha256": "85d267103678a8f0c14869681e23f0cf34d0504171d3af0ae1f8598d1cf551f7",
+      "characters": 43,
+      "headings": 0,
+      "categories": [
+        "security"
+      ]
+    },
+    {
+      "path": "contrib/jdr-generator/docs/threat-model.md",
+      "bytes": 3155,
+      "sha256": "c6c39906feb0314c5dc83c8a5f494d02e75dc30c7da546cd26060e6bbca369ea",
+      "characters": 3112,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "data/BLUEPRINT100-7d9456.docx",
+      "bytes": 1064402,
+      "sha256": "2c75740d2f65962a5fac88e730e998dc8764382e9400c82b57a83af6d417ae3f",
+      "characters": 8902,
+      "headings": 0,
+      "categories": [
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": " 🏛️ 1. Identidad Institucional y Propósito Civilizatorio TAMV – Territorio Autónomo de Memoria Viva es una infraestructura digital federada, antifrágil y auditable, diseñada como civilización XR con gobernanza ética, economía creativa y soberanía computacional. Fundador: Edwin O"
+    },
+    {
+      "path": "data/Document-1-5f7090.docx",
+      "bytes": 45067,
+      "sha256": "813b09e6b648be4889287bd46848f79117504b9a44c8a4b1550dea827e062a33",
+      "characters": 36217,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "Soberanía tecnológica verificable en América Latina: diagnóstico estructural, análisis del costo total de propiedad y propuesta arquitectónica del ecosistema Isabella Villaseñor AI / TINA Tipo de artículo: Reportaje de investigación original Estilo: Investigación aplicada con exc"
+    },
+    {
+      "path": "data/archivordm4-947ad5.docx",
+      "bytes": 187330,
+      "sha256": "ef6b3ba54b9bb876d3d8635ac953b50d14f264242980e389461b96d46ef4bc72",
+      "characters": 70496,
+      "headings": 0,
+      "categories": [
+        "architecture",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": " ARCHIVO HISTORICO RDM DIGITAL HUB INVESTIGACION Y RECOLECCION DE DATOS HISTORICOS REAL DEL MONTE HIDALGO, MEXICO. Agosto 10de 2026 Autor: Edwin Oswaldo Castillo Trejo “Un pueblo que se niega a permanecer en el olvido, que grita desde lo mas profundo de sus minas, relata entre su"
+    },
+    {
+      "path": "data/blindajes-467cdd.docx",
+      "bytes": 1372306,
+      "sha256": "4bc4dd83e1d9fb442808b3b485f0f09844e138870663cdd238db7de901fab99d",
+      "characters": 160423,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "Especificación Técnica Mejorada de la Librería Isabella AI Introducción La inteligencia artificial bajo el nombre 'Isabella AI' o 'Isabella Artificial Intelligence' ha emergido en los últimos años como un concepto multifacético, abarcando desde soluciones comerciales y académicas"
+    },
+    {
+      "path": "data/comienzo_atlas-5bfa83.docx",
+      "bytes": 73519,
+      "sha256": "16f6d773315da0c69ef14c6f4a7287eae25737b1ab2648c31156e57c0a6540cd",
+      "characters": 64959,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "tienes secrets, tokens, api keys que se ingresaron revisalas para que con ellas completes el atlas trascendece: Aquí tienes la propuesta final del archivo en formato de apertura editorial y técnica, ya consolidada para Atlas Trascendence / TAMV. La escribí para que funcione como "
+    },
+    {
+      "path": "data/crear_api-d1bb20.docx",
+      "bytes": 109660,
+      "sha256": "bb34ed4de2f367ca704fba9e0831e0019191d494011db0b85e6a88dfcfc60711",
+      "characters": 107283,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "TAMV ONLINE CONSTITUCIÓN OPERATIVA CIVILIZATORIA TOTAL Estado: ejecutable · federado · irreversibleNaturaleza: infraestructura de especieHorizonte: multi-generacional 0. DEFINICIÓN CANÓNICA (no interpretativa) TAMV Online es una infraestructura civilizatoria digital soberana, dis"
+    },
+    {
+      "path": "data/db_yun-fc26f9.docx",
+      "bytes": 65212,
+      "sha256": "78605f8666af574d3f642ca65ffa7f2c4b79ee9df965a67dff72037b4d50952a",
+      "characters": 53127,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": " YUN Always by your side Documento Fundacional – Versión 1.0 Este documento unifica la propuesta final del sistema de datos, seguridad, orquestación, federación, monitoreo, resiliencia y coordinación operativa para TAMV Online, Nodo Cero, RDM Digital, Isabella y las 7 federacione"
+    },
+    {
+      "path": "docs/01-ISABELLA-CANONICA-UNIFICADA.md",
+      "bytes": 3042,
+      "sha256": "3ec6f2393e5bc6c9ba98d6776dec29f9d00fafcf7c7e996851cb22312c45f456",
+      "characters": 2967,
+      "headings": 5,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/02-ISABELLA-OPERACIONES-PRODUCCION.md",
+      "bytes": 2486,
+      "sha256": "f374f04200d882c0ab64ab784b0f80a8c7c5c33c42c25ed292d358b73968f4cb",
+      "characters": 2413,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/03-ISABELLA-SEGURIDAD-PRIVACIDAD.md",
+      "bytes": 2196,
+      "sha256": "5091b15c89539d973ff73283ab91cc5165053f184656fd50755f99cdc7bbb280",
+      "characters": 2158,
+      "headings": 5,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/04-ISABELLA-ECONOMIA-BOOKPI.md",
+      "bytes": 1346,
+      "sha256": "c8ca39695dd3964c9c337d941de324576199e7b5cc6d5b8a20d6e42dc8c39d83",
+      "characters": 1308,
+      "headings": 1,
+      "categories": [
+        "architecture",
+        "governance"
+      ]
+    },
+    {
+      "path": "docs/05-ISABELLA-INTELIGENCIA-ML.md",
+      "bytes": 1457,
+      "sha256": "66293dc290a4d0695aa8d589e82f7d5a6e2be95365fc11f131123b7811f1b09c",
+      "characters": 1437,
+      "headings": 1,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/06-ISABELLA-DESARROLLO-CONTRIBUCION.md",
+      "bytes": 1564,
+      "sha256": "6acd03c2156fcfd8e31fa319ec9f3882f7f6f81ce4befbf1e397668afa0ff97a",
+      "characters": 1547,
+      "headings": 1,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/07-TINA-CATEGORIA.md",
+      "bytes": 3772,
+      "sha256": "fc0914f9fe5fa2aac20f3396ef85f0abd64498b7ec364ef269f62a6f47045c3f",
+      "characters": 3709,
+      "headings": 10,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/INDEX.md",
+      "bytes": 4607,
+      "sha256": "faa98ec88a21fbc9830232bad3d13ac977a07cea71f24c576bfb11eed00724da",
+      "characters": 4528,
+      "headings": 7,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 13411,
+      "sha256": "3a186a30351274222caf61f1df104fdd14280b3a42d6be996120d84d794dba35",
+      "characters": 13162,
+      "headings": 10,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/300-CRITICAL-FIXES.md",
+      "bytes": 1503,
+      "sha256": "bd124110c37d67179eed0332dd169da4297c4e9cd571eaf7804cff7a90b99dd2",
+      "characters": 1475,
+      "headings": 3,
+      "categories": [
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/DEPLOYMENT-ROUTE-RECOVERY.md",
+      "bytes": 1688,
+      "sha256": "2928db3b253ff24469ee859114fcd649165176799bcc5e31c638763a57b032c4",
+      "characters": 1688,
+      "headings": 7,
+      "categories": [
+        "api",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/ENTERPRISE-ARCHITECTURE.md",
+      "bytes": 1933,
+      "sha256": "b1a6ab45809094a16ad53bca40d7f64e510f1f5af6a83bde9fc6decef132e9a9",
+      "characters": 1885,
+      "headings": 6,
+      "categories": [
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/ISABELLA_V3.0-MASTER-EXTENDED-CANONICA.md",
+      "bytes": 35841,
+      "sha256": "8c42406ddacaa1af12aaeee1d564a0230166cc348ac5762e1503ebe7f842c8c9",
+      "characters": 35132,
+      "headings": 67,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/ISABELLA_VILLASENOR_AI_PRESENTACION_Y_AUDITORIA_v1.0.0.md",
+      "bytes": 26431,
+      "sha256": "b3b3a35ce37cd8c96752e8e234014796f871210655e5620e3cb550a51b7e72e6",
+      "characters": 25705,
+      "headings": 37,
+      "categories": [
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/OPERATIONAL-RISK-REGISTER.md",
+      "bytes": 1209,
+      "sha256": "eece8cc61bc905e73f693d50aa076e2596e7f07eb4ac7e2c830e59448ce29801",
+      "characters": 1191,
+      "headings": 1,
+      "categories": [
+        "historical",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/_archive/PLAN-FASES-100.md",
+      "bytes": 5879,
+      "sha256": "a04cf7355394d36cb901346a7facf367a517325b1b3f4211df2db52122226449",
+      "characters": 5798,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/PRODUCT-PRESENTATION-STANDARD.md",
+      "bytes": 1211,
+      "sha256": "7be3c0a3b213e35a79083a84783561b098f353723cfae5a664300f19fe494516",
+      "characters": 1181,
+      "headings": 7,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/PRODUCTION-READINESS-2026-09-13.md",
+      "bytes": 12651,
+      "sha256": "bc74abd7d5022d6e6e87a59d38214825f8e24810e6113f2313beb9a168cf2752",
+      "characters": 12466,
+      "headings": 28,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/PRODUCTION_GATE.md",
+      "bytes": 3979,
+      "sha256": "d78e5e47a30cea41c6771dc975df6ca664d2e5cafe12d27630eb36172702ee0e",
+      "characters": 3881,
+      "headings": 7,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/REGISTRO-MEJORAS-3.1.md",
+      "bytes": 3250,
+      "sha256": "ea5e0238da56b9e8f748a624bcded58060f66d0f0a906f00b776907278132cd1",
+      "characters": 3176,
+      "headings": 8,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/RELEASE-CHECKLIST.md",
+      "bytes": 1296,
+      "sha256": "e724d5565f9f6ba5df25c388cc7363d55c5c0ca4279a127b47fe94f70a53d28c",
+      "characters": 1283,
+      "headings": 4,
+      "categories": [
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/RFC-ARC-INDEX.md",
+      "bytes": 1129,
+      "sha256": "8f2c9e8330a1203156bc269fc1eb19c3ab6ae4d86430bd63fc929ce8be543c9f",
+      "characters": 1103,
+      "headings": 5,
+      "categories": [
+        "governance",
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/ROADMAP-PRODUCTION-HARDENING.md",
+      "bytes": 1452,
+      "sha256": "7d78739290f504587c4bcb2a995c094d8155d30107da1235a92e4fedbce39434",
+      "characters": 1432,
+      "headings": 5,
+      "categories": [
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/TELEMETRY-GOVERNANCE.md",
+      "bytes": 1274,
+      "sha256": "3849e016ef75b8407a3b3db04f1720d30f307321472c979df685741f151b1551",
+      "characters": 1261,
+      "headings": 7,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/api/API_CONTRACT_AUTHORITY.md",
+      "bytes": 64534,
+      "sha256": "48727c6314a9bd360fd33dc8dd8546beaa6f96a4d4bbf3a83ccc291da338a8c2",
+      "characters": 63242,
+      "headings": 90,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-001-authorization-plane.md",
+      "bytes": 28434,
+      "sha256": "b9e373bbfd6906442597ca34f336d5b7c193f6046d89a1989129e709e7754149",
+      "characters": 27911,
+      "headings": 35,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-001-source-of-truth.md",
+      "bytes": 1240,
+      "sha256": "1b31dd6d22391c46c2a76397f25000b3553b32ca9b9e1885fbb4e6fde17fa26c",
+      "characters": 1225,
+      "headings": 2,
+      "categories": [
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-002-api-key-plane.md",
+      "bytes": 1004,
+      "sha256": "a02e58fce6cb09d2311152190ef0709ec1eea1bce3ccd8a25717081c3d57e946",
+      "characters": 1004,
+      "headings": 4,
+      "categories": [
+        "api",
+        "architecture",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-002-bookpi-ledger.md",
+      "bytes": 1162,
+      "sha256": "39c049d47d5830e1f02148af3a9de9b9ad3337cd5a8a68778d25ca632ed58db0",
+      "characters": 1150,
+      "headings": 2,
+      "categories": [
+        "api",
+        "historical",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-003-aegis-integration.md",
+      "bytes": 954,
+      "sha256": "f574b35eb946f093736d8688d2b11f08f57578b8f80afe4fcc75a24a4c100ffb",
+      "characters": 954,
+      "headings": 4,
+      "categories": [
+        "governance",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-003-canonical-payload.md",
+      "bytes": 973,
+      "sha256": "7d1c8abdeec23b29c439131a94c5fe1f84f00903014364a30d5410f926839c95",
+      "characters": 962,
+      "headings": 2,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-004-bookpi-integrity.md",
+      "bytes": 1002,
+      "sha256": "0ade041ff7ca711d9482e81e31a3db7770b46b3f860500294b0a82293f284537",
+      "characters": 1002,
+      "headings": 4,
+      "categories": [
+        "api",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-004-economic-events.md",
+      "bytes": 953,
+      "sha256": "177a280845e35d771538d58841e83a16501c46dde2f384569ba98ec85e005911",
+      "characters": 942,
+      "headings": 1,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-005-sandbox-execution.md",
+      "bytes": 840,
+      "sha256": "834c9af6da6a2662004500b6bf1b7a1b9ea2121e399a529e77c74f44be91a0fa",
+      "characters": 840,
+      "headings": 4,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-005-signature-authority.md",
+      "bytes": 1187,
+      "sha256": "8ded68bbed7a91f3e032b1d6f2e3fa344c17b524883c9daf481ba6762725e10d",
+      "characters": 1157,
+      "headings": 2,
+      "categories": [
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-006-webhook-idempotency.md",
+      "bytes": 909,
+      "sha256": "9000845a68096bd119ca2134b7f95b1d5d7e3cea2ec3bbc92bb189b064a96c58",
+      "characters": 893,
+      "headings": 2,
+      "categories": [
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-007-refund-immutability.md",
+      "bytes": 924,
+      "sha256": "ef5a6f35a2a2ce6cb619c0556a55412f153c7c15ff7f7b8827374b753ee5c1fe",
+      "characters": 904,
+      "headings": 2,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-008-env-fail-fast.md",
+      "bytes": 1456,
+      "sha256": "631d1765550202c480d663eb30e29bf6610d64c51adcb7fac6114dbf46a71561",
+      "characters": 1440,
+      "headings": 2,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-008-runtime-authority-reconciliation.md",
+      "bytes": 6488,
+      "sha256": "90f2e13e8e7748049534bc32937aceecbcc05cc49c19ca62bf54e407784b8fce",
+      "characters": 6403,
+      "headings": 12,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-009-health-checks.md",
+      "bytes": 828,
+      "sha256": "a8757725b9a951ce6b0a842510e83c2f6886a87d94149401ea5a71454d8fd851",
+      "characters": 814,
+      "headings": 2,
+      "categories": [
+        "api",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ADR-010-concurrency.md",
+      "bytes": 1096,
+      "sha256": "628e3385a187c34927654555a6d20ef36f964d04e2e10ad98a7a932a6e83b2bc",
+      "characters": 1077,
+      "headings": 2,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ARCHITECTURE_FREEZE.md",
+      "bytes": 4092,
+      "sha256": "6956cff260893f0a6016587e31e2a7944f298baceb9e9444309a9c0a7f9cb626",
+      "characters": 4010,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/AUTHORITY_MATRIX.md",
+      "bytes": 3088,
+      "sha256": "7aaf405e0dd747644a8f108a7f9314a43354328ec67a41b6d569ef4b36281480",
+      "characters": 3063,
+      "headings": 3,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/CORE-SOURCE-INTEGRATION.md",
+      "bytes": 2652,
+      "sha256": "ddf5d8aacae0c862b354c053bc8e166e7986f1feff1ee64df38d0e34bc5eabe4",
+      "characters": 2619,
+      "headings": 6,
+      "categories": [
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/FGAIS-PRODUCTION-STATUS.md",
+      "bytes": 1894,
+      "sha256": "4594e22f39aae78d98195807cd2676a37c11f1e91e8c47c130ea9e5670e80e88",
+      "characters": 1894,
+      "headings": 5,
+      "categories": [
+        "api",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ISABELLA-COGNITIVE-TRAINING.md",
+      "bytes": 2054,
+      "sha256": "eff9438207e356c4f022c305fada60f67501ffac1c93ec409100ff8c4c87ee46",
+      "characters": 2038,
+      "headings": 6,
+      "categories": [
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/ISABELLA-LEARNING-ARCHITECTURE.md",
+      "bytes": 2555,
+      "sha256": "e933a59375c91492765905270f3df6af05cddd0f210410f9c0be5a79c5ca4854",
+      "characters": 2537,
+      "headings": 7,
+      "categories": [
+        "api",
+        "architecture",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/OPEN-MODEL-FAILOVER.md",
+      "bytes": 2850,
+      "sha256": "45f2ae49156a825e6b2dd8590aabddf74a1ee53175b054f939dbc9297c913dcf",
+      "characters": 2844,
+      "headings": 7,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/RUNTIME-AUTHORITY-MAP.md",
+      "bytes": 3022,
+      "sha256": "1103c2f1b9c20a6c75d046cc1de2e2d57ba0937aa6576d581d45598bd1d1af94",
+      "characters": 2988,
+      "headings": 9,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/architecture/SSOT.md",
+      "bytes": 1956,
+      "sha256": "626ae1678a7ed2d2fedddc932706ac777f468e5c36bfa787f73f5300f8f1e19d",
+      "characters": 1936,
+      "headings": 1,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/arcs/ARC-0001-gobernanza-tecnica-operativa.md",
+      "bytes": 1371,
+      "sha256": "ad00f5efc9649364737987336b08e91155b1a99868a4f482bbf70fd74858f135",
+      "characters": 1347,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/arcs/ARC-0002-marco-juridico-internacional.md",
+      "bytes": 977,
+      "sha256": "f21d158b9601ed676d8ef83e86da889acda3ad6de5d000b2166bc490560755f9",
+      "characters": 959,
+      "headings": 5,
+      "categories": [
+        "historical",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/_archive/audit-report-2026-09-13.md",
+      "bytes": 4104,
+      "sha256": "69b001e1e1dd13454dee2b409ed9011bdb054a6529deb9711e708fec7c2ab138",
+      "characters": 4052,
+      "headings": 7,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/audits/2026-09-13-hardening-audit.md",
+      "bytes": 10244,
+      "sha256": "3694929e23bf540feba106e94a7d6423dee2ef58bdeaee6127506917978ec8e7",
+      "characters": 10073,
+      "headings": 20,
+      "categories": [
+        "api",
+        "architecture",
+        "historical",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/audits/2026-09-total-repository-audit.md",
+      "bytes": 2266,
+      "sha256": "75e9d5aff69df80bb3dd968d6147596f1f22e65978a579184836532391304e0e",
+      "characters": 2226,
+      "headings": 6,
+      "categories": [
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/audits/AUDITORIA-TOTAL-HALLAZGOS-IMPLEMENTACION-2026-09-14.md",
+      "bytes": 9650,
+      "sha256": "1c17b46ad64fff9f335f11234d37ba1e6cdd84631b9f79fab7ebdf9c9ef1e273",
+      "characters": 9493,
+      "headings": 21,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/database/MIGRATION_POLICY.md",
+      "bytes": 3441,
+      "sha256": "083f5e053fa56ce86539a9e6931c9d642dbcca818b5e5d0383a8b74af0be32c5",
+      "characters": 3391,
+      "headings": 3,
+      "categories": [
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/governance/AI-GOVERNANCE-MATRIX-2026.md",
+      "bytes": 4496,
+      "sha256": "26efcc1843cad5e49d5ac1addfe6886b7efd36302045c6a42281ac94be753d8b",
+      "characters": 4494,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/governance/EVIDENCE-MAP.md",
+      "bytes": 3999,
+      "sha256": "72f950219b06a4e6a671f92e687e724d1a7f24959d6ff69b8af794305a73321a",
+      "characters": 3952,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/ml/DRIFT.md",
+      "bytes": 4090,
+      "sha256": "75e6e55c59ce9e483d54f046d48209c28e6ea95dcc224e5a41741b14ee3bdf85",
+      "characters": 4044,
+      "headings": 11,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/ml/EXTENSION-HDC.md",
+      "bytes": 517,
+      "sha256": "6eb64ecd1dd3bd6b6877fba9592bc49bc9aeba20c4d7ae3bc9c23e41e2d3c941",
+      "characters": 514,
+      "headings": 1,
+      "categories": [
+        "historical",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/A11Y.md",
+      "bytes": 876,
+      "sha256": "b1d33aef312c7ebeed6638fb5a9d0739ecb77d770ff703236349f09f0e26e6e6",
+      "characters": 858,
+      "headings": 1,
+      "categories": [
+        "historical"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/CANONICAL-PRODUCTION-STATUS-2026-09-17.md",
+      "bytes": 3913,
+      "sha256": "083663c262c70bb4622a3ab504094470c82d97e682b14cbc764308ebe2c0264a",
+      "characters": 3849,
+      "headings": 7,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/DEPENDENCY_MATRIX.md",
+      "bytes": 3151,
+      "sha256": "e27b475900d827c44f2f58ef62473e1ec5194a53402589fd460b4b7edd2638f5",
+      "characters": 3096,
+      "headings": 4,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/DISASTER_RECOVERY.md",
+      "bytes": 2528,
+      "sha256": "4eeae9d2b2f27ad5fe4676bbd64bc406318f8c8738ddbd759174d12ca47765f8",
+      "characters": 2499,
+      "headings": 7,
+      "categories": [
+        "api",
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/ENCRYPTION_MATRIX.md",
+      "bytes": 1701,
+      "sha256": "aa9e392d852c40edb65ac647f9d41aad74e30c9ba7ed5702b38056485bd357cf",
+      "characters": 1675,
+      "headings": 2,
+      "categories": [
+        "api",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/HARDENING-TRIANGULADO.md",
+      "bytes": 646,
+      "sha256": "4904ca98cdb5b4dae4beb8fd021ec594667c9a493291b66c5b76301f1095d8c1",
+      "characters": 624,
+      "headings": 1,
+      "categories": [
+        "governance",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/JWT-HARDENING.md",
+      "bytes": 1004,
+      "sha256": "0a8a2329482fe8bce45c53408bee835d97dd69cd91cfb1eaa03a775f6cff5420",
+      "characters": 980,
+      "headings": 1,
+      "categories": [
+        "api",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/P0-IMPLEMENTATION-STATUS-2026-09-08.md",
+      "bytes": 3680,
+      "sha256": "e4b981bbcfb1abf2ddda3800564efdbc1ab55dae9bb3922c2a85c5b12138a6a2",
+      "characters": 3670,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/P0-IMPLEMENTATION-STATUS-2026-09-09.md",
+      "bytes": 4308,
+      "sha256": "9e3ebc1795cbfc86044c7de314658b1d6386ff094a6f4e7462b2b4301d305d2f",
+      "characters": 4306,
+      "headings": 10,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/PRODUCTION-GO-LIVE-GATE.md",
+      "bytes": 3359,
+      "sha256": "dbec702ff054db439114c60887de3691d1dc7ba32904da2d01ab169965955d9c",
+      "characters": 3310,
+      "headings": 9,
+      "categories": [
+        "api",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/PRODUCTION-READINESS-80-GATE.md",
+      "bytes": 3516,
+      "sha256": "6a17231d2adeac35ac893173ebc48402a8b7fcd7f3a490841b895868c0760086",
+      "characters": 3478,
+      "headings": 7,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/PRODUCTION-READINESS-BASELINE-2026-09-08.md",
+      "bytes": 5018,
+      "sha256": "335ac256f0141e8d3bea71749ebc0ab2e46e6d1f7ab0d53bfcd436c92343c5e3",
+      "characters": 5016,
+      "headings": 9,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/PRODUCTION-RECOVERY-RUNBOOK.md",
+      "bytes": 1599,
+      "sha256": "5fba7198619c4037386aaa86b8dcdd4f6b4eb8f35cf97fa692ea452446917a38",
+      "characters": 1578,
+      "headings": 5,
+      "categories": [
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/PRODUCTION_REPAIR_REGISTER.md",
+      "bytes": 12453,
+      "sha256": "3a536fa877442c28d56e850423a6a784f557648eac4e1204d8133f5767ba5d0a",
+      "characters": 12370,
+      "headings": 5,
+      "categories": [
+        "api",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/operations/SBOM.md",
+      "bytes": 6379,
+      "sha256": "73db57c6cf117f812b8e642f7a3e03533eb2339c1b18de4e6602bce124e0c4c9",
+      "characters": 6311,
+      "headings": 20,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/policies/AI-ACTION-GOVERNANCE.md",
+      "bytes": 2508,
+      "sha256": "e0a6f0c1fb8cabb43b5103bc8d84617396a6e56b6986ad92b9ab869f9edb813e",
+      "characters": 2456,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/policies/AI-DECISION-DISCLOSURE.md",
+      "bytes": 3462,
+      "sha256": "59ae9a60f962f17d619110b7a315ce1225d967f17dd46436c8d7237a486db41f",
+      "characters": 3408,
+      "headings": 9,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/policies/PRIVACY-AND-DATA-GOVERNANCE.md",
+      "bytes": 2891,
+      "sha256": "e8344d60281dfcad449f6f8a5929d5d11dd41f1310612791818dbde31b233173",
+      "characters": 2833,
+      "headings": 11,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/policies/REGULATORY-AND-GOVERNANCE-MATRIX.md",
+      "bytes": 1546,
+      "sha256": "f9d592faa7f4127178e5930b8ff3036ef7b6f4c8db97d1baf1ea3f20a33707ba",
+      "characters": 1522,
+      "headings": 3,
+      "categories": [
+        "governance",
+        "historical",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/policies/THIRD-PARTY-LICENSE-POLICY.md",
+      "bytes": 1800,
+      "sha256": "15aadb91cc8e54ee7825d367c09d245ed9ac5a29d433881bc6ca1c9efcd252d0",
+      "characters": 1775,
+      "headings": 8,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/rfcs/RFC-0001-openness-cooperacion-cognitiva.md",
+      "bytes": 1792,
+      "sha256": "e3e2835fa91f5651af640f4c469528ebed064e4b3448fd958eb99b39f562f0da",
+      "characters": 1756,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/rfcs/RFC-0002-connectors-governed-por-usuario.md",
+      "bytes": 1553,
+      "sha256": "22995cf7ec602da9796e3ef046a3fd5ebff4ca6ac28f67894c65567a7e8fb2be",
+      "characters": 1538,
+      "headings": 5,
+      "categories": [
+        "api",
+        "governance",
+        "historical",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/_archive/security/ARGUS-DEFENSE-ARCHITECTURE.md",
+      "bytes": 2572,
+      "sha256": "5b838212a9407ad9412424f40af1b5555a5eb999e24b8053bb741391d19a384c",
+      "characters": 2572,
+      "headings": 9,
+      "categories": [
+        "architecture",
+        "governance",
+        "historical",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/00-SKILLS-VGENESIS-UNIFICACION-TOTAL.md",
+      "bytes": 99282,
+      "sha256": "02ad4bd59e043067bbb784d7688efb8ac398cc97f8707ff22eb635d968df8096",
+      "characters": 97623,
+      "headings": 97,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/01-DOCUMENTO-MAESTRO-CANONICO.md",
+      "bytes": 89292,
+      "sha256": "f3e9c1235e2df5f5ca64cc80144ca181109f929c6b8c66c0e4d9a70191382d28",
+      "characters": 87445,
+      "headings": 168,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/02-TESIS-WHITEPAPER-ALTA-INGENIERIA.md",
+      "bytes": 22016,
+      "sha256": "7b0c7ae8261e5d13a3f36e701d0a158a0aa4a1d76ecc842b22a6fc7c428ed5be",
+      "characters": 21595,
+      "headings": 63,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/03-BLUEPRINT-API-70-SKILLS.md",
+      "bytes": 29684,
+      "sha256": "7b17ebe84c9cfcc653f5b67917525fd9ba8bae817db7ded9f4d4d511be67ebf2",
+      "characters": 29388,
+      "headings": 13,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/04-AEGIS-X-PRODUCTION-ARCHITECTURE.md",
+      "bytes": 38960,
+      "sha256": "f5da8ce9bedff1afc28e9eeb46689a7345b48ab3da843381bb27825cfadade08",
+      "characters": 38492,
+      "headings": 90,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/05-MANUAL-OPERATIVO-CORRECCION.md",
+      "bytes": 38074,
+      "sha256": "e7f924df4a7c8f70ac70fa530871021ddc7de88a86bfee9aed22847468c75c76",
+      "characters": 37100,
+      "headings": 142,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/06-VIDEO-ENGINE-X.md",
+      "bytes": 147051,
+      "sha256": "4ee14f5891b93dd54b152e00dde38c5c261f76e4a95aa110c0af7f200b2f522d",
+      "characters": 139250,
+      "headings": 277,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/_archive/unified/README-UNIFICACION.md",
+      "bytes": 7913,
+      "sha256": "162011f38f6c3b3f5c0f4631a8d959ca84dc12ad37004104ae9330fb533f413b",
+      "characters": 7757,
+      "headings": 8,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "historical",
+        "intelligence",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/architecture/ADR-011-blueprint-maestro-v2-adaptacion-ts.md",
+      "bytes": 6856,
+      "sha256": "86862b464122fb8b62522ba4f7204e8f972ff47400ebf8ca52899530458d23bd",
+      "characters": 6790,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/architecture/ADR-012-evidence-ledger.md",
+      "bytes": 3654,
+      "sha256": "5a1b701bdc0eb06eb0257f7de6ec28905ec6fab22178d1b3daae397aae147f32",
+      "characters": 3613,
+      "headings": 10,
+      "categories": [
+        "governance",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/architecture/ADR-013-jdr-generator-propiedad.md",
+      "bytes": 2644,
+      "sha256": "f92f7c7193f6b530204e6f647d75d14207afd6f0f6216291086eb67f7e5dde5e",
+      "characters": 2593,
+      "headings": 5,
+      "categories": [
+        "api",
+        "intelligence",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/architecture/ADR-014-canonical-cognitive-kernel.md",
+      "bytes": 2794,
+      "sha256": "dd9dbe2123b67522dd9f3c76d78d2c80418a5b3520f647396968eeea35fc20dd",
+      "characters": 2745,
+      "headings": 6,
+      "categories": [
+        "architecture",
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/architecture/RUNTIME-AUTHORITY-MAP.md",
+      "bytes": 1344,
+      "sha256": "c1bb5ef18f7eca424a2eb2c8745219acc3720011f2a0e08b30d52c6cbfec0fff",
+      "characters": 1326,
+      "headings": 4,
+      "categories": [
+        "api",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/architecture/SSOT.md",
+      "bytes": 1240,
+      "sha256": "08699e9db9354714c84b44dccbc06ae9565d8541d1da1ece9a5cff8c0cc46987",
+      "characters": 1240,
+      "headings": 2,
+      "categories": [
+        "api",
+        "governance"
+      ]
+    },
+    {
+      "path": "docs/evidence/300-COMPLETADO-2026-09-23.md",
+      "bytes": 362,
+      "sha256": "fdf50e79dfab4392f51feed87a76a8a5c0725ff1a941b4b355c3f660dd8c5d67",
+      "characters": 357,
+      "headings": 1,
+      "categories": [
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/evidence/FINAL-EVOLUCION-2026-09-23.md",
+      "bytes": 1890,
+      "sha256": "5def803de80ed08d4f721d5fc781ece6bf3d42cd7d34ab706110d428cdf2b810",
+      "characters": 1860,
+      "headings": 4,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/evidence/FINAL-PRODUCCION-2026-09-23.md",
+      "bytes": 1983,
+      "sha256": "d8f82e6830ccb93c26d6ca979e5f888874090b8ab137bf5560d43c7bc7e45631",
+      "characters": 1950,
+      "headings": 4,
+      "categories": [
+        "api",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/governance/01-FGAIS-Governance-Constitution.md",
+      "bytes": 50653,
+      "sha256": "2678d03b2171a426080038f0d0849f2a5604bb534ba2ef0ffad786b580739b61",
+      "characters": 49926,
+      "headings": 109,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/governance/README.md",
+      "bytes": 2951,
+      "sha256": "aeb9ddb96ecec749a62cc47edc9d1b16298bf64c801c9a40fe636e4708ceb6af",
+      "characters": 2911,
+      "headings": 4,
+      "categories": [
+        "governance",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/governance/risk-register/README.md",
+      "bytes": 2746,
+      "sha256": "352f984ffcf6ea4c7ed16b5f178ba93583207c5599a16a91a1d86a7bdc16238e",
+      "characters": 2702,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/ml/DRIFT.md",
+      "bytes": 3822,
+      "sha256": "869d5cc851a56d365e9d009621bf78b8950e7b972ef832660739614390b21020",
+      "characters": 3754,
+      "headings": 5,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/operations/API-KEYS-ROTATION.md",
+      "bytes": 744,
+      "sha256": "39d8d9ddf42c4b9cf67d38443b8411d7f48ec4fc9754328f3c619a9af72bd6af",
+      "characters": 734,
+      "headings": 2,
+      "categories": [
+        "api",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/BACKUP-ENCRYPTION.md",
+      "bytes": 572,
+      "sha256": "e8589016922c7472d6f0919b5f3edb8ad1e1bc3f3b7422a12f6dfe9432895f2a",
+      "characters": 558,
+      "headings": 1,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/BACKUP-VERIFICATION.md",
+      "bytes": 473,
+      "sha256": "5b77b0515aba4eff8bfa7927b7d50f89e2378ebac0def21c2b956b61018e1241",
+      "characters": 464,
+      "headings": 2,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/BRANCH-PROTECTION.md",
+      "bytes": 5217,
+      "sha256": "ef0b215550460a912ddbb545b39f5a807fe08e9ae9aa64c9dc52b0e02d5aad01",
+      "characters": 5146,
+      "headings": 10,
+      "categories": [
+        "api",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/CAPABILITY_MATRIX.md",
+      "bytes": 9273,
+      "sha256": "1b29627ea69c156a14aab94ba6ae5c734248eb19eebf1d3d5b725f0fdef988a8",
+      "characters": 9192,
+      "headings": 1,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/CHAOS-ENGINEERING.md",
+      "bytes": 629,
+      "sha256": "880bc1d4dc83400d08a4fd649edeb15f1b14ee014a9b08e05c1bbf4699e77fe6",
+      "characters": 616,
+      "headings": 1,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/CODE-QUALITY.md",
+      "bytes": 544,
+      "sha256": "b7feb03993468f7fae0664a49e0658e01f06f2fecb0085027b73d53f7d0e229e",
+      "characters": 530,
+      "headings": 1,
+      "categories": [
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/CSP-NONCES.md",
+      "bytes": 1980,
+      "sha256": "8b474d5444d54ad775b8f536d39a794c131f8f070172b1a1b11aafaa380155d4",
+      "characters": 1958,
+      "headings": 1,
+      "categories": [
+        "api",
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/FINAL-300-COMPLETION.md",
+      "bytes": 405,
+      "sha256": "044c700fc48cc78f75a44991bb51941984b0227b9d78b047278493bbd8ce1123",
+      "characters": 400,
+      "headings": 1,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/HARDENING-500.md",
+      "bytes": 1036,
+      "sha256": "5bde5a99c391dd379be2772e3f1f7f288dff9511b51d78cd8d2f10c0a46934d5",
+      "characters": 1017,
+      "headings": 1,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/HSM-KMS.md",
+      "bytes": 12831,
+      "sha256": "5f4d2563092dd7fe78b65a285eccadbeb6bc7ad8ebbdc570ad0b08ea4b4f0ff0",
+      "characters": 12650,
+      "headings": 31,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/operations/KEY-COMPROMISE-PLAYBOOK.md",
+      "bytes": 1307,
+      "sha256": "0b1accf52d6d5cf2262fcba7cf7c0849576dc65f8fc6be2d02bb81e3ed072310",
+      "characters": 1307,
+      "headings": 6,
+      "categories": [
+        "api",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/OBSERVABILITY-SLO.md",
+      "bytes": 14397,
+      "sha256": "757273dabd87bceed71d63691eafb6d89cef2bf89787039b1928e102d23abfde",
+      "characters": 14226,
+      "headings": 28,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/PERFORMANCE.md",
+      "bytes": 392,
+      "sha256": "80996a053ab75707239a3540f0511b5b57ca852505f4895d9e906e9e5c8941a4",
+      "characters": 383,
+      "headings": 1,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/PRE-COMMIT-HOOKS.md",
+      "bytes": 301,
+      "sha256": "dbf55e94d62924ccae25263988abe2c887d519bdb7c51022e553d56310b53e72",
+      "characters": 296,
+      "headings": 1,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/PROCESS-ENV-AUDIT.md",
+      "bytes": 576,
+      "sha256": "824b0a27428721f020cf90407f7364adb40e6525ef578f536e38825c37c83346",
+      "characters": 567,
+      "headings": 1,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/RATE-LIMITING.md",
+      "bytes": 750,
+      "sha256": "9f24d7fdb8117148f8ab32ffe88c87f7c1c3a6db85d9d85af76acb7d2c76e57e",
+      "characters": 739,
+      "headings": 1,
+      "categories": [
+        "governance",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/SECRETS-CATALOG.md",
+      "bytes": 5669,
+      "sha256": "af646354794195345149b2a1d71fd58dee7256521a10aa360a7f5d81a2df92bf",
+      "characters": 5629,
+      "headings": 10,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/SLO-SLI.md",
+      "bytes": 1235,
+      "sha256": "78817af663db0ad8f5ff7e6f0aae61c493d578a93e3cf0c21913b89bb516cf19",
+      "characters": 1235,
+      "headings": 4,
+      "categories": [
+        "api",
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/SLO.md",
+      "bytes": 3913,
+      "sha256": "57e423010a15474e7db8cf448394266af24cf3325995792c7fb832147202fd23",
+      "characters": 3846,
+      "headings": 8,
+      "categories": [
+        "api",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/operations/SLSA-PROVENANCE.md",
+      "bytes": 358,
+      "sha256": "98dd3e6d9bfd178085058cbebadc6fd0fb49580a5df4a5c91b5903280a40c13b",
+      "characters": 354,
+      "headings": 1,
+      "categories": [
+        "intelligence"
+      ]
+    },
+    {
+      "path": "docs/operations/VERSION-DRIFT.md",
+      "bytes": 510,
+      "sha256": "5a707e7aa8bba4df32f05ce8c822162e17fe825fad3b1b321de37c215f62663e",
+      "characters": 504,
+      "headings": 1,
+      "categories": []
+    },
+    {
+      "path": "docs/operations/WAF-ANTI-BOT.md",
+      "bytes": 568,
+      "sha256": "b67fa82ceff4ac6836fe186289e7bf47410e03c707c571199b371b2914c59a40",
+      "characters": 564,
+      "headings": 1,
+      "categories": [
+        "api",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/research/README.md",
+      "bytes": 1580,
+      "sha256": "eac9be68d26d2fde8f9fcc500a64452a6884feffb79fd4f919dce46b796954ae",
+      "characters": 1560,
+      "headings": 4,
+      "categories": [
+        "api"
+      ]
+    },
+    {
+      "path": "docs/runbooks/incident.md",
+      "bytes": 7572,
+      "sha256": "7b51a91a78f67d1a3865f8aaf0c7c06e4fae96419b27dd48de6ac457274bf01c",
+      "characters": 7461,
+      "headings": 10,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "docs/security/ATTESTATION-SIGNATURES.md",
+      "bytes": 5738,
+      "sha256": "2f4c326167991d1463590c82a0d4ceb5ad3c2572a0f3a01fc9f0d11b2210a016",
+      "characters": 5657,
+      "headings": 14,
+      "categories": [
+        "architecture",
+        "governance",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "docs/security/CVE-TRIAGE.md",
+      "bytes": 1156,
+      "sha256": "ed23fab163f5bff216fcbbac3233b3a06e9325bf9e212f97a4a088e77897b3a7",
+      "characters": 1156,
+      "headings": 4,
+      "categories": [
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/security/DATA-CLASSIFICATION.md",
+      "bytes": 1232,
+      "sha256": "1ebcf00b30efbb8ae5de596e52c8b171fe19ebe891b33d71bdbb933166481ad7",
+      "characters": 1232,
+      "headings": 3,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/security/DATA-ERASURE-RETENTION.md",
+      "bytes": 652,
+      "sha256": "42a998a6fb400f8f72d569b43f975ceb90f6561893ae1ef7aa4c72e3a4e7c3e1",
+      "characters": 652,
+      "headings": 1,
+      "categories": [
+        "api"
+      ]
+    },
+    {
+      "path": "docs/security/ISABELLA-API-KEYS.md",
+      "bytes": 3649,
+      "sha256": "552c5584a936e5cdbb043ebc99742bebfdc759f4832f25efbd027f0073650e79",
+      "characters": 3647,
+      "headings": 12,
+      "categories": [
+        "api",
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/security/MASS-HARDENING-112.md",
+      "bytes": 3137,
+      "sha256": "af5e776113a75c6faf86c7eaa97e6ba2e19ed5b8ca07ded2b0d307d2cc447945",
+      "characters": 3135,
+      "headings": 5,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/security/THIRD-PARTY-DEPENDENCY-REGISTER.md",
+      "bytes": 1149,
+      "sha256": "003b718e6a1f6b6b78e9d723ad2eecd57b1e7cfc1b998a7bdf47b1d24b3cfcd8",
+      "characters": 1149,
+      "headings": 1,
+      "categories": [
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/security/THREAT-MODEL-TINA-INITIAL.md",
+      "bytes": 8847,
+      "sha256": "0536e11d3f9fee03be4f24d0307a1031f6f4b8a0113f61077abc9496f8a1021e",
+      "characters": 8795,
+      "headings": 16,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/security/THREAT-MODEL-TINA-ISABELLA.md",
+      "bytes": 3045,
+      "sha256": "932d9c56e49f965f23af7be62b21acd7b33469052d56b4e880cf2159442feb42",
+      "characters": 2989,
+      "headings": 8,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/status/CRITICAL-AUDIT-2026-09-28.md",
+      "bytes": 2755,
+      "sha256": "fc8569c04745260922194bfdca4c7d87bac679b63a6704c184ae14b0c51bb18f",
+      "characters": 2711,
+      "headings": 10,
+      "categories": [
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/status/ISA-500-STATUS-2026-09-26.md",
+      "bytes": 5943,
+      "sha256": "48110b9addf18d9cd07adfb2d713ec7179db2d790fda89036e425c96d2c0478d",
+      "characters": 5855,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "docs/status/ISABELLA-GENESIS-500-CHECKLIST.md",
+      "bytes": 147844,
+      "sha256": "6d19cb763d877690fcfcacbb72c7eccf115f007d6d9c1876dd7d7ecdc73a1cf7",
+      "characters": 145184,
+      "headings": 24,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "genesis/reports/genesis-report-2026-09-07T23-58-41-581Z.md",
+      "bytes": 18840,
+      "sha256": "3e2254f47e9b2c54c91eddb408f10eb4392a0073521dfe75df56012e0a4bbe10",
+      "characters": 18834,
+      "headings": 66,
+      "categories": [
+        "governance",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "genesis/reports/genesis-report-2026-09-08T01-30-44-546Z.md",
+      "bytes": 23657,
+      "sha256": "60572ec3ad7d49b6e32c28e55497020fec4038710a1ad8b1ecc8686af44f9959",
+      "characters": 23650,
+      "headings": 79,
+      "categories": [
+        "governance",
+        "operations",
+        "security",
+        "territory"
+      ]
+    },
+    {
+      "path": "governance/README.md",
+      "bytes": 2040,
+      "sha256": "5e2c64cbf8d5f6ec8346ec27a0e08cd07aafa38919d04b2e30efdb93af5aec96",
+      "characters": 1998,
+      "headings": 6,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "governance/data-sheets/user-data.md",
+      "bytes": 1638,
+      "sha256": "4e8e86295dec0b6508176711fbfa9216df0bf628d62558ae60180710278a91fe",
+      "characters": 1609,
+      "headings": 7,
+      "categories": [
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "governance/human-oversight/governance-board.md",
+      "bytes": 2018,
+      "sha256": "9b4605b954e4b23da047a1fdfd093283c21b6fee8d58c77a9e5b06a42a197d49",
+      "characters": 1988,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "governance/model-cards/isabella-sovereign.md",
+      "bytes": 1740,
+      "sha256": "9acdc2a7c4cfd5bb9b6d166fa81a4c2a140a6d52b8d6c721dd49b86302906932",
+      "characters": 1716,
+      "headings": 7,
+      "categories": [
+        "governance",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "governance/risk-register/README.md",
+      "bytes": 1193,
+      "sha256": "947a1b2b2b1f8030d10db67c376fc32eeb47dfb14eaff3800e714c2b134329f6",
+      "characters": 1174,
+      "headings": 4,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "governance/system-cards/isabella-5-3-0.md",
+      "bytes": 1826,
+      "sha256": "dc7b11e6254f28fd6e3794be85504fa847e96abba051bc5ca6a026128ae9ad46",
+      "characters": 1791,
+      "headings": 6,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "latam-aegis-x/README.md",
+      "bytes": 734,
+      "sha256": "1dfa35c9c47d0f2873f687858dc7c20c60a4e88e4845fee898d7dc6b2564504a",
+      "characters": 725,
+      "headings": 2,
+      "categories": [
+        "architecture",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/ACCEPTABLE-USE-POLICY.md",
+      "bytes": 1468,
+      "sha256": "e841e5b452207b245daec9b6896f48326c78a6a18ebbac29828b1d89a47447be",
+      "characters": 1442,
+      "headings": 4,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/AI-TRANSPARENCY-NOTICE.md",
+      "bytes": 1271,
+      "sha256": "4863ef33fa2f5d93f30b0c638307a85d00892081a0c6d7e0b7502fade0f0aaf0",
+      "characters": 1240,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "legal/API-TERMS.md",
+      "bytes": 1138,
+      "sha256": "26f7a0038477ae0ca7db0e0ed4ffc5652af460d0612359e388b4d556870dafe8",
+      "characters": 1119,
+      "headings": 8,
+      "categories": [
+        "api",
+        "governance"
+      ]
+    },
+    {
+      "path": "legal/CONTRIBUTOR-AGREEMENT.md",
+      "bytes": 1159,
+      "sha256": "c71e0ab90c189bf2b2cd4f26da34c724832a2c45da665ad2ed8c2537dc12cbba",
+      "characters": 1141,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/COOKIE-POLICY.md",
+      "bytes": 731,
+      "sha256": "a37d8830a57a00ac4870bec9f854218fcddea71c970bb1cf20265377d2f74355",
+      "characters": 719,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/DPA.md",
+      "bytes": 1230,
+      "sha256": "3b57a987fd8e97d26894121ed868267a6e8a633d89635e4bf66942a797b82595",
+      "characters": 1213,
+      "headings": 8,
+      "categories": [
+        "security"
+      ]
+    },
+    {
+      "path": "legal/HUMAN-OVERSIGHT-POLICY.md",
+      "bytes": 1334,
+      "sha256": "c6c70315f72a5684c20a316d8e822fcbda61e634e3f34a31faf0e588519a86e6",
+      "characters": 1312,
+      "headings": 5,
+      "categories": [
+        "governance",
+        "intelligence",
+        "operations"
+      ]
+    },
+    {
+      "path": "legal/INCIDENT-RESPONSE-POLICY.md",
+      "bytes": 1323,
+      "sha256": "3b13e9cb0e7744ecbd91b46854d10b36e99b18ee209340015be90611aab89240",
+      "characters": 1286,
+      "headings": 5,
+      "categories": [
+        "governance",
+        "operations"
+      ]
+    },
+    {
+      "path": "legal/LICENSES/CODE/README.md",
+      "bytes": 649,
+      "sha256": "4f390c76788839b55f39ad438f264bb1b3b872b6f7bf2218f0c7595311f384be",
+      "characters": 642,
+      "headings": 1,
+      "categories": [
+        "governance"
+      ]
+    },
+    {
+      "path": "legal/LICENSES/COMMERCIAL/COMMERCIAL-LICENSE.md",
+      "bytes": 1670,
+      "sha256": "4074a3dc027024d723179dca8df1276fa69363514520e76ccfd959654c5553f9",
+      "characters": 1657,
+      "headings": 8,
+      "categories": [
+        "api",
+        "governance"
+      ]
+    },
+    {
+      "path": "legal/LICENSES/CONTENT/README.md",
+      "bytes": 895,
+      "sha256": "22ba29ec492850b3e30eba17ed1ed58cc770154bcf5868c20287c1b85865635d",
+      "characters": 884,
+      "headings": 3,
+      "categories": []
+    },
+    {
+      "path": "legal/LICENSES/DOCS/README.md",
+      "bytes": 877,
+      "sha256": "74d9ccba480577d3def2d991ac5311d988f09d80849ade16cc22404bab23a905",
+      "characters": 868,
+      "headings": 3,
+      "categories": [
+        "governance"
+      ]
+    },
+    {
+      "path": "legal/LICENSES/MARKS/TRADEMARK-POLICY.md",
+      "bytes": 1020,
+      "sha256": "b19ad66b806fb97668b182bbbe8c0484204589f3dfab6a6e4dd4397fbe53c3b0",
+      "characters": 1007,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/PRIVACY-NOTICE.md",
+      "bytes": 1717,
+      "sha256": "3e50efe733e2b6fd0787990fc724cc3d6424aa08f067b0d8ed315a77f8a96c5f",
+      "characters": 1685,
+      "headings": 11,
+      "categories": [
+        "intelligence",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/README.md",
+      "bytes": 1987,
+      "sha256": "f38865140ba5f71d96a58ff7414e6463ec08f68dfefa6b5b28cc638dc105dd8f",
+      "characters": 1943,
+      "headings": 5,
+      "categories": [
+        "api",
+        "governance",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/SECURITY-DISCLOSURE.md",
+      "bytes": 1009,
+      "sha256": "70d6cdb1fdaa05e9ca76801e2ad615869fc6d33b14196479469f3e86faf0bf94",
+      "characters": 992,
+      "headings": 6,
+      "categories": [
+        "governance",
+        "operations",
+        "security"
+      ]
+    },
+    {
+      "path": "legal/THIRD-PARTY-NOTICES.md",
+      "bytes": 1104,
+      "sha256": "145bd18a8987fcbf73295bf5ed09d4f2a8ab0c7fc3b31ea20b6c3ad6abfa674f",
+      "characters": 1084,
+      "headings": 5,
+      "categories": [
+        "api",
+        "governance",
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "public/robots.txt",
+      "bytes": 1369,
+      "sha256": "1b7245008de033fa20e4e61f1c170ab46a437e3323a67b8438407557dc78c24d",
+      "characters": 1366,
+      "headings": 3,
+      "categories": []
+    },
+    {
+      "path": "quantum_utility_platform/README.md",
+      "bytes": 560,
+      "sha256": "8c022883b9ccdcade249d6ad5c25b0c228fcc995048d33c6e8e2a137b791c272",
+      "characters": 560,
+      "headings": 2,
+      "categories": [
+        "intelligence",
+        "security"
+      ]
+    },
+    {
+      "path": "scripts/quantum/requirements.txt",
+      "bytes": 222,
+      "sha256": "fa6fb0f9d297f32b0c13fec121f08a114d0860392b852757d822a090b0e2dbae",
+      "characters": 222,
+      "headings": 6,
+      "categories": []
+    },
+    {
+      "path": "scripts/voice/requirements.txt",
+      "bytes": 171,
+      "sha256": "a0ff668e099c13d1abd2df70097158d36593d8e606ca0037fbdadf4f60f1cd62",
+      "characters": 169,
+      "headings": 2,
+      "categories": [
+        "api"
+      ]
+    },
+    {
+      "path": "src/lib/isabella/pake/DOCUMENTATION.md",
+      "bytes": 3647,
+      "sha256": "c1f7b9bcedce51f82feb36553b6df0210d7c27c12efa88106f7510611159540f",
+      "characters": 3590,
+      "headings": 7,
+      "categories": [
+        "governance",
+        "intelligence"
+      ]
+    },
+    {
+      "path": "src/routes/README.md",
+      "bytes": 1235,
+      "sha256": "edbd5d3cd5a427882c60b7b7dcdd12c7031f2f8ac0c085d20d2f6abec719e95d",
+      "characters": 1227,
+      "headings": 2,
+      "categories": [
+        "api"
+      ]
+    }
+  ],
+  "exactDuplicates": [],
+  "counts": {
+    "total": 196,
+    "markdown": 184,
+    "text": 5,
+    "word": 7,
+    "exactDuplicateGroups": 0
+  }
+}

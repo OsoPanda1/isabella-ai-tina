@@ -21,6 +21,7 @@
     "attestation:keygen": "node scripts/attestation-keygen.mjs",
     "attestation:verify": "node scripts/attestation-keygen.mjs --all --verify",
     "audit:repository": "node scripts/repository-audit.mjs",
+    "audit:documents": "node scripts/document-inventory.mjs",
     "audit:architecture": "node scripts/audit-architecture.mjs",
     "audit:routes": "node scripts/genesis-route-audit.mjs",
     "build": "vite build && node scripts/generate-client-shell.mjs",
