@@ -1,6 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "feat/*": false,
+      "repair/*": false,
+      "chore/*": false
+    }
+  },
   "buildCommand": "NITRO_PRESET=vercel pnpm run build",
   "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": ".vercel/output",
@@ -42,13 +50,5 @@
         }
       ]
     }
-  ],
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "feat/*": false,
-      "repair/*": false,
-      "chore/*": false
-    }
-  }
+  ]
 }

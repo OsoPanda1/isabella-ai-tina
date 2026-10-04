@@ -20,7 +20,7 @@ import {
   commissionForPlan,
   calculateCattleyaSplit,
 } from "./cattleya";
-import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-repository";
+import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";
 
 export interface TamvSovereignPlan {
   id: string;

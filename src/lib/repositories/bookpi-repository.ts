@@ -9,3 +9,11 @@ export function getBookPiRepository(): BookPiRepository {
 
 export { BookPiRepository, bookpiPostgresRepository };
 export default bookpiPostgresRepository;
+
+
+/** Legacy compatibility factory. The historical sync engine intentionally
+ * keeps its existing in-memory algorithm; production callers use the
+ * explicit createBookpiPostgresRepository() runtime instead. */
+export function createBookpiRepository(): BookPiRepository {
+  return bookpiPostgresRepository;
+}

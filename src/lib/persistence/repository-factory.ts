@@ -128,4 +128,4 @@ export const repositoryFactory: RepositoryFactory = new ProductionRepositoryFact
 // Legacy export for direct JSON access in dev/test only — not for production routes
 export { JsonRepositoryFactory } from "./adapters/json-adapter";
 export { NeonRepository } from "./adapters/neon-adapter";
-export { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-repository";
+export { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";

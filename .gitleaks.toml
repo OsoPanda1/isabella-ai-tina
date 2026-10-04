@@ -7,9 +7,11 @@ useDefault = true
 # This exact value is allowlisted narrowly so historical scanning remains active for
 # every other secret. The live application and documentation must never contain it.
 [allowlist]
-description = "Known retired CROWN credential from historical incident; exact value only"
+description = "Known retired credentials/placeholders from historical repository material; exact values only"
 regexTarget = "secret"
 regexes = [
   '''C869C1B14A8938785A9438060AD878711124F416''',
-  '''AIzaSyAny-ujWCY0Lw6_sDS_pIppJtlcESBJ2U8'''
+  '''AIzaSyAny-ujWCY0Lw6_sDS_pIppJtlcESBJ2U8''',
+  '''sk_test_mock_stripe_key_placeholder''',
+  '''whsec_test_secret'''
 ]
