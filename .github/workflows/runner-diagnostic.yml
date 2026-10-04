@@ -3,7 +3,7 @@ name: Isabella Genesis — Runner Diagnostic
 on:
   push:
     branches:
-      - repair/production-certification-2026-09-21
+      - main
   workflow_dispatch:
 
 permissions:
@@ -11,12 +11,33 @@ permissions:
 
 jobs:
   runner:
-    runs-on: ubuntu-22.04
+    name: Runner ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
     steps:
       - name: Runner identity
         run: |
-          set -eux
+          set -euxo pipefail
           echo "runner=${RUNNER_NAME}"
           echo "os=${RUNNER_OS}"
+          echo "arch=${RUNNER_ARCH}"
+          echo "node=$(node --version)"
+          echo "pnpm=$(pnpm --version 2>/dev/null || true)"
           uname -a
-          node --version
+      - name: Checkout capability
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Workspace capability
+        run: |
+          set -euxo pipefail
+          test -f package.json
+          test -f pnpm-lock.yaml
+          git status --short

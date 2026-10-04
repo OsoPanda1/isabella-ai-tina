@@ -27,7 +27,7 @@ import {
   verify as cryptoVerify,
   type KeyObject,
 } from "node:crypto";
-import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-repository";
+import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";
 import { config } from "../config";
 
 // ============================================================================
