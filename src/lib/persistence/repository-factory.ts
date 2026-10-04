@@ -1,43 +1,131 @@
-/**
- * Repository Factory (src/lib/persistence/repository-factory.ts)
- * -------------------------------------------------------------
- * Enforces explicit storage provider selection (ISABELLA_STORAGE_PROVIDER).
- * Production safety rule: JSON persistence is forbidden in production runtime.
- * Unsupported adapters are not implemented for production (fail-closed).
- */
-import { auditRepository } from "../repositories/audit-repository";
-import { memoryRepository } from "../repositories/memory-repository";
-import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";
-import { apiKeyRepository } from "../repositories/api-key-repository";
-import { approvalRepository } from "../repositories/approval-repository";
-import { marketplaceRepository } from "../repositories/marketplace-repository";
-import { policyRepository } from "../repositories/policy-repository";
-import { decisionRepository } from "../repositories/decision-repository";
-import { isProductionLike } from "../runtime-mode";
+import { config } from "../config";
+import type {
+  IRepository,
+  RepositoryFactory,
+  ApiKey,
+  AuditEntry,
+  Tenant,
+  Session,
+} from "./repository";
+import { JsonRepositoryFactory } from "./adapters/json-adapter";
+import { NeonRepository } from "./adapters/neon-adapter";
 
-export function getRepositoryFactory() {
-  const provider = process.env.ISABELLA_STORAGE_PROVIDER || "postgres";
+class ProductionRepositoryFactory implements RepositoryFactory {
+  private readonly neonFactory = new Map<string, IRepository<unknown>>();
+  private readonly jsonFactory = new JsonRepositoryFactory();
 
-  if (isProductionLike()) {
-    if (provider === "json" || provider === "memory") {
-      throw new Error("FAIL_CLOSED: JSON persistence is forbidden in production runtime.");
-    }
-    if (provider !== "postgres" && provider !== "neon" && provider !== "supabase") {
-      throw new Error(`FAIL_CLOSED: Storage provider '${provider}' is not implemented for production.`);
+  private isProduction(): boolean {
+    try {
+      const cfg = config();
+      const mode = (cfg.ISABELLA_RUNTIME_MODE || "").toLowerCase();
+      if (mode === "development" || mode === "test" || mode === "local") {
+        return false;
+      }
+      return cfg.NODE_ENV === "production" || mode === "production" || mode === "staging";
+    } catch {
+      // La configuración es una frontera de seguridad: si no puede resolverse,
+      // asumir runtime productivo evita cualquier fallback a persistencia local.
+      return true;
     }
   }
 
-  return {
-    getAuditRepository: () => auditRepository,
-    getMemoryRepository: () => memoryRepository,
-    getBookPiRepository: () => createBookpiPostgresRepository(),
-    getApiKeyRepository: () => apiKeyRepository,
-    getApprovalRepository: () => approvalRepository,
-    getMarketplaceRepository: () => marketplaceRepository,
-    getPolicyRepository: () => policyRepository,
-    getDecisionRepository: () => decisionRepository,
-  };
+  private isDurableJsonAllowed(): boolean {
+    try {
+      const cfg = config() as unknown as Record<string, unknown>;
+      if (typeof cfg.DURABLE_JSON_ALLOWED === "boolean") return cfg.DURABLE_JSON_ALLOWED as boolean;
+      if (typeof cfg.DURABLE_JSON_ALLOWED === "string")
+        return (cfg.DURABLE_JSON_ALLOWED as string) === "true";
+    } catch {
+      // Ignored
+    }
+    return false;
+  }
+
+  private assertProductionPersistence(): void {
+    if (!this.isProduction()) {
+      return;
+    }
+
+    if (this.isDurableJsonAllowed()) {
+      throw new Error(
+        "[FATAL] JSON persistence is forbidden in staging/production. Set DURABLE_JSON_ALLOWED=false.",
+      );
+    }
+
+    const cfg = config();
+    const hasPostgres = Boolean(cfg.DATABASE_URL);
+
+    if (!hasPostgres) {
+      throw new Error(
+        "[FATAL] Production persistence misconfigured. Configure DATABASE_URL for the dedicated PostgreSQL authoritative database. Supabase is Identity Provider only — not state authority.",
+      );
+    }
+
+    // Proveedor explícito (P0-5): una app financiera no debe decidir por
+    // presencia de variables ("tengo DATABASE_URL, entonces..."). Exige que
+    // ISABELLA_STORAGE_PROVIDER declare postgres|neon; json|supabase|memory
+    // son no autoritativos y quedan PROHIBIDOS en staging/production.
+    const provider = (cfg as unknown as Record<string, unknown>).ISABELLA_STORAGE_PROVIDER;
+    const normalized =
+      typeof provider === "string" ? (provider as string).trim().toLowerCase() : "";
+
+    if (!normalized) {
+      throw new Error(
+        "[FATAL] ISABELLA_STORAGE_PROVIDER must be explicitly set to postgres|neon in staging/production. Ambiguous or missing provider is a deployment blocker.",
+      );
+    }
+    if (!["postgres", "neon"].includes(normalized)) {
+      throw new Error(
+        `[FATAL] ISABELLA_STORAGE_PROVIDER="${normalized}" is not an authoritative durable provider in production. Allowed: postgres|neon.`,
+      );
+    }
+  }
+
+  private getNeonRepo<T extends { id: string }>(type: string): IRepository<T> {
+    this.assertProductionPersistence();
+    let repo = this.neonFactory.get(type) as IRepository<T> | undefined;
+    if (!repo) {
+      repo = new NeonRepository<T>(type);
+      this.neonFactory.set(type, repo as IRepository<unknown>);
+    }
+    return repo;
+  }
+
+  getAdapter<T extends { id: string }>(type: "neon" | "redis"): IRepository<T> {
+    if (type === "neon") return this.getNeonRepo<T>("neon");
+    // redis not yet implemented — fail closed in production
+    if (this.isProduction()) {
+      throw new Error(
+        `[FATAL] Adapter ${type} not implemented for production — deployment blocker`,
+      );
+    }
+    return new JsonRepositoryFactory().getAdapter<T>(type);
+  }
+
+  getApiKeyRepository(): IRepository<ApiKey> {
+    if (this.isProduction()) return this.getNeonRepo<ApiKey>("apiKey");
+    return this.jsonFactory.getApiKeyRepository();
+  }
+
+  getAuditRepository(): IRepository<AuditEntry> {
+    if (this.isProduction()) return this.getNeonRepo<AuditEntry>("audit");
+    return this.jsonFactory.getAuditRepository();
+  }
+
+  getTenantRepository(): IRepository<Tenant> {
+    if (this.isProduction()) return this.getNeonRepo<Tenant>("tenant");
+    return this.jsonFactory.getTenantRepository();
+  }
+
+  getSessionRepository(): IRepository<Session> {
+    if (this.isProduction()) return this.getNeonRepo<Session>("session");
+    return this.jsonFactory.getSessionRepository();
+  }
 }
 
-export const repositoryFactory = getRepositoryFactory();
-export default repositoryFactory;
+export const repositoryFactory: RepositoryFactory = new ProductionRepositoryFactory();
+
+// Legacy export for direct JSON access in dev/test only — not for production routes
+export { JsonRepositoryFactory } from "./adapters/json-adapter";
+export { NeonRepository } from "./adapters/neon-adapter";
+export { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";

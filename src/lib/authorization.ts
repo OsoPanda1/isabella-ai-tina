@@ -94,8 +94,43 @@ class CryptoManager {
   private publicKey: KeyObject;
   private keyId: string;
 
-  // En memoria solo como cache L1; fuente de verdad es Postgres `hsm_signature_chain` (ver `getAndAdvanceChainDurable`)
+  // En memoria solo como cache L1; fuente de verdad es Postgres `hsm_signature_chain`.
   private signatureChainState = new Map<string, string>(); // tenant_id -> last_hash (cache)
+
+  // Reutiliza la conexión durante la vida de la instancia del runtime para
+  // evitar crear/cerrar un Pool por cada decisión de autorización.
+  private durablePool: import("pg").Pool | null = null;
+  private durablePoolUrl: string | null = null;
+
+  private async getDurablePool(databaseUrl: string): Promise<import("pg").Pool> {
+    if (this.durablePool && this.durablePoolUrl === databaseUrl) {
+      return this.durablePool;
+    }
+
+    if (this.durablePool) {
+      await this.durablePool.end().catch(() => undefined);
+      this.durablePool = null;
+      this.durablePoolUrl = null;
+    }
+
+    const { Pool } = await import("pg");
+    this.durablePool = new Pool({
+      connectionString: databaseUrl,
+      max: 4,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
+      statement_timeout: 15_000,
+    });
+    this.durablePoolUrl = databaseUrl;
+    return this.durablePool;
+  }
+
+  public async closeDurablePool(): Promise<void> {
+    const pool = this.durablePool;
+    this.durablePool = null;
+    this.durablePoolUrl = null;
+    if (pool) await pool.end().catch(() => undefined);
+  }
 
   constructor() {
     const { privateKey, publicKey } = generateKeyPairSync("ec", {
@@ -195,7 +230,6 @@ class CryptoManager {
       return this.getAndAdvanceChain(tenantId, newDecisionHash, newSignature);
     }
     const { createHash: createHash2 } = await import("node:crypto");
-    let pool: import("pg").Pool | null = null;
     let release: (() => void) | null = null;
     try {
       const { config } = await import("./config");
@@ -205,9 +239,8 @@ class CryptoManager {
           "DATABASE_URL ausente: la cadena durable de firmas no existe en este runtime productivo.",
         );
       }
-      const { Pool } = await import("pg");
-      pool = new Pool({ connectionString: cfg.DATABASE_URL, max: 1 });
-      const client = await pool.connect();
+      const durablePool = await this.getDurablePool(cfg.DATABASE_URL);
+      const client = await durablePool.connect();
       release = () => client.release();
       await client.query("BEGIN");
       const lockId = createHash2("sha256").update(tenantId).digest().readInt32BE(0);
@@ -247,7 +280,6 @@ class CryptoManager {
       );
     } finally {
       release?.();
-      if (pool) await pool.end().catch(() => {});
     }
   }
 

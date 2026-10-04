@@ -158,12 +158,30 @@ const repositoryFactory = readFileSync(
   resolve(root, "src/lib/persistence/repository-factory.ts"),
   "utf8",
 );
+const memoryPostgres = readFileSync(
+  resolve(root, "src/lib/repositories/memory-postgres-repository.ts"),
+  "utf8",
+);
+const authVerification = readFileSync(
+  resolve(root, "src/lib/auth-verification-layer.ts"),
+  "utf8",
+);
+
 for (const [pattern, label] of [
   ["ISABELLA_STORAGE_PROVIDER", "explicit storage provider enforcement"],
   ["JSON persistence is forbidden", "production JSON persistence prohibition"],
   ["not implemented for production", "unsupported adapter fail-closed behavior"],
 ])
   if (!repositoryFactory.includes(pattern)) errors.push(`repository factory missing ${label}`);
+
+if (/private\s+fallback\s*=\s*memoryRepository/.test(memoryPostgres))
+  errors.push("production memory repository must not contain an in-memory fallback");
+if (!memoryPostgres.includes("DATABASE_URL is required for PostgreSQL memory persistence"))
+  errors.push("production memory repository must fail closed without DATABASE_URL");
+if (/sovereign-default/.test(authVerification))
+  errors.push("auth verification must not synthesize sovereign-default tenant identities");
+if (!authVerification.includes('reasonCode: "TENANT_MISSING"'))
+  errors.push("auth verification must reject missing tenant claims explicitly");
 const migrationRunner = readFileSync(resolve(root, "scripts/db-migrate.mjs"), "utf8");
 for (const [pattern, label] of [
   ["--single-transaction", "atomic migration transaction"],

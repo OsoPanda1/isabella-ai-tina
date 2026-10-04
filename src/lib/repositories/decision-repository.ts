@@ -156,7 +156,88 @@ export function createPostgresDecisionLedger(deps?: DecisionLedgerDeps): LedgerS
 
   async function append(record: LedgerDecisionRecord): Promise<void> {
     const run = await resolveQuery(deps);
-    // Reenvío idempotente: si el registro ya está, no hay nada que corregir.
+
+    // Los tests inyectados conservan el contrato histórico de consultas separadas.
+    // El runtime productivo usa una sola sentencia para cerrar la ventana TOCTOU:
+    // el advisory xact lock, lectura del último hash y INSERT viven en la misma
+    // transacción implícita de PostgreSQL (una sentencia = una transacción).
+    if (!deps?.query) {
+      const { rows } = await run(
+        `WITH tenant_lock AS (
+           SELECT pg_advisory_xact_lock(hashtextextended($2, 0))
+         ),
+         existing AS (
+           SELECT EXISTS(
+             SELECT 1
+               FROM public.isabella_decisions
+              WHERE tenant_id = $2 AND record_hash = $13
+           ) AS already_recorded
+           FROM tenant_lock
+         ),
+         expected AS (
+           SELECT COALESCE(
+             (
+               SELECT record_hash
+                 FROM public.isabella_decisions
+                WHERE tenant_id = $2
+                ORDER BY created_at DESC, id DESC
+                LIMIT 1
+             ),
+             'GENESIS'
+           ) AS previous_hash,
+           existing.already_recorded
+             FROM existing
+         ),
+         inserted AS (
+           INSERT INTO public.isabella_decisions
+             (id, tenant_id, actor_id, authority, capability, policy, risk, model_id,
+              input_hash, output_hash, result, previous_hash, record_hash, evidence_ids, recorded_at)
+           SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, expected.previous_hash,
+                  $13, $14::jsonb, $15
+             FROM expected
+            WHERE NOT expected.already_recorded
+              AND expected.previous_hash = $12
+           ON CONFLICT (tenant_id, record_hash) DO NOTHING
+           RETURNING id
+         )
+         SELECT
+           expected.previous_hash,
+           expected.already_recorded,
+           (SELECT id FROM inserted) AS inserted_id
+           FROM expected`,
+        [
+          record.id,
+          record.tenantId,
+          record.actorId,
+          record.authority,
+          record.capability,
+          record.policy,
+          record.risk,
+          record.modelId ?? null,
+          record.inputHash,
+          record.outputHash,
+          record.result,
+          record.previousHash,
+          record.recordHash,
+          JSON.stringify(record.evidenceIds),
+          record.timestamp,
+        ],
+      );
+      const row = rows[0] as Record<string, unknown> | undefined;
+      const expected = row?.previous_hash == null ? "GENESIS" : String(row.previous_hash);
+      const alreadyRecorded = row?.already_recorded === true;
+      const insertedId = row?.inserted_id == null ? null : String(row.inserted_id);
+
+      if (!alreadyRecorded && expected !== record.previousHash && insertedId === null) {
+        throw new Error(
+          `DECISION_CHAIN_MISMATCH: previousHash ${record.previousHash} no coincide con el último record_hash ${expected}.`,
+        );
+      }
+      // inserted_id null con hash correcto significa reenvío idempotente por UNIQUE.
+      return;
+    }
+
+    // Inyectado para tests/forensics: preservar el contrato de query existente.
     const duplicate = await run(
       `SELECT 1 FROM public.isabella_decisions
         WHERE tenant_id = $1 AND record_hash = $2
@@ -195,10 +276,7 @@ export function createPostgresDecisionLedger(deps?: DecisionLedgerDeps): LedgerS
         record.timestamp,
       ],
     );
-    if (!rows[0]) {
-      // Reenvío idempotente del mismo registro: no es un fallo de integridad.
-      return;
-    }
+    if (!rows[0]) return;
   }
 
   async function verifyChain(

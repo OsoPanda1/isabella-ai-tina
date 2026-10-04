@@ -1,83 +1,140 @@
 /**
- * BookPI PostgreSQL Runtime
- * -----------------------------------------------------------------
- * Implementación durable para producción. No sustituye ni elimina
- * el repositorio legacy: lo complementa y lo hace verdaderamente
- * persistente sobre la tabla append-only `bookpi_ledger`.
+ * BookPI PostgreSQL Runtime — production authority.
+ *
+ * This module is additive. The historical BookPI implementation remains
+ * untouched; production financial/evidence consumers resolve this runtime
+ * explicitly so persistence is durable and append-only.
  */
 import { createHash, randomInt } from "node:crypto";
-import pg from "pg";
-import type {
-  BookPiBlock,
-  BookPiRepository,
-} from "./bookpi-postgres-repository";
-import type {
-  BlockPIBlock,
-  LedgerCategory,
-  LedgerStatus,
-} from "../bookpi/types";
+import type { Pool, PoolClient } from "pg";
 import { canonicalize } from "../igds/canonical";
 import { getPgPool } from "../persistence/postgres";
 
 const GENESIS_HASH = "GENESIS_BLOCK_HASH";
-const HASH_ALGORITHM = "SHA3-512-HASH-CHAIN";
-const MAX_TENANT_LENGTH = 128;
-const MAX_USER_LENGTH = 128;
-const MAX_OPERATION_LENGTH = 512;
-const MAX_CATEGORY_LENGTH = 64;
+const HASH_CHAIN = "SHA3-512-HASH-CHAIN";
+const MAX_TENANT = 128;
+const MAX_USER = 128;
+const MAX_OPERATION = 512;
+const MAX_CATEGORY = 64;
+const MAX_LIMIT = 5000;
 
-export interface DurableBookPiRepository extends BookPiRepository {
+export interface DurableBookPiBlock {
+  index: number;
+  tenant_id: string;
+  user_id: string;
+  timestamp: string;
+  operation: string;
+  category: string;
+  cost_decimal: number;
+  tokens_consumed: number;
+  previous_hash: string;
+  block_hash: string;
+  signature_algorithm: string;
+  status: "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
+  nonce: number;
+}
+
+export interface DurableBookPiRepository {
   append(input: {
     tenantId: string;
     userId: string;
     operation: string;
-    category?: LedgerCategory | string;
+    category?: string;
     cost?: number;
     tokens?: number;
-    status?: LedgerStatus | "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
-  }): Promise<{ success: boolean; error?: string; block?: BlockPIBlock }>;
+    status?: "settled" | "pending" | "refunded" | "pruned";
+  }): Promise<{ success: boolean; error?: string; block?: DurableBookPiLegacyBlock }>;
+  appendBlock(input: {
+    tenant_id: string;
+    user_id: string;
+    operation: string;
+    category?: string;
+    cost_decimal?: number;
+    tokens_consumed?: number;
+    status?: "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
+  }): Promise<DurableBookPiBlock>;
+  batchAppend(inputs: Array<{
+    tenantId: string;
+    userId: string;
+    operation: string;
+    category?: string;
+    cost?: number;
+    tokens?: number;
+    status?: "settled" | "pending" | "refunded" | "pruned";
+  }>): Promise<{ success: boolean; error?: string; blocks: DurableBookPiLegacyBlock[] }>;
+  getLatestBlock(tenantId: string): Promise<DurableBookPiBlock | null>;
+  listBlocks(tenantId: string, limit?: number): Promise<readonly DurableBookPiBlock[]>;
+  list(tenantId: string): Promise<DurableBookPiLegacyBlock[]>;
+  query(tenantId: string, filter: {
+    category?: string;
+    userId?: string;
+    fromDate?: Date;
+    toDate?: Date;
+  }): Promise<DurableBookPiLegacyBlock[]>;
+  verifyLedger(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: number }>;
+  verifyIntegrity(tenantId: string): Promise<{ success: boolean; error?: string; corruptedIndex?: number }>;
+  refund(tenantId: string, index: number, reason?: string): Promise<{ success: boolean; error?: string }>;
 }
 
-function text(value: string, field: string, max: number): string {
+export interface DurableBookPiLegacyBlock {
+  index: number;
+  timestamp: string;
+  tenantId: string;
+  userId: string;
+  operation: string;
+  category: "inference" | "processing" | "apis" | "skills" | "other";
+  costDecimal: string;
+  tokensConsumed: number;
+  previousHash: string;
+  blockHash: string;
+  pqcSignature: string | null;
+  signatureAlgorithm: string;
+  status: "settled" | "pending" | "refunded" | "pruned";
+  nonce: string;
+}
+
+function safeText(value: string, field: string, max: number): string {
   const normalized = value.trim();
-  if (!normalized) throw new Error(`${field}_required`);
-  if (normalized.length > max) throw new Error(`${field}_too_long`);
+  if (!normalized) throw new Error(field + "_required");
+  if (normalized.length > max) throw new Error(field + "_too_long");
   return normalized;
 }
 
-function nonNegative(value: number, field: string): number {
-  if (!Number.isFinite(value) || value < 0) throw new Error(`${field}_invalid`);
+function safeNumber(value: number, field: string): number {
+  if (!Number.isFinite(value) || value < 0) throw new Error(field + "_invalid");
   return value;
 }
 
-function normalizeStatus(
-  status: LedgerStatus | "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED" | undefined,
-): BookPiBlock["status"] {
-  if (status === "pending" || status === "PENDING") return "PENDING";
-  if (status === "refunded" || status === "REVERSED") return "REVERSED";
-  if (status === "pruned" || status === "FAILED") return "FAILED";
-  return "CONFIRMED";
+function normalizeStatus(status: "settled" | "pending" | "refunded" | "pruned" | undefined) {
+  if (status === "pending") return "PENDING" as const;
+  if (status === "refunded") return "REVERSED" as const;
+  if (status === "pruned") return "FAILED" as const;
+  return "CONFIRMED" as const;
 }
 
-function legacyStatus(status: BookPiBlock["status"]): LedgerStatus {
-  if (status === "PENDING") return "pending";
-  if (status === "REVERSED") return "refunded";
-  if (status === "FAILED") return "pruned";
-  return "settled";
+function legacyStatus(status: DurableBookPiBlock["status"]) {
+  if (status === "PENDING") return "pending" as const;
+  if (status === "REVERSED") return "refunded" as const;
+  if (status === "FAILED") return "pruned" as const;
+  return "settled" as const;
 }
 
-function toLegacy(block: BookPiBlock): BlockPIBlock {
+function legacyCategory(category: string) {
+  return (["inference", "processing", "apis", "skills", "other"] as const).includes(
+    category as "inference" | "processing" | "apis" | "skills" | "other",
+  )
+    ? (category as "inference" | "processing" | "apis" | "skills" | "other")
+    : "other";
+}
+
+function toLegacy(block: DurableBookPiBlock): DurableBookPiLegacyBlock {
   return {
     index: block.index,
     timestamp: block.timestamp,
     tenantId: block.tenant_id,
     userId: block.user_id,
     operation: block.operation,
-    category: (["inference", "processing", "apis", "skills", "other"] as const).includes(
-      block.category as LedgerCategory,
-    )
-      ? (block.category as LedgerCategory)
-      : "other",
+    category: legacyCategory(block.category),
     costDecimal: block.cost_decimal.toFixed(6),
     tokensConsumed: block.tokens_consumed,
     previousHash: block.previous_hash,
@@ -89,29 +146,7 @@ function toLegacy(block: BookPiBlock): BlockPIBlock {
   };
 }
 
-function hashPayload(input: Omit<BookPiBlock, "block_hash">): string {
-  return createHash("sha3-512")
-    .update(
-      canonicalize({
-        index: input.index,
-        tenant_id: input.tenant_id,
-        user_id: input.user_id,
-        timestamp: input.timestamp,
-        operation: input.operation,
-        category: input.category,
-        cost_decimal: input.cost_decimal,
-        tokens_consumed: input.tokens_consumed,
-        previous_hash: input.previous_hash,
-        signature_algorithm: input.signature_algorithm,
-        status: input.status,
-        nonce: input.nonce,
-      }),
-      "utf8",
-    )
-    .digest("hex");
-}
-
-function fromRow(row: Record<string, unknown>): BookPiBlock {
+function mapRow(row: Record<string, unknown>): DurableBookPiBlock {
   return {
     index: Number(row.index),
     tenant_id: String(row.tenant_id),
@@ -124,55 +159,68 @@ function fromRow(row: Record<string, unknown>): BookPiBlock {
     previous_hash: String(row.previous_hash),
     block_hash: String(row.block_hash),
     signature_algorithm: String(row.signature_algorithm),
-    status: String(row.status) as BookPiBlock["status"],
+    status: String(row.status) as DurableBookPiBlock["status"],
     nonce: Number(row.nonce),
   };
 }
 
-function lockId(tenantId: string): number {
+function blockHash(block: Omit<DurableBookPiBlock, "block_hash">): string {
+  return createHash("sha3-512")
+    .update(
+      canonicalize({
+        index: block.index,
+        tenant_id: block.tenant_id,
+        user_id: block.user_id,
+        timestamp: block.timestamp,
+        operation: block.operation,
+        category: block.category,
+        cost_decimal: block.cost_decimal,
+        tokens_consumed: block.tokens_consumed,
+        previous_hash: block.previous_hash,
+        signature_algorithm: block.signature_algorithm,
+        status: block.status,
+        nonce: block.nonce,
+      }),
+      "utf8",
+    )
+    .digest("hex");
+}
+
+function tenantLockId(tenantId: string): number {
   return createHash("sha256").update(tenantId, "utf8").digest().readInt32BE(0);
 }
 
-async function inTenantTransaction<T>(
-  pool: pg.Pool,
-  tenantId: string,
-  fn: (client: pg.PoolClient) => Promise<T>,
-): Promise<T> {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("SELECT pg_advisory_xact_lock($1)", [lockId(tenantId)]);
-    const result = await fn(client);
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
-  } finally {
-    client.release();
+class PostgresBookPiRuntime implements DurableBookPiRepository {
+  constructor(private readonly pool: Pool) {}
+
+  private async transaction<T>(
+    tenantId: string,
+    work: (client: PoolClient) => Promise<T>,
+  ): Promise<T> {
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock($1)", [tenantLockId(tenantId)]);
+      const result = await work(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => undefined);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
-}
 
-class DurableBookPiRepositoryImpl implements DurableBookPiRepository {
-  constructor(private readonly pool: pg.Pool) {}
+  async appendBlock(input: Parameters<DurableBookPiRepository["appendBlock"]>[0]) {
+    const tenantId = safeText(input.tenant_id, "tenant_id", MAX_TENANT);
+    const userId = safeText(input.user_id, "user_id", MAX_USER);
+    const operation = safeText(input.operation, "operation", MAX_OPERATION);
+    const category = safeText(input.category ?? "other", "category", MAX_CATEGORY);
+    const cost = safeNumber(Number(input.cost_decimal ?? 0), "cost_decimal");
+    const tokens = Math.trunc(safeNumber(Number(input.tokens_consumed ?? 0), "tokens_consumed"));
 
-  async appendBlock(input: {
-    tenant_id: string;
-    user_id: string;
-    operation: string;
-    category?: string;
-    cost_decimal?: number;
-    tokens_consumed?: number;
-    status?: "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
-  }): Promise<BookPiBlock> {
-    const tenantId = text(input.tenant_id, "tenant_id", MAX_TENANT_LENGTH);
-    const userId = text(input.user_id, "user_id", MAX_USER_LENGTH);
-    const operation = text(input.operation, "operation", MAX_OPERATION_LENGTH);
-    const category = text(String(input.category ?? "other"), "category", MAX_CATEGORY_LENGTH);
-    const cost = nonNegative(input.cost_decimal ?? 0, "cost_decimal");
-    const tokens = Math.trunc(nonNegative(input.tokens_consumed ?? 0, "tokens_consumed"));
-
-    return inTenantTransaction(this.pool, tenantId, async (client) => {
+    return this.transaction(tenantId, async (client) => {
       const latest = await client.query(
         "SELECT index, block_hash FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index DESC LIMIT 1",
         [tenantId],
@@ -181,10 +229,11 @@ class DurableBookPiRepositoryImpl implements DurableBookPiRepository {
       const previousHash = latest.rows[0]?.block_hash
         ? String(latest.rows[0].block_hash)
         : GENESIS_HASH;
-      const index =
-        latest.rows[0]?.index === undefined ? 0 : Number(latest.rows[0].index) + 1;
+      const index = latest.rows[0]?.index === undefined
+        ? 0
+        : Number(latest.rows[0].index) + 1;
 
-      const payload: Omit<BookPiBlock, "block_hash"> = {
+      const payload: Omit<DurableBookPiBlock, "block_hash"> = {
         index,
         tenant_id: tenantId,
         user_id: userId,
@@ -194,18 +243,14 @@ class DurableBookPiRepositoryImpl implements DurableBookPiRepository {
         cost_decimal: cost,
         tokens_consumed: tokens,
         previous_hash: previousHash,
-        signature_algorithm: HASH_ALGORITHM,
+        signature_algorithm: HASH_CHAIN,
         status: input.status ?? "CONFIRMED",
         nonce: randomInt(0, 1_000_000_000),
       };
 
-      const blockHash = hashPayload(payload);
+      const hash = blockHash(payload);
       const result = await client.query(
-        `INSERT INTO bookpi_ledger
-          (index, tenant_id, user_id, timestamp, operation, category, cost_decimal, tokens_consumed,
-           previous_hash, block_hash, signature_algorithm, status, nonce)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-         RETURNING *`,
+        "INSERT INTO bookpi_ledger (index, tenant_id, user_id, timestamp, operation, category, cost_decimal, tokens_consumed, previous_hash, block_hash, signature_algorithm, status, nonce) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *",
         [
           payload.index,
           payload.tenant_id,
@@ -216,25 +261,19 @@ class DurableBookPiRepositoryImpl implements DurableBookPiRepository {
           payload.cost_decimal,
           payload.tokens_consumed,
           payload.previous_hash,
-          blockHash,
+          hash,
           payload.signature_algorithm,
           payload.status,
           payload.nonce,
         ],
       );
-      return fromRow(result.rows[0] as Record<string, unknown>);
+
+      if (!result.rows[0]) throw new Error("bookpi_insert_empty");
+      return mapRow(result.rows[0] as Record<string, unknown>);
     });
   }
 
-  async append(input: {
-    tenantId: string;
-    userId: string;
-    operation: string;
-    category?: LedgerCategory | string;
-    cost?: number;
-    tokens?: number;
-    status?: LedgerStatus | "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
-  }) {
+  async append(input: Parameters<DurableBookPiRepository["append"]>[0]) {
     try {
       const block = await this.appendBlock({
         tenant_id: input.tenantId,
@@ -254,58 +293,8 @@ class DurableBookPiRepositoryImpl implements DurableBookPiRepository {
     }
   }
 
-  async getLatestBlock(tenantId: string): Promise<BookPiBlock | null> {
-    const safeTenant = text(tenantId, "tenantId", MAX_TENANT_LENGTH);
-    const result = await this.pool.query(
-      "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index DESC LIMIT 1",
-      [safeTenant],
-    );
-    return result.rows[0]
-      ? fromRow(result.rows[0] as Record<string, unknown>)
-      : null;
-  }
-
-  async listBlocks(tenantId: string, limit = 50): Promise<readonly BookPiBlock[]> {
-    const safeTenant = text(tenantId, "tenantId", MAX_TENANT_LENGTH);
-    const safeLimit = Math.max(1, Math.min(Math.trunc(limit), 5000));
-    const result = await this.pool.query(
-      "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index ASC LIMIT $2",
-      [safeTenant, safeLimit],
-    );
-    return result.rows.map((row) => fromRow(row as Record<string, unknown>));
-  }
-
-  async list(tenantId: string): Promise<BlockPIBlock[]> {
-    return (await this.listBlocks(tenantId, 5000)).map(toLegacy);
-  }
-
-  async query(
-    tenantId: string,
-    filter: {
-      category?: LedgerCategory;
-      userId?: string;
-      fromDate?: Date;
-      toDate?: Date;
-    },
-  ): Promise<BlockPIBlock[]> {
-    let rows = await this.list(tenantId);
-    if (filter.category) rows = rows.filter((row) => row.category === filter.category);
-    if (filter.userId) rows = rows.filter((row) => row.userId === filter.userId);
-    if (filter.fromDate) rows = rows.filter((row) => new Date(row.timestamp) >= filter.fromDate!);
-    if (filter.toDate) rows = rows.filter((row) => new Date(row.timestamp) <= filter.toDate!);
-    return rows;
-  }
-
-  async batchAppend(inputs: Array<{
-    tenantId: string;
-    userId: string;
-    operation: string;
-    category?: LedgerCategory | string;
-    cost?: number;
-    tokens?: number;
-    status?: LedgerStatus | "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
-  }>) {
-    const blocks: BlockPIBlock[] = [];
+  async batchAppend(inputs: Parameters<DurableBookPiRepository["batchAppend"]>[0]) {
+    const blocks: DurableBookPiLegacyBlock[] = [];
     for (const input of inputs) {
       const result = await this.append(input);
       if (!result.success) return { success: false, error: result.error, blocks };
@@ -314,108 +303,96 @@ class DurableBookPiRepositoryImpl implements DurableBookPiRepository {
     return { success: true, blocks };
   }
 
-  async refund(tenantId: string, index: number, reason = "refund") {
-    const original = await this.getLatestOrByIndex(tenantId, index);
-    if (!original) return { success: false, error: "BOOKPI_BLOCK_NOT_FOUND" };
-
-    const existing = await this.pool.query(
-      "SELECT 1 FROM bookpi_ledger WHERE tenant_id = $1 AND operation LIKE $2 LIMIT 1",
-      [tenantId, `REFUND_OF:${index}:%`],
-    );
-    if (existing.rows[0]) return { success: false, error: "BOOKPI_REFUND_DUPLICATE" };
-
-    const result = await this.append({
-      tenantId,
-      userId: original.user_id,
-      operation: `REFUND_OF:${index}:${reason.slice(0, 120)}`,
-      category: "other",
-      cost: 0,
-      tokens: 0,
-      status: "refunded",
-    });
-    return result.success
-      ? { success: true }
-      : { success: false, error: result.error };
-  }
-
-  private async getLatestOrByIndex(tenantId: string, index: number) {
+  async getLatestBlock(tenantId: string) {
+    const safeTenant = safeText(tenantId, "tenantId", MAX_TENANT);
     const result = await this.pool.query(
-      "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 AND index = $2 LIMIT 1",
-      [tenantId, index],
+      "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index DESC LIMIT 1",
+      [safeTenant],
     );
-    return result.rows[0]
-      ? fromRow(result.rows[0] as Record<string, unknown>)
-      : null;
+    return result.rows[0] ? mapRow(result.rows[0] as Record<string, unknown>) : null;
   }
 
-  async verifyLedger(
-    tenantId: string,
-  ): Promise<{ valid: boolean; count: number; brokenAt?: number }> {
-    const safeTenant = text(tenantId, "tenantId", MAX_TENANT_LENGTH);
+  async listBlocks(tenantId: string, limit = 50) {
+    const safeTenant = safeText(tenantId, "tenantId", MAX_TENANT);
+    const safeLimit = Math.max(1, Math.min(Math.trunc(limit), MAX_LIMIT));
+    const result = await this.pool.query(
+      "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index ASC LIMIT $2",
+      [safeTenant, safeLimit],
+    );
+    return result.rows.map((row) => mapRow(row as Record<string, unknown>));
+  }
+
+  async list(tenantId: string) {
+    return (await this.listBlocks(tenantId, MAX_LIMIT)).map(toLegacy);
+  }
+
+  async query(tenantId: string, filter: {
+    category?: string;
+    userId?: string;
+    fromDate?: Date;
+    toDate?: Date;
+  }) {
+    let blocks = await this.list(tenantId);
+    if (filter.category) blocks = blocks.filter((item) => item.category === filter.category);
+    if (filter.userId) blocks = blocks.filter((item) => item.userId === filter.userId);
+    if (filter.fromDate) blocks = blocks.filter((item) => new Date(item.timestamp) >= filter.fromDate!);
+    if (filter.toDate) blocks = blocks.filter((item) => new Date(item.timestamp) <= filter.toDate!);
+    return blocks;
+  }
+
+  async verifyLedger(tenantId: string) {
+    const safeTenant = safeText(tenantId, "tenantId", MAX_TENANT);
     const result = await this.pool.query(
       "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index ASC",
       [safeTenant],
     );
     let previous = GENESIS_HASH;
     for (const row of result.rows) {
-      const block = fromRow(row as Record<string, unknown>);
-      if (block.previous_hash !== previous) {
-        return {
-          valid: false,
-          count: result.rows.length,
-          brokenAt: block.index,
-        };
-      }
-      if (hashPayload(block) !== block.block_hash) {
-        return {
-          valid: false,
-          count: result.rows.length,
-          brokenAt: block.index,
-        };
+      const block = mapRow(row as Record<string, unknown>);
+      if (block.previous_hash !== previous || blockHash(block) !== block.block_hash) {
+        return { valid: false, count: result.rows.length, brokenAt: block.index };
       }
       previous = block.block_hash;
     }
     return { valid: true, count: result.rows.length };
   }
 
-  async verifyIntegrity(tenantId?: string) {
-    if (!tenantId) {
-      return {
-        success: false,
-        error: "tenantId_required_for_integrity_verification",
-      };
-    }
+  async verifyIntegrity(tenantId: string) {
     const verification = await this.verifyLedger(tenantId);
     return {
       success: verification.valid,
-      ...(verification.brokenAt === undefined
-        ? {}
-        : { corruptedIndex: verification.brokenAt }),
-      ...(verification.valid ? {} : { error: "BOOKPI_CHAIN_INVALID" }),
+      ...(verification.valid ? {} : { error: "BOOKPI_CHAIN_INVALID", corruptedIndex: verification.brokenAt }),
     };
   }
 
-  async prune() {
-    return {
-      success: false,
-      error: "BOOKPI_PRUNE_FORBIDDEN_APPEND_ONLY_LEDGER",
-    };
-  }
-
-  async pruneInactive() {
-    return {
-      success: false,
-      error: "BOOKPI_PRUNE_INACTIVE_FORBIDDEN_APPEND_ONLY_LEDGER",
-    };
+  async refund(tenantId: string, index: number, reason = "refund") {
+    const target = await this.pool.query(
+      "SELECT user_id FROM bookpi_ledger WHERE tenant_id = $1 AND index = $2 LIMIT 1",
+      [tenantId, index],
+    );
+    if (!target.rows[0]) return { success: false, error: "BOOKPI_BLOCK_NOT_FOUND" };
+    const duplicate = await this.pool.query(
+      "SELECT 1 FROM bookpi_ledger WHERE tenant_id = $1 AND operation = $2 LIMIT 1",
+      [tenantId, "REFUND_OF:" + index],
+    );
+    if (duplicate.rows[0]) return { success: false, error: "BOOKPI_REFUND_DUPLICATE" };
+    const result = await this.append({
+      tenantId,
+      userId: String(target.rows[0].user_id),
+      operation: "REFUND_OF:" + index + ":" + reason.slice(0, 120),
+      category: "other",
+      cost: 0,
+      tokens: 0,
+      status: "refunded",
+    });
+    return result.success ? { success: true } : { success: false, error: result.error };
   }
 }
 
 export function createBookpiPostgresRepository(): DurableBookPiRepository {
   const pool = getPgPool();
   if (!pool) {
-    throw new Error(
-      "BOOKPI_POSTGRES_UNAVAILABLE: DATABASE_URL is required for durable BookPI.",
-    );
+    throw new Error("BOOKPI_POSTGRES_UNAVAILABLE: DATABASE_URL is required for durable BookPI.");
   }
-  return new DurableBookPiRepositoryImpl(pool);
+  return new PostgresBookPiRuntime(pool);
 }

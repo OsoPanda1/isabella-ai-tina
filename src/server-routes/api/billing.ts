@@ -15,8 +15,8 @@ import { fraudReviewEngine } from "../../lib/monetization/fraud-review";
 import { executePayout } from "../../lib/monetization/payout-executor";
 import { createBookpiPostgresRepository } from "../../lib/repositories/bookpi-postgres-runtime";
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY || "sk_test_mock_stripe_key_placeholder";
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "whsec_test_secret";
+const stripeSecret = getSecret("STRIPE_SECRET_KEY");
+const webhookSecret = getSecret("STRIPE_WEBHOOK_SECRET");
 const stripe = new Stripe(stripeSecret, { apiVersion: "2023-10-16" as any });
 
 export async function handleStripeWebhook(req: Request, res: Response): Promise<void> {
