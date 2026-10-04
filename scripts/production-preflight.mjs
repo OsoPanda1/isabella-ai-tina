@@ -37,7 +37,6 @@ const required = [
   "vite.config.ts",
   ".nvmrc",
   "src/routes/index.tsx",
-  "app/api/isabella/chat/route.ts",
   "src/server.ts",
   "src/lib/isabella-chat-gateway.ts",
   "src/lib/api-contracts.ts",
@@ -162,10 +161,7 @@ const memoryPostgres = readFileSync(
   resolve(root, "src/lib/repositories/memory-postgres-repository.ts"),
   "utf8",
 );
-const authVerification = readFileSync(
-  resolve(root, "src/lib/auth-verification-layer.ts"),
-  "utf8",
-);
+const authVerification = readFileSync(resolve(root, "src/lib/auth-verification-layer.ts"), "utf8");
 
 for (const [pattern, label] of [
   ["ISABELLA_STORAGE_PROVIDER", "explicit storage provider enforcement"],

@@ -5,10 +5,7 @@ import { permissionFor, RESOURCES, ACTIONS, type Resource, type Action } from ".
 import { evaluateAbac, type AttributeContext } from "./abac";
 import { canonicalize } from "./igds/canonical";
 import { isProductionLike, resolveRuntimeMode } from "./runtime-mode";
-import {
-  createUuidV7,
-  type AuthorizationDynamicContext,
-} from "./authorization-context";
+import { createUuidV7, type AuthorizationDynamicContext } from "./authorization-context";
 import {
   getAuthorizationPolicyCache,
   setAuthorizationPolicyCache,
@@ -378,7 +375,6 @@ export async function evaluateAuthorization(
   });
 
   let cacheHit = false;
-  let cacheLatencyMs = 0;
   let policyLatencyMs = 0;
   let allow = false;
   let obligations: string[] = [];
@@ -388,7 +384,7 @@ export async function evaluateAuthorization(
   const cached: CachedAuthorizationPolicy | null = cacheEligible
     ? getAuthorizationPolicyCache(cacheKey)
     : null;
-  cacheLatencyMs = performance.now() - cacheStartedAt;
+  const cacheLatencyMs = performance.now() - cacheStartedAt;
 
   if (cached) {
     cacheHit = true;

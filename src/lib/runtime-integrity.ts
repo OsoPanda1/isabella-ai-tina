@@ -7,6 +7,7 @@
  * - Cryptographic self-tests
  * - Integrity posture scoring
  */
+import { createHash } from "node:crypto";
 import { config } from "./config";
 
 export interface RuntimeIntegrityReport {
@@ -23,6 +24,14 @@ export interface RuntimeIntegrityReport {
   };
 }
 
+/** Minimum Node major declared by .nvmrc (24.11.0) / engines ("24.x"). */
+const MIN_NODE_MAJOR = 24;
+
+function isNodeEngineCompatible(version: string): boolean {
+  const major = Number.parseInt(version.replace(/^v/, "").split(".")[0] ?? "", 10);
+  return Number.isInteger(major) && major >= MIN_NODE_MAJOR;
+}
+
 export function checkRuntimeIntegrity(): RuntimeIntegrityReport {
   const cfg = config();
   const runtimeMode = cfg.ISABELLA_RUNTIME_MODE;
@@ -30,10 +39,11 @@ export function checkRuntimeIntegrity(): RuntimeIntegrityReport {
   const memoryUsageMb = Math.round(memory.heapUsed / 1024 / 1024);
   const nodeVersion = process.version;
 
-  // Verify basic crypto readiness
-  let cryptoHealthy = false;
+  // ESM-safe crypto self-test: createHash comes from the static node:crypto
+  // import above, so the probe still runs when this module is loaded as ESM
+  // (a runtime `require()` would throw there and falsely report cryptoHealthy=false).
+  let cryptoHealthy: boolean;
   try {
-    const { createHash } = require("node:crypto");
     const testHash = createHash("sha256").update("integrity_probe").digest("hex");
     cryptoHealthy = testHash.length === 64;
   } catch {
@@ -41,7 +51,11 @@ export function checkRuntimeIntegrity(): RuntimeIntegrityReport {
   }
 
   const memoryHealthy = memoryUsageMb < 1536; // Under 1.5 GB limit
-  const nodeEngineCompatible = true;
+  // Minimum engine declared by this repo, not an optimistic constant:
+  // package.json engines.node = "24.x", .nvmrc = 24.11.0,
+  // .github/workflows NODE_VERSION = "24.11.0".
+  // Compared as a major floor, so Node 25+ stays compatible (no exact-24 block).
+  const nodeEngineCompatible = isNodeEngineCompatible(nodeVersion);
 
   return {
     ok: cryptoHealthy && memoryHealthy && nodeEngineCompatible,

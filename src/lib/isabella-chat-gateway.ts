@@ -471,9 +471,9 @@ export async function handleIsabellaChat(
   void requestContext;
   // Provider contracts: GEMINI_API_KEY, GROQ_API_KEY, XAI_API_KEY
   const providerKeys = {
-    gemini: secrets.optionalProviderKey("gemini"),
-    groq: secrets.optionalProviderKey("groq"),
-    xai: secrets.optionalProviderKey("xai"),
+    gemini: secrets.getOptional("GEMINI_API_KEY"),
+    groq: secrets.getOptional("GROQ_API_KEY"),
+    xai: secrets.getOptional("XAI_API_KEY"),
   };
   const serverSystem = [
     "Eres Isabella Villaseñor AI, interfaz cognitiva soberana del Nodo Cero.",
@@ -860,7 +860,7 @@ export async function handleIsabellaChat(
       ) {
         // Skip gateway when no direct provider keys — go directly to sovereign fallback
         // (AI_GATEWAY es opcional; se resuelve vía secrets/config validada por Zod)
-        const gwKey = secrets.optionalProviderKey("ai-gateway");
+        const gwKey = secrets.getOptional("AI_GATEWAY_API_KEY");
         if (!gwKey) continue;
       }
       const isGemini = attempt.provider === "gemini";

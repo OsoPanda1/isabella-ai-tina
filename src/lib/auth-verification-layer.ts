@@ -530,18 +530,24 @@ class AuthVerificationLayerImpl {
 
     try {
       await this.auditRepo.append({
-        traceId: params.traceId,
-        correlationId: params.correlationId,
-        actorIp: params.actorIp,
+        tenant_id: "unknown",
+        timestamp: new Date().toISOString(),
+        trace_id: params.traceId,
+        correlation_id: params.correlationId,
+        actor: "unknown",
+        actor_ip: params.actorIp,
+        action: eventName,
+        resource: "auth-token",
         event: eventName,
         severity: params.severity,
-        details: JSON.stringify({
+        result: "denied",
+        details: {
           error: params.error,
           reasonCode: params.reasonCode,
           spoofingAttempt: params.spoofingAttempt,
+          remediated: true, // Bloqueado activamente por la capa de verificación
           timestamp: new Date().toISOString(),
-        }),
-        remediated: true, // Bloqueado activamente por la capa de verificación
+        },
       });
     } catch (err) {
       console.error("[AuthVerificationLayer] Error al persistir evento de auditoría:", err);
@@ -602,20 +608,26 @@ class AuthVerificationLayerImpl {
 
     try {
       await this.auditRepo.append({
-        traceId: params.traceId,
-        correlationId: params.correlationId,
-        actorIp: params.actorIp,
+        tenant_id: claims.tenantId,
+        timestamp: new Date().toISOString(),
+        trace_id: params.traceId,
+        correlation_id: params.correlationId,
+        actor: claims.sub,
+        actor_ip: params.actorIp,
+        action: `AUTH_SUCCESS_${params.provider.toUpperCase()}`,
+        resource: "auth-token",
         event: `AUTH_SUCCESS_${params.provider.toUpperCase()}`,
         severity: "S3",
-        details: JSON.stringify({
+        result: "success",
+        details: {
           provider: params.provider,
           sub: claims.sub,
           tenantId: claims.tenantId,
           role: claims.role,
           scope: claims.scope,
           jti: claims.jti,
-        }),
-        remediated: false,
+          remediated: false,
+        },
       });
     } catch (err) {
       console.error("[AuthVerificationLayer] Error al persistir evento de éxito:", err);

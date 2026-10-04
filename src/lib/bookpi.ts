@@ -12,7 +12,7 @@
  */
 
 import {
-  createBookpiRepository,
+  createBookpiJsonRepository,
   type BlockPIBlock,
   type BookpiRepository,
   type LedgerCategory,
@@ -35,7 +35,7 @@ export interface BookpiRefundRequest {
 /**
  * Crea el motor BookPI con un repositorio inyectable (para test/aislamiento).
  */
-export function createBookpiEngine(repository: BookpiRepository = createBookpiRepository()) {
+export function createBookpiEngine(repository: BookpiRepository = createBookpiJsonRepository()) {
   return {
     list(tenantId: string): BlockPIBlock[] {
       return repository.list(tenantId);

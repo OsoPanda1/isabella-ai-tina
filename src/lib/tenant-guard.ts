@@ -21,19 +21,15 @@ export function assertTenantIsolation(
     return; // Same tenant
   }
 
-  // Only SovereignOwner or system role may perform cross-tenant operations
-  if (
-    principal.role === "SovereignOwner" ||
-    principal.roles.includes("SovereignOwner") ||
-    principal.role === "system" ||
-    principal.roles.includes("system")
-  ) {
+  // Only SovereignOwner or System role may perform cross-tenant operations
+  // (PrincipalContext expone un único `role` canónico; no existe `roles` ni `sub`).
+  if (principal.role === "SovereignOwner" || principal.role === "System") {
     return;
   }
 
   throw new SecurityError(
     "TENANT_ISOLATION_VIOLATION",
-    `Principal ${principal.sub} from tenant '${principal.tenantId}' is forbidden from ${operation} on tenant '${resourceTenantId}'.`,
+    `Principal ${principal.userId} from tenant '${principal.tenantId}' is forbidden from ${operation} on tenant '${resourceTenantId}'.`,
     403,
   );
 }

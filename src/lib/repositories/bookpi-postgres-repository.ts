@@ -6,7 +6,6 @@
  */
 import { createHash } from "node:crypto";
 import { canonicalize } from "../igds/canonical";
-import { getPgPool } from "../persistence/postgres";
 
 export interface BookPiBlock {
   index: number;
@@ -73,9 +72,7 @@ class InMemoryBookPiRepository implements BookPiRepository {
       nonce,
     };
 
-    const block_hash = createHash("sha3-512")
-      .update(canonicalize(payload), "utf8")
-      .digest("hex");
+    const block_hash = createHash("sha3-512").update(canonicalize(payload), "utf8").digest("hex");
 
     const block: BookPiBlock = {
       ...payload,
@@ -93,7 +90,9 @@ class InMemoryBookPiRepository implements BookPiRepository {
     return tenantBlocks.length > 0 ? tenantBlocks[tenantBlocks.length - 1] : null;
   }
 
-  async verifyLedger(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: number }> {
+  async verifyLedger(
+    tenantId: string,
+  ): Promise<{ valid: boolean; count: number; brokenAt?: number }> {
     const tenantBlocks = this.blocks.filter((b) => b.tenant_id === tenantId);
     let previous = "GENESIS_BLOCK_HASH";
 
@@ -137,3 +136,11 @@ class InMemoryBookPiRepository implements BookPiRepository {
 
 export const bookpiPostgresRepository = new InMemoryBookPiRepository();
 export default bookpiPostgresRepository;
+
+/**
+ * Factory de la autoridad durable. Este módulo fue históricamente el hogar de
+ * `createBookpiPostgresRepository()`; la implementación vive ahora en
+ * `bookpi-postgres-runtime.ts` y se re-exporta aquí para conservar el
+ * contrato público original de este módulo.
+ */
+export { createBookpiPostgresRepository } from "./bookpi-postgres-runtime";

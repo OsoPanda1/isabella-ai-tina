@@ -486,7 +486,10 @@ export const RealtimeWaveformVisualizer: React.FC<RealtimeWaveformVisualizerProp
         ctx.beginPath();
         let x = 0;
         for (let i = 0; i < bufferLength / 2; i++) {
-          const v = analyser && hasLiveAudio ? (timeDomainData[i] - 128) / 128 : Math.sin(i * 0.09 + phase * 3) * 0.4;
+          const v =
+            analyser && hasLiveAudio
+              ? (timeDomainData[i] - 128) / 128
+              : Math.sin(i * 0.09 + phase * 3) * 0.4;
           const y = yTop - v * (h * 0.2) * gain;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
@@ -500,7 +503,10 @@ export const RealtimeWaveformVisualizer: React.FC<RealtimeWaveformVisualizerProp
         ctx.beginPath();
         x = 0;
         for (let i = bufferLength / 2; i < bufferLength; i++) {
-          const v = analyser && hasLiveAudio ? (timeDomainData[i] - 128) / 128 : Math.sin(i * 0.09 - phase * 3) * 0.4;
+          const v =
+            analyser && hasLiveAudio
+              ? (timeDomainData[i] - 128) / 128
+              : Math.sin(i * 0.09 - phase * 3) * 0.4;
           const y = yBottom - v * (h * 0.2) * gain;
           if (i === bufferLength / 2) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
@@ -742,7 +748,9 @@ export const RealtimeWaveformVisualizer: React.FC<RealtimeWaveformVisualizerProp
             <button
               type="button"
               onClick={() => setExpanded(!expanded)}
-              aria-label={expanded ? "Reducir visualizador de onda" : "Expandir visualizador de onda"}
+              aria-label={
+                expanded ? "Reducir visualizador de onda" : "Expandir visualizador de onda"
+              }
               className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all cursor-pointer"
             >
               {expanded ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}

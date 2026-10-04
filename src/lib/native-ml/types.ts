@@ -88,7 +88,6 @@ export interface FederatedRound {
   nextVersion?: string;
 }
 
-
 /** Legacy lexical classifier contract retained for compatibility. */
 export interface ClassifierResult {
   intent: string;

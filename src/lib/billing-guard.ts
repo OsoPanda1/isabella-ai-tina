@@ -47,7 +47,9 @@ const STEP_UP_FUTURE_SKEW_MS = 30_000;
 type AuthorizationResult = { ok: true } | { ok: false; reason: string };
 
 function stepUpMac(payload: string): string {
-  return createHmac("sha256", secrets.jwtSecret()).update(payload, "utf8").digest("base64url");
+  return createHmac("sha256", secrets.get("AUTH_JWT_SECRET"))
+    .update(payload, "utf8")
+    .digest("base64url");
 }
 
 function stepUpPayload(input: {

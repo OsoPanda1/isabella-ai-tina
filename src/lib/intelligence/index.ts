@@ -34,3 +34,40 @@ export { invokeIntelligence, governIntelligence };
 export * from "./contracts";
 export * from "./model-registry";
 export * from "./free-ai-federation";
+
+// TRI-HEPTA Turbo MoE — canonical surface only. The legacy helpers are re-exported
+// under explicit aliases because their original names collide with ./moe-engine
+// (createMoERoute, executeMoE, MoERoute), ./model-registry (listModels) and
+// ./observability (recordIntelligenceMetric). The unaliased names live in
+// ./tri-hepta; nothing here changes the existing MoE/router/runtime contracts.
+export { executeTriangulatedMoE, chooseTemperature, chooseTopK } from "./tri-hepta";
+export type {
+  TriHeptaRequest,
+  TriHeptaPolicyDecision,
+  TriHeptaOptions,
+  TriHeptaExecutor,
+  TriHeptaExecutionResult,
+  TriangulationResult,
+  InferenceCandidate,
+  VerificationCandidate,
+  RiskLevel,
+  EvidenceLevel,
+  ExecutionTemperature,
+  ConsensusState,
+  FinalVerdict,
+  ExpertSideEffect,
+} from "./tri-hepta";
+export {
+  createMoERoute as createTriHeptaMoERoute,
+  executeMoE as executeTriHeptaMoE,
+  listModels as listTriHeptaModels,
+  recordIntelligenceMetric as recordTriHeptaMetric,
+} from "./tri-hepta";
+export type {
+  MoERoute as TriHeptaMoERoute,
+  MoeExpertArtifact as TriHeptaMoeExpertArtifact,
+  MoeGateDecision as TriHeptaMoeGateDecision,
+  MoeTrace as TriHeptaMoeTrace,
+  MoeExecutionResult as TriHeptaMoeExecutionResult,
+  MoeRouteOptions as TriHeptaMoeRouteOptions,
+} from "./tri-hepta";

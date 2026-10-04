@@ -7,11 +7,20 @@
 import type { Request, Response } from "express";
 import { isProductionLike } from "../../lib/runtime-mode";
 import { pgHealthCheck } from "../../lib/persistence/postgres";
+import { SecuritySystem } from "../../lib/security";
+import { getTrustedClientIp } from "../../lib/trusted-client-ip";
 
 export async function handleDbRoute(req: Request, res: Response): Promise<void> {
   // Production stealth 404 gate
   if (isProductionLike()) {
     res.status(404).json({ error: "not_found" });
+    return;
+  }
+
+  // Dev-only route: still rate-limited so the admin surface cannot be sprayed.
+  const rateLimit = SecuritySystem.checkRateLimit(getTrustedClientIp(req), 30);
+  if (!rateLimit.allowed) {
+    res.status(429).json({ error: "RATE_LIMIT_EXCEEDED" });
     return;
   }
 

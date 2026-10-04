@@ -13,14 +13,14 @@ export class GeminiProvider implements IntelligenceProvider {
 
   async health(): Promise<boolean> {
     try {
-      return Boolean(secrets.aiGatewayKey());
+      return Boolean(secrets.getOptional("GEMINI_API_KEY"));
     } catch {
       return false;
     }
   }
 
   async invoke(request: IntelligenceRequest): Promise<IntelligenceResponse> {
-    const apiKey = secrets.aiGatewayKey();
+    const apiKey = secrets.get("GEMINI_API_KEY");
     const started = performance.now();
     const contents = request.messages
       .filter((m) => m.role !== "system")

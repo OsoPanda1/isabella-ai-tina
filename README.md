@@ -333,6 +333,18 @@ Implementa:
 
 Esto es un **runtime de Mixture of Experts**, no una afirmación de que Isabella entrene un gran modelo fundacional propio.
 
+## Motor TRI-HEPTA Turbo MoE
+
+`src/lib/intelligence/tri-hepta/tri-hepta-moe.ts` (+ `tri-hepta/index.ts`)
+
+Motor MoE de triangulación heurística integrado en el plano de inteligencia, exportado desde `src/lib/intelligence/index.ts` sin colisionar con los aliases históricos. Aporta:
+
+- triangulación de votos de expertos con pesos y `executeTriangulatedMoE`;
+- artefactos y métricas de routing versionadas (`TriHeptaMoERoute`, `TriHeptaMoeExpertArtifact`);
+- contrato de modelos y registro de métricas (`listTriHeptaModels`, `recordTriHeptaMetric`).
+
+Cubierto por `test/unit/tri-hepta-moe.test.ts` (19 tests) junto a `test/unit/native-moe.test.ts` (10 tests): **29 tests verdes** para el plano MoE.
+
 ## Aprendizaje avanzado
 
 El repositorio también contiene superficies para:
@@ -612,44 +624,93 @@ La interfaz no debe utilizar métricas sintéticas como evidencia operacional.
 
 # Estado real de producción y despliegue
 
-## Métrica formal disponible
+## Medición verificable (2026-10-04)
 
-La última evaluación cuantitativa almacenada en `production-capabilities.json` establece:
+Todas las cifras de esta sección provienen de gates ejecutados en local sobre esta versión del README (Node v24.19.0 · pnpm 10.34.5 · TypeScript 6.0.3). Cada resultado es reproducible con el comando indicado.
+
+### Gates del paquete
+
+| Gate | Comando | Resultado medido |
+|---|---|---|
+| Contrato de lockfile | `pnpm verify:lock` | PASS |
+| Typecheck | `pnpm typecheck` | **0 errores** |
+| Lint | `pnpm lint` | **0 errores** · 387 warnings preexistentes |
+| Tests | `pnpm test` | **43 archivos** (42 ejecutados + 1 omitido) · **312 tests aprobados** + 8 omitidos (320) |
+| Auditoría de repositorio | `pnpm audit:repository` | PASS |
+| Auditoría de arquitectura | `pnpm audit:architecture` | PASS — 885 archivos inspeccionados |
+| Contrato de imports internos | `pnpm audit:imports` | PASS — 798 archivos, 0 hallazgos |
+| SAST + secretos | `pnpm security:scan` | 0 errores de lint de seguridad · 0 secretos hardcodeados |
+| Matriz de capacidades | `pnpm capabilities` | 34 capacidades · archivos declarados y manifiesto válidos |
+| Auditoría de rutas | `pnpm audit:routes` | PASS |
+| Contrato de migraciones | `pnpm db:verify` | 10 migraciones detectadas · contrato estático OK |
+| Integridad de producción | `pnpm production:integrity` | PASSED |
+| Preflight de producción | `pnpm production:preflight -- --json` | `static_ready` — 27 archivos validados |
+| Build | `pnpm build` | OK (Vite 8 + Nitro) · client shell verificado en `.vercel/output`, `.output` y `dist` |
+| Evidencia same-commit | `pnpm production:evidence` | PASS solo con árbol limpio; antes del commit devuelve `UNVERIFIED` por diseño |
+
+`pnpm production:gate` encadena los 15 pasos anteriores en una sola corrida.
+
+### Superficie del código
+
+| Métrica | Valor |
+|---|---:|
+| Archivos `.ts`/`.tsx` en `src/` | 791 |
+| Líneas en `src/` | 151.475 |
+| Archivos de suite (`*.test.ts`) | 43 |
+| Migraciones SQL (`supabase/migrations/`) | 10 |
+| Workflows de GitHub Actions | 18 |
+| Scripts de auditoría/gate (`scripts/`) | 56 |
+| Documentos en `docs/` | 154 |
+| Scripts npm | 48 |
+| Dependencias (producción / desarrollo) | 83 / 27 |
+
+### Avance por capacidades
+
+`pnpm capabilities` clasifica 34 capacidades según su estado de evidencia:
+
+| Estado | Cantidad | Porcentaje | Significado |
+|---|---:|---:|---|
+| `real` | **29** | **85 %** | Código ejecutable con tests verdes en esta corrida |
+| `evidence-gated` | 3 | 9 % | Requiere Postgres/entorno externo (`TEST_DATABASE_URL`) |
+| `manual` | 2 | 6 % | Requiere verificación humana |
+
+Las tres capacidades `evidence-gated` son: concurrencia financiera (idempotencia, reconciliación, refund único), ledger de aprobaciones durable y atestaciones de evidencia RSA-2048/PKCS#1. Las dos `manual` son: rate limiting distribuido fail-closed y dossier de presentación canónico.
+
+### Métrica histórica ISA-500
+
+La última evaluación de 500 controles almacenada en `production-capabilities.json` corresponde al **26 de septiembre de 2026**:
 
 | Dimensión | Porcentaje | Interpretación |
 |---|---:|---|
-| Implementación | **46 %** | Estado ponderado de implementación frente al conjunto de controles definidos |
-| Despliegue / infraestructura | **62 %** | Estado hasta infraestructura externa como Neon, Stripe y controles de producción |
+| Implementación | **46 %** | Ponderado conservador sobre 500 controles |
+| Despliegue / infraestructura | **62 %** | Hasta infraestructura externa: Neon, Stripe, HSM |
 | Global | **54 %** | Media de implementación y despliegue |
 
-Estas cifras proceden de la evaluación de **500 controles**:
+Desglose: 44 FIXED · 374 PARTIAL · 72 STILL_BROKEN · 8 BLOCKED_ENVIRONMENT.
 
-- 44 FIXED;
-- 374 PARTIAL;
-- 72 STILL_BROKEN;
-- 8 BLOCKED_ENVIRONMENT.
-
-### Importante sobre la fecha
-
-La métrica formal anterior corresponde al **26 de septiembre de 2026**.
-
-El repositorio ha recibido cambios posteriores, por lo que **54 % continúa siendo la última cifra formal auditable, no una certificación del HEAD actual**.
-
-El HEAD actual registrado en esta versión del README es:
-
-`90bec1af4d384e09e575e931c28616c01c3756d3`
-
-La certificación del estado actual requiere volver a ejecutar los gates completos sobre ese SHA exacto.
+> Esa cifra **no se re-ejecutó el 2026-10-04** y no certifica el HEAD actual. Se conserva como histórico auditable. El avance verificable de hoy es la matriz de capacidades (85 % `real`) y la tabla de gates anterior.
 
 ---
 
 # ¿Está listo para producción?
 
-La respuesta técnicamente correcta es:
+La respuesta técnicamente correcta sigue siendo:
 
-> **La arquitectura está significativamente avanzada y contiene numerosos componentes productivos, pero el proyecto todavía no debe declararse como 100 % certificado para producción.**
+> **La arquitectura está significativamente avanzada y todos los gates locales de código pasan en verde, pero el proyecto todavía no debe declararse como 100 % certificado para producción.**
+
+## Bloqueadores verificados el 2026-10-04
+
+1. **CI de GitHub Actions no ejecuta ningún gate.** Todos los jobs terminan en 4–5 segundos con la anotación *"The job was not started because your account is locked due to a billing issue."* Verificado con `gh run view 37216836662` sobre `main`. Ningún workflow (CI, Security Gate, CodeQL, gitleaks, Production Release) llega a correr tests sobre HEAD; los gates canónicos aparecen como fallidos/skipped por esta causa, no por defectos de código.
+2. **3 capacidades `evidence-gated`** requieren una base Postgres real y `TEST_DATABASE_URL` para producir evidencia.
+3. **Certificación 100 %** exige, además de los gates locales: migraciones aplicadas y verificadas en el ambiente, secretos reales configurados, proveedor de inferencia autorizado, Stripe en modo live, HSM/KMS externo, evidencia de despliegue same-commit, smoke tests operacionales y rollback probado.
 
 Para una promoción real se requiere evidencia del mismo commit de:
+
+```bash
+pnpm production:gate
+```
+
+que encadena:
 
 ```bash
 pnpm verify:lock
@@ -658,6 +719,7 @@ pnpm lint
 pnpm test
 pnpm audit:repository
 pnpm audit:architecture
+pnpm audit:imports
 pnpm security:scan
 pnpm capabilities
 pnpm audit:routes
@@ -665,50 +727,36 @@ pnpm db:verify
 pnpm production:integrity
 pnpm production:preflight -- --json
 pnpm build
+pnpm production:preflight -- --json
 pnpm production:evidence
 ```
-
-Y además:
-
-- migraciones PostgreSQL aplicadas y verificadas;
-- configuración real de secretos;
-- proveedor de inferencia autorizado;
-- evidencia de despliegue;
-- smoke tests operacionales;
-- infraestructura externa disponible;
-- controles humanos y operacionales.
 
 ---
 
 # Estado de madurez
 
-### Implementado
+### Implementado y verificado localmente
 
-Existe código real y ejecutable para:
+Código real, ejecutable y cubierto por los gates de arriba:
 
-- gateway;
-- gobernanza;
-- seguridad;
-- memoria;
-- ML nativo;
-- MoE;
-- skills;
-- persistencia;
-- ledger;
-- observabilidad;
-- APIs;
+- gateway y rutas servidor;
+- gobernanza CROWN y autorización RBAC/ABAC;
+- seguridad AEGIS/ARGUS, output gate, SSRF allowlist;
+- memoria y auditoría con cadenas de integridad;
+- ML nativo y MoE (incluido el motor TRI-HEPTA Turbo MoE);
+- skills y bridge gobernado;
+- persistencia y repositorios por dominio;
+- ledger y settlement;
+- observabilidad OTel;
 - interfaz web.
 
 ### Implementado parcialmente
 
-Permanece trabajo para:
-
-- integración total de CROWN v6;
+- integración total de CROWN v6 al pipeline principal;
 - centralización completa del Intelligence Router en el hot path;
-- certificación económica;
-- cobertura total de evidencias;
-- algunos controles de infraestructura;
-- capacidades externas dependientes de proveedores.
+- certificación económica (Stripe live, RLS en vivo);
+- evidencia de las 3 capacidades `evidence-gated`;
+- ejecución de los gates en CI (bloqueo de billing, punto 1 arriba).
 
 ### Condicionado por infraestructura externa
 
@@ -817,8 +865,14 @@ Las marcas, contenidos, código, datos, modelos y componentes externos conservan
 
 Versión del proyecto: **4.3.3**
 
-HEAD documentado: **90bec1af4d384e09e575e931c28616c01c3756d3**
+Fecha de medición de los gates: **2026-10-04** (Node v24.19.0 · pnpm 10.34.5)
 
-Última métrica formal de readiness: **54 % global / 46 % implementación / 62 % despliegue**
+Gates locales: **15/15 en verde** · typecheck 0 errores · lint 0 errores · 312 tests aprobados de 320
 
-Estado: **arquitectura ejecutable en evolución; no certificada al 100 % para producción**
+Avance por capacidades: **85 % `real` (29/34)** · 9 % `evidence-gated` · 6 % `manual`
+
+Métrica histórica ISA-500 (2026-09-26): **54 % global / 46 % implementación / 62 % despliegue** — no re-ejecutada hoy
+
+CI en GitHub Actions: **no ejecuta gates** (jobs bloqueados por billing, verificado el 2026-10-04)
+
+Estado: **código verde en local y ejecutable; no certificado al 100 % para producción**

@@ -7,4 +7,5 @@ export * from "./convergence-engine";
 export * from "./federated";
 export * from "./evolved-skills-ml";
 export * from "./skill-fusion";
+export * from "./moe-native";
 export * from "../isabella/ml/reinforcement";

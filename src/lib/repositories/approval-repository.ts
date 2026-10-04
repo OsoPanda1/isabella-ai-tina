@@ -43,7 +43,10 @@ class InMemoryApprovalRepository {
     return record;
   }
 
-  async consumeApproval(id: string, consumerId: string): Promise<{ success: boolean; record?: ApprovalRecord; error?: string }> {
+  async consumeApproval(
+    id: string,
+    consumerId: string,
+  ): Promise<{ success: boolean; record?: ApprovalRecord; error?: string }> {
     const record = this.approvals.get(id);
     if (!record) {
       return { success: false, error: "APPROVAL_NOT_FOUND" };

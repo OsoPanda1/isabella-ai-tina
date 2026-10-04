@@ -151,6 +151,8 @@ export const envSchema = z
     AI_GATEWAY_API_KEY: optionalString(),
     LLM_DEFAULT_MODEL: z.string().default("google/gemini-3.1-flash"),
     VOICE_API_URL: optionalUrl(),
+    ELEVENLABS_API_KEY: optionalString(),
+    GOOGLE_TTS_API_KEY: optionalString(),
     GROQ_API_KEY: optionalString(),
     XAI_API_KEY: optionalString(),
     // Free federation is opt-in and only accepts explicitly configured, HTTPS endpoints.
@@ -1251,6 +1253,24 @@ export const ENV_VAR_CATALOG: EnvVarDescriptor[] = [
     provider: "self",
     criticality: "MEDIUM",
     description: "Endpoint del servicio de voz.",
+  },
+  {
+    name: "ELEVENLABS_API_KEY",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "self",
+    criticality: "HIGH",
+    description: "Clave del proveedor TTS ElevenLabs (solo server-side).",
+  },
+  {
+    name: "GOOGLE_TTS_API_KEY",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "self",
+    criticality: "HIGH",
+    description: "Clave del proveedor TTS de Google (solo server-side).",
   },
 ];
 

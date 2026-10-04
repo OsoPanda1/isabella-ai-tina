@@ -86,7 +86,6 @@ export function classifyTextRisk(input: string, hooks: NativeMLHooks = {}): Text
   return signal;
 }
 
-
 /**
  * Backward-compatible intent classifier retained for existing UI and integrations.
  * The governed risk classifier above remains the security signal.

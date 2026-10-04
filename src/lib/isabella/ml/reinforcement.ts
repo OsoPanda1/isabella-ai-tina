@@ -90,10 +90,15 @@ function canonicalize(value: unknown): string {
     return JSON.stringify(value);
   }
   if (typeof value === "boolean") return value ? "true" : "false";
-  if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
+  if (Array.isArray(value)) {
+    // JSON.stringify convierte `undefined` dentro de un arreglo en `null`.
+    return `[${value.map((item) => canonicalize(item === undefined ? null : item)).join(",")}]`;
+  }
   if (typeof value === "object") {
     const object = value as Record<string, unknown>;
-    const keys = Object.keys(object).sort();
+    const keys = Object.keys(object)
+      .filter((key) => object[key] !== undefined)
+      .sort();
     return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalize(object[key])}`).join(",")}}`;
   }
   throw new Error("unsupported_value_in_evaluation");
