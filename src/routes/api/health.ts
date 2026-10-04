@@ -13,5 +13,5 @@ if (!server) throw new Error("Ruta servidora sin handlers.");
 const handlers = server.handlers as unknown as Handlers;
 
 export const Route = createFileRoute("/api/health")({
-  server: { handlers: { GET: (context) => handlers.GET(context) } },
+  server: { handlers: { GET: (context: IsabellaRouteContext) => handlers.GET(context) } },
 });

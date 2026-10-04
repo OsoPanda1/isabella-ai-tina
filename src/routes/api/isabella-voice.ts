@@ -13,5 +13,5 @@ if (!server) throw new Error("Ruta servidora sin handlers.");
 const handlers = server.handlers as unknown as Handlers;
 
 export const Route = createFileRoute("/api/isabella-voice")({
-  server: { handlers: { POST: (context) => handlers.POST(context) } },
+  server: { handlers: { POST: (context: IsabellaRouteContext) => handlers.POST(context) } },
 });

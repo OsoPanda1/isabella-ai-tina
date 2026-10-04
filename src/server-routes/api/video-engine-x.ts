@@ -51,7 +51,7 @@ const exportC2PASchema = z.object({
 export const Route = createFileRoute("/api/video-engine-x")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: IsabellaRouteContext) => {
         const rateResponse = videoXRateLimit(request);
         if (rateResponse) return rateResponse;
         // Autorización ANTES de cualquier acción (incluye el listado por
@@ -136,7 +136,7 @@ export const Route = createFileRoute("/api/video-engine-x")({
         });
       },
 
-      POST: async ({ request }) => {
+      POST: async ({ request }: IsabellaRouteContext) => {
         const rateResponse = videoXRateLimit(request);
         if (rateResponse) return rateResponse;
         const authResult = await PrincipalContext.authorize(request, "isabella:tools");

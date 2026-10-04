@@ -7,5 +7,5 @@ if (!server) throw new Error("Ruta ncua-load sin handlers.");
 const handlers = server.handlers as unknown as Handlers;
 
 export const Route = createFileRoute("/api/ncua-load")({
-  server: { handlers: { POST: (context) => handlers.POST(context) } },
+  server: { handlers: { POST: (context: IsabellaRouteContext) => handlers.POST(context) } },
 });

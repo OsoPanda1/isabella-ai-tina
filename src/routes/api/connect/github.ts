@@ -4,14 +4,14 @@ import { start, status } from "@/server-routes/api/connect";
 export const Route = createFileRoute("/api/connect/github")({
   server: {
     handlers: {
-      GET: ({ request }) =>
+      GET: ({ request }: IsabellaRouteContext) =>
         start({
           request: new Request(
             `${request.url}${request.url.includes("?") ? "&" : "?"}provider=github`,
             request,
           ),
         }),
-      POST: ({ request }) =>
+      POST: ({ request }: IsabellaRouteContext) =>
         status({
           request: new Request(
             `${request.url}${request.url.includes("?") ? "&" : "?"}provider=github`,

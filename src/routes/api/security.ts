@@ -16,7 +16,7 @@ const handlers = server.handlers as unknown as ServerHandlers;
 export const Route = createFileRoute("/api/security")({
   server: {
     handlers: {
-      POST: ({ request }) => handlers.POST({ request }),
+      POST: ({ request }: IsabellaRouteContext) => handlers.POST({ request }),
     },
   },
 });

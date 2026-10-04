@@ -16,8 +16,8 @@ const handlers = server.handlers as unknown as Handlers;
 export const Route = createFileRoute("/api/billing")({
   server: {
     handlers: {
-      GET: (context) => handlers.GET(context),
-      POST: (context) => handlers.POST(context),
+      GET: (context: IsabellaRouteContext) => handlers.GET(context),
+      POST: (context: IsabellaRouteContext) => handlers.POST(context),
     },
   },
 });

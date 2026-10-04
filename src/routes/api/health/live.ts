@@ -18,5 +18,5 @@ const loadHandler = (context: unknown): Promise<Response> => {
 };
 
 export const Route = createFileRoute("/api/health/live")({
-  server: { handlers: { GET: (context) => loadHandler(context) } },
+  server: { handlers: { GET: (context: IsabellaRouteContext) => loadHandler(context) } },
 });

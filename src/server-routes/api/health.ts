@@ -7,7 +7,7 @@ type HealthCheck = { ok: boolean; latencyMs?: number; error?: string };
 export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: IsabellaRouteContext) => {
         const url = new URL(request.url);
         const path = url.pathname;
         const stage = url.searchParams.get("stage");

@@ -11,7 +11,7 @@ const handlers = server.handlers as unknown as Handlers;
 export const Route = createFileRoute("/api/v1/quantum/telemetry")({
   server: {
     handlers: {
-      GET: (context) => handlers.GET(context),
+      GET: (context: IsabellaRouteContext) => handlers.GET(context),
     },
   },
 });

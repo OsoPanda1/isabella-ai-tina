@@ -83,7 +83,7 @@ async function readAllListings(): Promise<MarketplaceListing[]> {
 export const Route = createFileRoute("/api/billing")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: IsabellaRouteContext) => {
         const url = new URL(request.url);
         const action = url.searchParams.get("action") || "credits";
 
@@ -268,7 +268,7 @@ export const Route = createFileRoute("/api/billing")({
         });
       },
 
-      POST: async ({ request }) => {
+      POST: async ({ request }: IsabellaRouteContext) => {
         const url = new URL(request.url);
         const action = url.searchParams.get("action");
 

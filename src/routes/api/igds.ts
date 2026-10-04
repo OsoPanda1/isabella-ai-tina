@@ -14,8 +14,8 @@ const handlers = server.handlers as unknown as Handlers;
 export const Route = createFileRoute("/api/igds")({
   server: {
     handlers: {
-      GET: (context) => handlers.GET(context),
-      POST: (context) => handlers.POST(context),
+      GET: (context: IsabellaRouteContext) => handlers.GET(context),
+      POST: (context: IsabellaRouteContext) => handlers.POST(context),
     },
   },
 });

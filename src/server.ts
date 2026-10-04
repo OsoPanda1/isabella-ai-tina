@@ -63,7 +63,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       `HTTP ${request.method} ${url.pathname}`,
       async () => {
         try {
-          const response = await handler.fetch(sanitizedRequest);
+          const response = await handler.fetch(sanitizedRequest, {});
 
           recordMetric({
             name: "http.server.requests",

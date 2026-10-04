@@ -7,5 +7,5 @@ if (!server) throw new Error("Ruta observability sin handlers.");
 const handlers = server.handlers as unknown as Handlers;
 
 export const Route = createFileRoute("/api/observability")({
-  server: { handlers: { GET: (context) => handlers.GET(context) } },
+  server: { handlers: { GET: (context: IsabellaRouteContext) => handlers.GET(context) } },
 });

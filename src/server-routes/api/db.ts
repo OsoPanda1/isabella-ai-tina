@@ -126,7 +126,7 @@ function auditAccessAttempt(
 export const Route = createFileRoute("/api/db")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: IsabellaRouteContext) => {
         const url = new URL(request.url);
         const action = url.searchParams.get("action") || "session";
 
@@ -694,7 +694,7 @@ export const Route = createFileRoute("/api/db")({
         });
       },
 
-      POST: async ({ request }) => {
+      POST: async ({ request }: IsabellaRouteContext) => {
         const ip = SecuritySystem.resolveClientIp(request);
         const url = new URL(request.url);
         const action = url.searchParams.get("action");

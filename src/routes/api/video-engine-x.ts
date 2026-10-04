@@ -14,8 +14,8 @@ const handlers = server.handlers as unknown as ServerHandlers;
 export const Route = createFileRoute("/api/video-engine-x")({
   server: {
     handlers: {
-      GET: ({ request }) => handlers.GET({ request }),
-      POST: ({ request }) => handlers.POST({ request }),
+      GET: ({ request }: IsabellaRouteContext) => handlers.GET({ request }),
+      POST: ({ request }: IsabellaRouteContext) => handlers.POST({ request }),
     },
   },
 });

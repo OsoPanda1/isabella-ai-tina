@@ -9,7 +9,7 @@ const handlers = server.handlers as unknown as Handlers;
 export const Route = createFileRoute("/api/v1/api-keys/rotate")({
   server: {
     handlers: {
-      POST: (context) => handlers.POST(context),
+      POST: (context: IsabellaRouteContext) => handlers.POST(context),
     },
   },
 });

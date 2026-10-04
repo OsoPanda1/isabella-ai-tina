@@ -7,5 +7,5 @@ if (!server) throw new Error("Ruta images/generate sin handlers.");
 const handlers = server.handlers as unknown as Handlers;
 
 export const Route = createFileRoute("/api/v1/images/generate")({
-  server: { handlers: { POST: (context) => handlers.POST(context) } },
+  server: { handlers: { POST: (context: IsabellaRouteContext) => handlers.POST(context) } },
 });

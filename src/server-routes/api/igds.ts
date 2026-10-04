@@ -93,7 +93,7 @@ const revokeSchema = z.object({
 export const Route = createFileRoute("/api/igds")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: IsabellaRouteContext) => {
         const url = new URL(request.url);
         const action = url.searchParams.get("action") ?? "entries";
         const headers = SecuritySystem.injectSecureHeaders(
@@ -136,7 +136,7 @@ export const Route = createFileRoute("/api/igds")({
         return json({ error: "Acción GET desconocida." }, 400, headers);
       },
 
-      POST: async ({ request }) => {
+      POST: async ({ request }: IsabellaRouteContext) => {
         const url = new URL(request.url);
         const action = url.searchParams.get("action");
         const headers = SecuritySystem.injectSecureHeaders(

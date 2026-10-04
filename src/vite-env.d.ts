@@ -5,6 +5,11 @@ declare module "*.mp3" {
   export default source;
 }
 
+interface IsabellaRouteContext {
+  request: Request;
+  params?: Record<string, string>;
+}
+
 declare module "@tanstack/router-core" {
   interface IsabellaServerHandlerContext {
     request: Request;
