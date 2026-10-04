@@ -6,6 +6,7 @@ import { runWithIdentity } from "./identity-context";
 import { resolveTrustedClientIp } from "./trusted-client-ip";
 import { parseSafeJsonBody } from "./input-limits";
 import { config } from "./config";
+import { buildAuthorizationDynamicContext } from "./authorization-context";
 
 export class ApiGateway {
   public static async handle<T>(
@@ -40,6 +41,11 @@ export class ApiGateway {
     const { context } = authResult;
     const clientIp = resolveTrustedClientIp(request);
 
+    const dynamicAuthorizationContext = buildAuthorizationDynamicContext(
+      request,
+      context.tenantId,
+      context.userId,
+    );
     const authReq: AuthorizationContext = {
       tenant_id: context.tenantId,
       subject_id: context.userId,
@@ -51,6 +57,7 @@ export class ApiGateway {
         ip_address: clientIp,
         user_agent: request.headers.get("user-agent") ?? "unknown",
         timestamp: new Date(),
+        ...dynamicAuthorizationContext,
       },
     };
 
@@ -60,6 +67,8 @@ export class ApiGateway {
         JSON.stringify({
           error: "Acceso Denegado: Privilegios insuficientes para la operación.",
           traceId: context.traceId,
+          decisionId: decisionResult.decision_id,
+          anomalyScore: decisionResult.anomaly_score ?? 0,
         }),
         { status: 403, headers },
       );

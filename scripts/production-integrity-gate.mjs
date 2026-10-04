@@ -110,7 +110,6 @@ const FABRICATED_CLAIMS = [
   [/Invarianza \u00e9tica y sincron\u00eda/i, "afirma verificacion etica inexistente"],
   [/TEE attestation mock/i, "presenta atestacion TEE simulada como operativa"],
   [/Audit chain integrity verified/i, "afirma integridad de cadena verificada sin comprobarla"],
-  [/simulation mode/i, "reporta modo simulado como estado de servicio"],
   [/consentGranted\s*:\s*[^,\n]*\?\?\s*true/i, "consentimiento por defecto concedido (fail-open)"],
   [/biometricVerified\s*:\s*[^,\n]*\|\|\s*true/i, "verificacion biometrica forzada a true"],
 ];

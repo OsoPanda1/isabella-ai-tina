@@ -93,7 +93,7 @@ export interface SettlementSteps {
 async function defaultSteps(): Promise<SettlementSteps> {
   const economic = await import("./economic-events");
   const { createBookpiPostgresRepository } =
-    await import("./repositories/bookpi-postgres-repository");
+    await import("./repositories/bookpi-postgres-runtime");
   const { createAuditRepository } = await import("./repositories/audit-repository");
   const { PostgresAccountingRepository } =
     await import("./accounting/accounting-postgres-repository");

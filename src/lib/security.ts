@@ -19,6 +19,10 @@ export interface TokenClaims {
   jti?: string;
   role?: string;
   tenant_id?: string;
+  /** Canonical normalized tenant claim produced by auth-verification-layer. */
+  tenantId?: string;
+  /** Canonical normalized scope string produced by auth-verification-layer. */
+  scope?: string;
   scopes?: string[];
   [key: string]: unknown;
 }

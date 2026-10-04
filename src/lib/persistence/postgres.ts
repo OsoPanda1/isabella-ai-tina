@@ -5,21 +5,26 @@
  * for PostgreSQL / Neon / Supabase database authorities.
  */
 import pg from "pg";
+import { config } from "../config";
 
 let pool: pg.Pool | null = null;
 
 export function getPgPool(): pg.Pool | null {
   if (pool) return pool;
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = config().DATABASE_URL;
   if (!connectionString) return null;
 
   try {
     pool = new pg.Pool({
       connectionString,
-      ssl: connectionString.includes("sslmode=require") || connectionString.includes("neon.tech") || connectionString.includes("supabase.co")
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl:
+        connectionString.includes("sslmode=require") ||
+        connectionString.includes("neon.tech") ||
+        connectionString.includes("supabase.co")
+          ? { rejectUnauthorized: true }
+          : undefined,
       max: 10,
+      connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
     });
     return pool;

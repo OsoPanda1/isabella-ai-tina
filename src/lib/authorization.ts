@@ -5,6 +5,18 @@ import { permissionFor, RESOURCES, ACTIONS, type Resource, type Action } from ".
 import { evaluateAbac, type AttributeContext } from "./abac";
 import { canonicalize } from "./igds/canonical";
 import { isProductionLike, resolveRuntimeMode } from "./runtime-mode";
+import {
+  createUuidV7,
+  type AuthorizationDynamicContext,
+} from "./authorization-context";
+import {
+  getAuthorizationPolicyCache,
+  setAuthorizationPolicyCache,
+  authorizationPolicyCacheKey,
+  type CachedAuthorizationPolicy,
+} from "./authorization-policy-cache";
+import { recordAuthorizationObservation } from "./authorization-observability";
+import { recordAuthorizationOutcome } from "./authorization-context";
 
 /**
  * C.R.O.W.N. / A.R.G.U.S. - PDP (Policy Decision Point)
@@ -35,6 +47,9 @@ export interface AuthorizationDecision {
   signature: string;
   signature_chain: string;
   previous_decision_hash: string;
+  context?: AuthorizationDynamicContext;
+  anomaly_score?: number;
+  cache_hit?: boolean;
 }
 
 export interface AuthorizationContext {
@@ -59,9 +74,12 @@ export interface AuthorizationContext {
     ip_address: string;
     user_agent: string;
     timestamp: Date;
-    geo_ip?: string;
+    geo_ip?: AuthorizationDynamicContext["geo_ip"];
     device_fingerprint?: string;
     behavior_score?: number;
+    threat_intel?: AuthorizationDynamicContext["threat_intel"];
+    geo_mismatch?: boolean;
+    device_changed?: boolean;
   };
 }
 
@@ -76,8 +94,43 @@ class CryptoManager {
   private publicKey: KeyObject;
   private keyId: string;
 
-  // En memoria solo como cache L1; fuente de verdad es Postgres `hsm_signature_chain` (ver `getAndAdvanceChainDurable`)
+  // En memoria solo como cache L1; fuente de verdad es Postgres `hsm_signature_chain`.
   private signatureChainState = new Map<string, string>(); // tenant_id -> last_hash (cache)
+
+  // Reutiliza la conexión durante la vida de la instancia del runtime para
+  // evitar crear/cerrar un Pool por cada decisión de autorización.
+  private durablePool: import("pg").Pool | null = null;
+  private durablePoolUrl: string | null = null;
+
+  private async getDurablePool(databaseUrl: string): Promise<import("pg").Pool> {
+    if (this.durablePool && this.durablePoolUrl === databaseUrl) {
+      return this.durablePool;
+    }
+
+    if (this.durablePool) {
+      await this.durablePool.end().catch(() => undefined);
+      this.durablePool = null;
+      this.durablePoolUrl = null;
+    }
+
+    const { Pool } = await import("pg");
+    this.durablePool = new Pool({
+      connectionString: databaseUrl,
+      max: 4,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
+      statement_timeout: 15_000,
+    });
+    this.durablePoolUrl = databaseUrl;
+    return this.durablePool;
+  }
+
+  public async closeDurablePool(): Promise<void> {
+    const pool = this.durablePool;
+    this.durablePool = null;
+    this.durablePoolUrl = null;
+    if (pool) await pool.end().catch(() => undefined);
+  }
 
   constructor() {
     const { privateKey, publicKey } = generateKeyPairSync("ec", {
@@ -177,7 +230,6 @@ class CryptoManager {
       return this.getAndAdvanceChain(tenantId, newDecisionHash, newSignature);
     }
     const { createHash: createHash2 } = await import("node:crypto");
-    let pool: import("pg").Pool | null = null;
     let release: (() => void) | null = null;
     try {
       const { config } = await import("./config");
@@ -187,9 +239,8 @@ class CryptoManager {
           "DATABASE_URL ausente: la cadena durable de firmas no existe en este runtime productivo.",
         );
       }
-      const { Pool } = await import("pg");
-      pool = new Pool({ connectionString: cfg.DATABASE_URL, max: 1 });
-      const client = await pool.connect();
+      const durablePool = await this.getDurablePool(cfg.DATABASE_URL);
+      const client = await durablePool.connect();
       release = () => client.release();
       await client.query("BEGIN");
       const lockId = createHash2("sha256").update(tenantId).digest().readInt32BE(0);
@@ -229,7 +280,6 @@ class CryptoManager {
       );
     } finally {
       release?.();
-      if (pool) await pool.end().catch(() => {});
     }
   }
 
@@ -283,82 +333,169 @@ export const authorizationCrypto = hsm;
 export async function evaluateAuthorization(
   ctx: AuthorizationContext,
 ): Promise<AuthorizationDecision> {
-  const decisionId = `dec_${randomUUID().replace(/-/g, "")}`;
+  const startedAt = performance.now();
+  const decisionId = `dec_${createUuidV7()}`;
   const now = new Date();
+  const policyVersion = "v4.1.0-native-context";
 
+  const dynamicContext: AuthorizationDynamicContext = {
+    ...(ctx.context.geo_ip ? { geo_ip: ctx.context.geo_ip } : {}),
+    ...(ctx.context.device_fingerprint
+      ? { device_fingerprint: ctx.context.device_fingerprint }
+      : {}),
+    ...(ctx.context.behavior_score !== undefined
+      ? { behavior_score: ctx.context.behavior_score }
+      : {}),
+    ...(ctx.context.threat_intel ? { threat_intel: ctx.context.threat_intel } : {}),
+    ...(ctx.context.geo_mismatch ? { geo_mismatch: true } : {}),
+    ...(ctx.context.device_changed ? { device_changed: true } : {}),
+  };
+
+  const dynamicRisk = Math.min(
+    100,
+    Math.max(
+      0,
+      Math.max(
+        dynamicContext.behavior_score ?? 0,
+        dynamicContext.threat_intel?.riskScore ?? 0,
+        dynamicContext.device_changed ? 20 : 0,
+        dynamicContext.geo_mismatch ? 15 : 0,
+      ),
+    ),
+  );
+  const cacheEligible = !["delete", "transfer", "publish", "administer"].includes(ctx.action);
+  const cacheKey = authorizationPolicyCacheKey({
+    tenantId: ctx.tenant_id,
+    subjectId: ctx.subject_id,
+    action: ctx.action,
+    resource: ctx.resource,
+    role: ctx.role,
+    authenticated: ctx.authenticated === true,
+    resourceTenantId: ctx.resource_tenant_id,
+    resourceOwner: ctx.resource_owner,
+    policyVersion,
+    dynamicContext,
+  });
+
+  let cacheHit = false;
+  let cacheLatencyMs = 0;
+  let policyLatencyMs = 0;
   let allow = false;
-  const obligations: string[] = [];
+  let obligations: string[] = [];
   let denyReason = "deny-by-default";
 
-  // Etapa 0: identidad mínima demostrable.
-  if (!ctx.subject_id || !ctx.tenant_id) {
-    denyReason = "missing-identity";
-  } else if (ctx.context.behavior_score !== undefined && ctx.context.behavior_score > 80) {
-    // Etapa 1: anomalía de comportamiento bloquea (fail-closed).
-    denyReason = "behavior-anomaly";
-  } else if (ctx.role === undefined || !ROLES.includes(ctx.role as Role)) {
-    // Etapa 2: rol desconocido o ausente → deny (nunca allow implícito).
-    denyReason = "unknown-role";
+  const cacheStartedAt = performance.now();
+  const cached: CachedAuthorizationPolicy | null = cacheEligible
+    ? getAuthorizationPolicyCache(cacheKey)
+    : null;
+  cacheLatencyMs = performance.now() - cacheStartedAt;
+
+  if (cached) {
+    cacheHit = true;
+    allow = cached.allow;
+    obligations = [...cached.obligations];
+    denyReason = cached.denyReason ?? (allow ? "" : "cached-deny");
   } else {
-    // Etapa 3: normalizar (recurso, acción) a la matriz canónica.
-    // Los skills (`skill:<id>`) y herramientas (`tool:<id>`) requieren tool:execute.
-    let resource: Resource | null = null;
-    let action: Action | null = null;
-    if (ctx.resource.startsWith("skill:") || ctx.resource.startsWith("tool:")) {
-      resource = "tool";
-      action = "execute";
+    const policyStartedAt = performance.now();
+
+    // Etapa 0: identidad mínima demostrable.
+    if (!ctx.subject_id || !ctx.tenant_id) {
+      denyReason = "missing-identity";
     } else if (
-      (RESOURCES as readonly string[]).includes(ctx.resource) &&
-      (ACTIONS as readonly string[]).includes(ctx.action)
+      ctx.context.behavior_score !== undefined &&
+      (!Number.isFinite(ctx.context.behavior_score) ||
+        ctx.context.behavior_score < 0 ||
+        ctx.context.behavior_score > 100)
     ) {
-      resource = ctx.resource as Resource;
-      action = ctx.action as Action;
-    }
-    if (resource === null || action === null) {
-      denyReason = "unknown-operation";
+      denyReason = "invalid-behavior-score";
+    } else if (ctx.context.behavior_score !== undefined && ctx.context.behavior_score > 80) {
+      // Etapa 1: anomalía de comportamiento bloquea (fail-closed).
+      denyReason = "behavior-anomaly";
+    } else if (ctx.role === undefined || !ROLES.includes(ctx.role as Role)) {
+      // Etapa 2: rol desconocido o ausente → deny (nunca allow implícito).
+      denyReason = "unknown-role";
     } else {
-      const derived = permissionFor(resource, action);
-      if (derived.permission === null) {
-        denyReason = `forbidden-operation:${derived.reason}`;
+      // Etapa 3: normalizar (recurso, acción) a la matriz canónica.
+      // Los skills (skill:<id>) y herramientas (tool:<id>) requieren tool:execute.
+      let resource: Resource | null = null;
+      let action: Action | null = null;
+      if (ctx.resource.startsWith("skill:") || ctx.resource.startsWith("tool:")) {
+        resource = "tool";
+        action = "execute";
+      } else if (
+        (RESOURCES as readonly string[]).includes(ctx.resource) &&
+        (ACTIONS as readonly string[]).includes(ctx.action)
+      ) {
+        resource = ctx.resource as Resource;
+        action = ctx.action as Action;
+      }
+      if (resource === null || action === null) {
+        denyReason = "unknown-operation";
       } else {
-        // Etapa 4: RBAC real contra el catálogo + herencia.
-        const rbac = checkPermission({ role: ctx.role as Role }, derived.permission);
-        if (!rbac.allowed) {
-          denyReason = `rbac-deny:${rbac.reason}`;
+        const derived = permissionFor(resource, action);
+        if (derived.permission === null) {
+          denyReason = `forbidden-operation:${derived.reason}`;
         } else {
-          // Etapa 5: ABAC real (deny-overrides) sobre atributos del request.
-          const risk =
-            ctx.context.behavior_score === undefined
-              ? 0.5
-              : Math.min(Math.max(ctx.context.behavior_score / 100, 0), 1);
-          const attr: AttributeContext = {
-            role: ctx.role as Role,
-            subjectTenant: ctx.tenant_id,
-            resource: ctx.resource,
-            action: ctx.action,
-            // Tenant del recurso: sólo se afirma si el llamador lo entrega.
-            // Si se omitiera y se rellenara con ctx.tenant_id la política
-            // territorial sería una tautología (siempre notApplied).
-            resourceTenant: ctx.resource_tenant_id ?? "",
-            resourceOwner: ctx.resource_owner ?? "",
-            subject: ctx.subject_id,
-            risk,
-            authenticated: ctx.authenticated ?? false,
-            timezone: "UTC",
-          };
-          const abac = evaluateAbac(attr);
-          if (abac.decision === "deny") {
-            denyReason = `abac-deny:${abac.policy ?? "unknown"}:${abac.reason}`;
+          // Etapa 4: RBAC real contra el catálogo + herencia.
+          const rbac = checkPermission({ role: ctx.role as Role }, derived.permission);
+          if (!rbac.allowed) {
+            denyReason = `rbac-deny:${rbac.reason}`;
           } else {
-            allow = true;
-            obligations.push("log_verbose", "pqc_signature_required");
+            // Etapa 5: ABAC real (deny-overrides) sobre atributos del request.
+            const risk =
+              ctx.context.behavior_score === undefined
+                ? 0.5
+                : Math.min(Math.max(ctx.context.behavior_score / 100, 0), 1);
+            const attr: AttributeContext = {
+              role: ctx.role as Role,
+              subjectTenant: ctx.tenant_id,
+              resource: ctx.resource,
+              action: ctx.action,
+              resourceTenant: ctx.resource_tenant_id ?? "",
+              resourceOwner: ctx.resource_owner ?? "",
+              subject: ctx.subject_id,
+              risk,
+              authenticated: ctx.authenticated ?? false,
+              timezone: "UTC",
+            };
+            const abac = evaluateAbac(attr);
+            if (abac.decision === "deny") {
+              denyReason = `abac-deny:${abac.policy ?? "unknown"}:${abac.reason}`;
+            } else {
+              allow = true;
+              obligations.push("log_verbose", "pqc_signature_required");
+            }
           }
         }
       }
     }
+
+    policyLatencyMs = performance.now() - policyStartedAt;
+
+    if (cacheEligible) {
+      setAuthorizationPolicyCache(cacheKey, {
+        tenantId: ctx.tenant_id,
+        subjectId: ctx.subject_id,
+        action: ctx.action,
+        resource: ctx.resource,
+        role: ctx.role,
+        authenticated: ctx.authenticated === true,
+        policyVersion,
+        allow,
+        obligations,
+        denyReason: allow ? null : denyReason,
+        invalidationKeys: [
+          `tenant:${ctx.tenant_id}`,
+          `subject:${ctx.subject_id}`,
+          `policy:${policyVersion}`,
+        ],
+      });
+    }
   }
 
-  if (!allow) obligations.push(`deny:${denyReason}`);
+  if (!allow && !obligations.some((value) => value.startsWith("deny:"))) {
+    obligations.push(`deny:${denyReason}`);
+  }
 
   const basePayload = {
     decision_id: decisionId,
@@ -368,17 +505,18 @@ export async function evaluateAuthorization(
     resource: ctx.resource,
     allow,
     obligations,
-    policy_version: "v4.0.0-real",
+    policy_version: policyVersion,
     issued_at: now.toISOString(),
-    expires_at: new Date(now.getTime() + 5 * 60000).toISOString(), // 5 min TTL
+    expires_at: new Date(now.getTime() + 5 * 60000).toISOString(),
+    context: dynamicContext,
+    anomaly_score: dynamicRisk,
   };
 
-  // 2. Firmar el payload principal
+  // 2. Firmar el payload principal.
   const signature = hsm.signPayload(basePayload);
 
-  // 3. Hash Chaining & Signature Chain — cadena DURABLE (Postgres). En
-  // runtime productivo no hay fallback a memoria: si la cadena no está
-  // disponible la decisión se reescribe como DENY (fail-closed, AGENTS §4.2).
+  // 3. Hash chaining & Signature Chain — cadena DURABLE (Postgres). En
+  // runtime productivo no hay fallback a memoria.
   const decisionHash = hsm.calculateHash(basePayload);
   let chain: { previousHash: string; signatureChain: string };
   try {
@@ -393,21 +531,59 @@ export async function evaluateAuthorization(
     console.error(
       `[PDP] Cadena durable de firmas no disponible; decisión convertida en DENY: ${error.message}`,
     );
+    const latencyMs = performance.now() - startedAt;
+    recordAuthorizationOutcome(ctx.tenant_id, ctx.subject_id, false);
+    recordAuthorizationObservation({
+      decisionId,
+      tenantId: ctx.tenant_id,
+      subjectId: ctx.subject_id,
+      action: ctx.action,
+      resource: ctx.resource,
+      allow: false,
+      anomalyScore: dynamicRisk,
+      cacheHit,
+      latencyMs,
+      policyLatencyMs,
+      cacheLatencyMs,
+      geoMismatch: dynamicContext.geo_mismatch === true,
+      deviceChanged: dynamicContext.device_changed === true,
+      timestamp: now.toISOString(),
+    });
     return {
       ...deniedPayload,
       signature: hsm.signPayload(deniedPayload),
       signature_chain: "unavailable:hsm-durable",
       previous_decision_hash: "unavailable:hsm-durable",
+      cache_hit: cacheHit,
     };
   }
 
-  // 4. Retornar Decisión Inmutable
   const finalDecision: AuthorizationDecision = {
     ...basePayload,
     signature,
     signature_chain: chain.signatureChain,
     previous_decision_hash: chain.previousHash,
+    cache_hit: cacheHit,
   };
+
+  const latencyMs = performance.now() - startedAt;
+  recordAuthorizationOutcome(ctx.tenant_id, ctx.subject_id, allow);
+  recordAuthorizationObservation({
+    decisionId,
+    tenantId: ctx.tenant_id,
+    subjectId: ctx.subject_id,
+    action: ctx.action,
+    resource: ctx.resource,
+    allow,
+    anomalyScore: dynamicRisk,
+    cacheHit,
+    latencyMs,
+    policyLatencyMs,
+    cacheLatencyMs,
+    geoMismatch: dynamicContext.geo_mismatch === true,
+    deviceChanged: dynamicContext.device_changed === true,
+    timestamp: now.toISOString(),
+  });
 
   return finalDecision;
 }
