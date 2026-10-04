@@ -34,3 +34,8 @@ export { invokeIntelligence, governIntelligence };
 export * from "./contracts";
 export * from "./model-registry";
 export * from "./free-ai-federation";
+export * from "./moe/contracts";
+export * from "./moe/expert-registry";
+export * from "./moe/aggregator";
+export * from "./moe/telemetry";
+export * from "./moe/policy-gate";

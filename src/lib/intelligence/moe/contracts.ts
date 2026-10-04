@@ -79,7 +79,12 @@ export function stableAuditId(requestId: string, tenantId: string): string {
 }
 
 export function isExpertEligible(expert: ExpertDescriptor, request: RoutingRequest): boolean {
-  return expert.enabled && expert.productionApproved && expert.capabilities.includes(request.modality) && riskRank(expert.riskCeiling) >= riskRank(request.risk);
+  return (
+    expert.enabled &&
+    expert.productionApproved &&
+    expert.capabilities.includes(request.modality) &&
+    riskRank(expert.riskCeiling) >= riskRank(request.risk)
+  );
 }
 
 export function createTraceEvent(
@@ -87,15 +92,24 @@ export function createTraceEvent(
   request: RoutingRequest,
   expertIds: readonly string[],
 ): MoETraceEvent {
-  return { eventType, requestId: request.requestId, tenantId: request.tenantId, auditId: stableAuditId(request.requestId, request.tenantId), expertIds, timestamp: new Date().toISOString() };
+  return {
+    eventType,
+    requestId: request.requestId,
+    tenantId: request.tenantId,
+    auditId: stableAuditId(request.requestId, request.tenantId),
+    expertIds,
+    timestamp: new Date().toISOString(),
+  };
 }
 
 export function assertRoutingRequest(request: RoutingRequest): void {
-  if (!request.requestId || !request.tenantId || !request.actorId) throw new Error("moe_request_identity_required");
+  if (!request.requestId || !request.tenantId || !request.actorId)
+    throw new Error("moe_request_identity_required");
 }
 
 export function assertEvidence(citation: EvidenceCitation): void {
-  if (!citation.citationId || !citation.sourceHash || !citation.knowledgeVersion || !citation.scope) throw new Error("moe_evidence_invalid");
+  if (!citation.citationId || !citation.sourceHash || !citation.knowledgeVersion || !citation.scope)
+    throw new Error("moe_evidence_invalid");
 }
 
 export type { IntelligenceRisk, Modality };
