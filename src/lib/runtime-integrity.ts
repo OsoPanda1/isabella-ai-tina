@@ -7,6 +7,7 @@
  * - Cryptographic self-tests
  * - Integrity posture scoring
  */
+import { createHash } from "node:crypto";
 import { config } from "./config";
 
 export interface RuntimeIntegrityReport {
@@ -23,6 +24,12 @@ export interface RuntimeIntegrityReport {
   };
 }
 
+function isNode24Compatible(version: string): boolean {
+  const match = /^v?(\d+)\.(\d+)\.(\d+)/.exec(version.trim());
+  if (!match) return false;
+  return Number(match[1]) === 24;
+}
+
 export function checkRuntimeIntegrity(): RuntimeIntegrityReport {
   const cfg = config();
   const runtimeMode = cfg.ISABELLA_RUNTIME_MODE;
@@ -30,18 +37,17 @@ export function checkRuntimeIntegrity(): RuntimeIntegrityReport {
   const memoryUsageMb = Math.round(memory.heapUsed / 1024 / 1024);
   const nodeVersion = process.version;
 
-  // Verify basic crypto readiness
+  // ESM-safe crypto self-test: uses an explicit node:crypto import.
   let cryptoHealthy = false;
   try {
-    const { createHash } = require("node:crypto");
     const testHash = createHash("sha256").update("integrity_probe").digest("hex");
     cryptoHealthy = testHash.length === 64;
   } catch {
     cryptoHealthy = false;
   }
 
-  const memoryHealthy = memoryUsageMb < 1536; // Under 1.5 GB limit
-  const nodeEngineCompatible = true;
+  const memoryHealthy = memoryUsageMb < 1536;
+  const nodeEngineCompatible = isNode24Compatible(nodeVersion);
 
   return {
     ok: cryptoHealthy && memoryHealthy && nodeEngineCompatible,

@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: isabella_jdr
+      MYSQL_USER: isabella_jdr
+      MYSQL_PASSWORD: local-dev-only
+      MYSQL_ROOT_PASSWORD: local-root-only
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - jdr-mysql-data:/var/lib/mysql
+
+  app:
+    build:
+      context: ./api
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      JDR_DB_URL: jdbc:mysql://mysql:3306/isabella_jdr
+      JDR_DB_USERNAME: isabella_jdr
+      JDR_DB_PASSWORD: local-dev-only
+      OIDC_ISSUER: ${OIDC_ISSUER:}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:}
+      SPRING_PROFILES_ACTIVE: local
+    ports:
+      - "8080:8080"
+
+volumes:
+  jdr-mysql-data:

@@ -1,0 +1,303 @@
+openapi: 3.1.0
+info:
+  title: Isabella-JDR API
+  version: 1.0.0
+  description: |
+    Persistence and domain service for Isabella, protected by Isabella
+    authorization. Deny-by-default, tenant derived from verified JWT, scopes
+    enforced server-side. This contract is NOT a security implementation.
+  contact:
+    name: Nodo Cero - RDM Digital Hub
+servers:
+  - url: https://api.isabella.example
+    description: Production (behind WAF/API Gateway + Isabella Authorization)
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+        errorCode:
+          type: string
+        status:
+          type: integer
+        message:
+          type: string
+        route:
+          type: string
+    CreateCharacterRequest:
+      type: object
+      required: [name, characterClass, race, level, attributes]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        characterClass:
+          type: string
+          pattern: "^[a-zA-Z0-9_-]{1,80}$"
+        race:
+          type: string
+          pattern: "^[a-zA-Z0-9_-]{1,80}$"
+        level:
+          type: integer
+          minimum: 1
+          maximum: 100
+        attributes:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+            maximum: 100
+          maxProperties: 32
+    CharacterResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        ownerSubject:
+          type: string
+        name:
+          type: string
+        characterClass:
+          type: string
+        race:
+          type: string
+        level:
+          type: integer
+        attributes:
+          type: object
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        version:
+          type: integer
+    PageResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        nextCursor:
+          type: string
+          nullable: true
+        limit:
+          type: integer
+    CreateMemoryLinkRequest:
+      type: object
+      required: [sourceId, targetId, relation, weight]
+      additionalProperties: false
+      properties:
+        sourceId:
+          type: string
+          maxLength: 64
+        targetId:
+          type: string
+          maxLength: 64
+        relation:
+          type: string
+          pattern: "^[a-zA-Z0-9_-]{1,40}$"
+        weight:
+          type: number
+          minimum: 0
+          maximum: 1
+    CreateQuantumJobRequest:
+      type: object
+      required: [provider, wires, shots, operations]
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          enum: [DEFAULT_QUBIT, LIGHTNING_QUBIT, QISKIT_AER]
+        wires:
+          type: integer
+          minimum: 1
+          maximum: 64
+        shots:
+          type: integer
+          minimum: 1
+          maximum: 8192
+        operations:
+          type: integer
+          minimum: 0
+          maximum: 2000
+        params:
+          type: object
+          maxProperties: 16
+          additionalProperties:
+            type: string
+paths:
+  /api/v1/characters:
+    get:
+      operationId: listCharacters
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Forbidden
+    post:
+      operationId: createCharacter
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCharacterRequest"
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Validation failed
+        "409":
+          description: Idempotency conflict
+        "413":
+          description: Payload too large
+  /api/v1/characters/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getCharacter
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCharacter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCharacterRequest"
+      responses:
+        "200":
+          description: OK
+        "409":
+          description: Conflict (version)
+    delete:
+      operationId: deleteCharacter
+      responses:
+        "204":
+          description: No content
+  /api/v1/memory-links:
+    get:
+      operationId: listMemoryLinks
+      responses:
+        "200":
+          description: OK
+    post:
+      operationId: createMemoryLink
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMemoryLinkRequest"
+      responses:
+        "201":
+          description: Created
+  /api/v1/rules:
+    get:
+      operationId: listRules
+      responses:
+        "200":
+          description: OK
+  /api/v1/quantum/jobs:
+    post:
+      operationId: submitQuantumJob
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuantumJobRequest"
+      responses:
+        "202":
+          description: Accepted
+        "422":
+          description: Job exceeds quota
+  /api/v1/quantum/jobs/{jobId}:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getQuantumJob
+      responses:
+        "200":
+          description: OK
+  /api/v1/audit/events:
+    get:
+      operationId: listAuditEvents
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        "200":
+          description: OK
+  /actuator/health:
+    get:
+      security: []
+      operationId: health
+      responses:
+        "200":
+          description: OK
+  /actuator/prometheus:
+    get:
+      operationId: prometheus
+      responses:
+        "200":
+          description: Metrics

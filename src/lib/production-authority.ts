@@ -65,8 +65,8 @@ export function evaluateProductionAuthorities(): ProductionAuditReport {
     },
     {
       name: "POLICY_AUTHORITY",
-      configured: true,
-      status: "ACTIVE",
+      configured: policyConfigured,
+      status: policyConfigured ? "ACTIVE" : production ? "MISSING" : "ACTIVE",
       requiredInProduction: true,
       details: "CROWN/ARGUS ejecuta evaluación determinista antes de la ejecución sensible.",
     },
@@ -126,7 +126,8 @@ export function assertProductionReady(): void {
       .join(", ");
 
     throw new Error(
-      `PRODUCTION_AUTHORITY_ABORT: System cannot start in production. Incomplete authorities: ${missingNames}`,
+      "PRODUCTION_AUTHORITY_ABORT: System cannot start in production. Incomplete authorities: " +
+        missingNames,
     );
   }
 }

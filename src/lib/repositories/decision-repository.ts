@@ -36,9 +36,8 @@ export interface DecisionRecord {
   timestamp: string;
 }
 
-class InMemoryDecisionRepository {
-  private decisions: DecisionRecord[] = [];
-  private lastHashByTenant = new Map<string, string>();
+let poolQuery: DecisionQuery | null = null;
+let poolClose: (() => Promise<void>) | null = null;
 
   async append(
     decision: Omit<DecisionRecord, "previous_hash" | "record_hash">,
@@ -52,8 +51,51 @@ class InMemoryDecisionRepository {
     return record;
   }
 
-  async getLatestHash(tenantId: string): Promise<string> {
-    return this.lastHashByTenant.get(tenantId) || "GENESIS";
+  async function append(record: DecisionRecord): Promise<void> {
+    const run = await resolveQuery(deps);
+    // Reenvío idempotente: si el registro ya está, no hay nada que corregir.
+    const duplicate = await run(
+      `SELECT 1 FROM public.isabella_decisions
+        WHERE tenant_id = $1 AND record_hash = $2
+        LIMIT 1`,
+      [record.tenantId, record.recordHash],
+    );
+    if (duplicate.rows[0]) return;
+    const expected = (await latestHash(record.tenantId)) ?? "GENESIS";
+    if (record.previousHash !== expected) {
+      throw new Error(
+        `DECISION_CHAIN_MISMATCH: previousHash ${record.previousHash} no coincide con el último record_hash ${expected}.`,
+      );
+    }
+    const { rows } = await run(
+      `INSERT INTO public.isabella_decisions
+         (id, tenant_id, actor_id, authority, capability, policy, risk, model_id,
+          input_hash, output_hash, result, previous_hash, record_hash, evidence_ids, recorded_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15)
+       ON CONFLICT (tenant_id, record_hash) DO NOTHING
+       RETURNING id`,
+      [
+        record.id,
+        record.tenantId,
+        record.actorId,
+        record.authority,
+        record.capability,
+        record.policy,
+        record.risk,
+        record.modelId ?? null,
+        record.inputHash,
+        record.outputHash,
+        record.result,
+        record.previousHash,
+        record.recordHash,
+        JSON.stringify(record.evidenceIds),
+        record.timestamp,
+      ],
+    );
+    if (!rows[0]) {
+      // Reenvío idempotente del mismo registro: no es un fallo de integridad.
+      return;
+    }
   }
 
   async verifyChain(
@@ -68,7 +110,6 @@ class InMemoryDecisionRepository {
     }
     return { valid: true, count: records.length };
   }
-}
 
 export const decisionRepository = new InMemoryDecisionRepository();
 
