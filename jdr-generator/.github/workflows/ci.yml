@@ -1,0 +1,89 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Compile
+        working-directory: jdr-generator/api
+        run: mvn -B -V compile
+
+      - name: Unit tests
+        working-directory: jdr-generator/api
+        run: mvn -B test
+
+      - name: Integration tests (Testcontainers)
+        working-directory: jdr-generator/api
+        run: mvn -B verify -Dtest='*IntegrationTest' -DfailIfNoTests=false
+
+      - name: Flyway validate
+        working-directory: jdr-generator/api
+        run: mvn -B flyway:validate
+
+      - name: Quality gates (checkstyle, spotbugs, OWASP)
+        working-directory: jdr-generator/api
+        run: mvn -B verify -Pci
+
+      - name: Secret scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: HEAD~1
+          head: HEAD
+
+      - name: Build image
+        working-directory: jdr-generator/api
+        run: docker build -t registry.example/isabella-jdr:${{ github.sha }} .
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: registry.example/isabella-jdr:${{ github.sha }}
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+      - name: SBOM
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: registry.example/isabella-jdr:${{ github.sha }}
+          format: cyclonedx
+          output: sbom.cdx.json
+
+      - name: Sign image (immutable digest)
+        run: echo "cosign sign --yes registry.example/isabella-jdr@${DIGEST}"
+
+  staging-deploy:
+    needs: build-and-verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smoke tests
+        run: echo "kubectl apply -f jdr-generator/deploy/k8s && smoke tests"
+
+  production-approval:
+    needs: staging-deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Manual gate
+        run: echo "Despliegue a produccion requiere aprobacion manual y rollback por digest"

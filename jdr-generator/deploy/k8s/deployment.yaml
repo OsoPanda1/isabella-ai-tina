@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: isabella-jdr
+  labels:
+    app: isabella-jdr
+    part-of: isabella
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: isabella-jdr
+  template:
+    metadata:
+      labels:
+        app: isabella-jdr
+        part-of: isabella
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: registry.example/isabella-jdr@sha256:REPLACE_WITH_IMMUTABLE_DIGEST
+          ports:
+            - containerPort: 8080
+          env:
+            - name: JDR_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: isabella-jdr-secrets
+                  key: db-url
+            - name: JDR_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: isabella-jdr-secrets
+                  key: db-username
+            - name: JDR_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: isabella-jdr-secrets
+                  key: db-password
+            - name: OIDC_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: isabella-jdr-secrets
+                  key: oidc-issuer
+            - name: OIDC_AUDIENCE
+              valueFrom:
+                secretKeyRef:
+                  name: isabella-jdr-secrets
+                  key: oidc-audience
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 20

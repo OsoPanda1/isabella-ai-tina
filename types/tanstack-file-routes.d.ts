@@ -73,5 +73,11 @@ declare module "@tanstack/react-router" {
       path: "/api/v1/quantum/telemetry";
       fullPath: "/api/v1/quantum/telemetry";
     };
+    "/api/v1/isabella": {
+      parentRoute: AnyRoute;
+      id: "/api/v1/isabella";
+      path: "/api/v1/isabella";
+      fullPath: "/api/v1/isabella";
+    };
   }
 }
