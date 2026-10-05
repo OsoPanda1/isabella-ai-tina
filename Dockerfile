@@ -4,7 +4,7 @@
 # node + dumb-init), HEALTHCHECK, readOnlyRootFilesystem (K8s),
 # seccomp=RuntimeDefault (K8s securityContext.seccompProfile.type), no-new-privileges.
 # Node 24 alineado con engines.node ("24.x") y con CI (NODE_VERSION 24.11.0).
-FROM node:24.11.0-alpine AS base
+FROM node:26.10.0-alpine AS base
 RUN apk add --no-cache dumb-init
 WORKDIR /app
 # Non-root user (uid 1000)
@@ -15,7 +15,7 @@ RUN corepack enable && corepack prepare pnpm@10.34.5 --activate && pnpm install 
 COPY . .
 RUN pnpm run build
 # Runtime minimal — solo artefactos de producción
-FROM node:24.11.0-alpine AS runtime
+FROM node:26.10.0-alpine AS runtime
 LABEL org.opencontainers.image.title="isabella-ai-genesis" \
       org.opencontainers.image.description="Isabella AI Genesis — federated sovereign AI (SBOM CycloneDX: ejecutar pnpm sbom en CI y adjuntarlo al release; no se embebe en la imagen)"
 RUN apk add --no-cache dumb-init && addgroup -S isabella && adduser -S isabella -G isabella
