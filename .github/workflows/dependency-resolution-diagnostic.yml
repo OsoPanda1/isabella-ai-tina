@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload diagnostic artifact
         if: always()
-        uses: actions/upload-artifact@v4 # 65462800fd760344b1a7b4382951275a0abb4808
+        uses: actions/upload-artifact@v7 # 65462800fd760344b1a7b4382951275a0abb4808
         with:
           name: dependency-resolution-${{ github.run_id }}
           path: dependency-resolution.log
