@@ -60,7 +60,7 @@ export function issueCapabilityToken(input: {
     expiresAt: now + (input.ttlMs ?? CAPABILITY_TTL_MS),
   };
   const payload = b64urlEncode(JSON.stringify(claims));
-  const mac = macFor(payload, secrets.jwtSecret()).toString("base64url");
+  const mac = macFor(payload, secrets.get("AUTH_JWT_SECRET")).toString("base64url");
   return `${PREFIX}.${payload}.${mac}`;
 }
 
@@ -88,7 +88,7 @@ export function verifyCapabilityToken(
   const [, payload, mac] = parts;
   let secret: string;
   try {
-    secret = secrets.jwtSecret();
+    secret = secrets.get("AUTH_JWT_SECRET");
   } catch {
     return { valid: false, reason: "Sin secreto de verificación." };
   }

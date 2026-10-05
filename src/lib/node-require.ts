@@ -1,22 +1,10 @@
-/**
- * Safe Node.js dynamic require abstraction for ESM/Bundler environments
- */
 import { createRequire } from "node:module";
 
-let nodeRequire: NodeRequire | null = null;
-
-export function safeRequire<T = unknown>(moduleName: string): T | null {
-  try {
-    if (!nodeRequire && typeof import.meta !== "undefined" && import.meta.url) {
-      nodeRequire = createRequire(import.meta.url);
-    }
-    if (nodeRequire) {
-      return nodeRequire(moduleName) as T;
-    }
-  } catch {
-    // Dynamic fallback
-  }
-  return null;
-}
-
-export default safeRequire;
+/**
+ * Dual-mode require for native/CJS-only modules (e.g. better-sqlite3).
+ * Works under tsx (ESM), Vercel functions, and the esbuild CJS bundle,
+ * where import.meta is an empty object and import.meta.url is undefined.
+ */
+export const nodeRequire = createRequire(
+  typeof import.meta !== "undefined" && import.meta.url ? import.meta.url : __filename,
+);

@@ -152,7 +152,7 @@ class TelemetryService {
   private readonly maxBufferSize = 500;
 
   private generateHmac(log: Omit<TelemetryLog, "signature">): string {
-    const key = secrets.jwtSecret();
+    const key = secrets.get("AUTH_JWT_SECRET");
     const payloadStr = JSON.stringify({
       t: log.timestamp,
       m: log.moduleId,

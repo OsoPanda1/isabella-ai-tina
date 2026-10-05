@@ -53,27 +53,38 @@ export interface DurableBookPiRepository {
     tokens_consumed?: number;
     status?: "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
   }): Promise<DurableBookPiBlock>;
-  batchAppend(inputs: Array<{
-    tenantId: string;
-    userId: string;
-    operation: string;
-    category?: string;
-    cost?: number;
-    tokens?: number;
-    status?: "settled" | "pending" | "refunded" | "pruned";
-  }>): Promise<{ success: boolean; error?: string; blocks: DurableBookPiLegacyBlock[] }>;
+  batchAppend(
+    inputs: Array<{
+      tenantId: string;
+      userId: string;
+      operation: string;
+      category?: string;
+      cost?: number;
+      tokens?: number;
+      status?: "settled" | "pending" | "refunded" | "pruned";
+    }>,
+  ): Promise<{ success: boolean; error?: string; blocks: DurableBookPiLegacyBlock[] }>;
   getLatestBlock(tenantId: string): Promise<DurableBookPiBlock | null>;
   listBlocks(tenantId: string, limit?: number): Promise<readonly DurableBookPiBlock[]>;
   list(tenantId: string): Promise<DurableBookPiLegacyBlock[]>;
-  query(tenantId: string, filter: {
-    category?: string;
-    userId?: string;
-    fromDate?: Date;
-    toDate?: Date;
-  }): Promise<DurableBookPiLegacyBlock[]>;
+  query(
+    tenantId: string,
+    filter: {
+      category?: string;
+      userId?: string;
+      fromDate?: Date;
+      toDate?: Date;
+    },
+  ): Promise<DurableBookPiLegacyBlock[]>;
   verifyLedger(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: number }>;
-  verifyIntegrity(tenantId: string): Promise<{ success: boolean; error?: string; corruptedIndex?: number }>;
-  refund(tenantId: string, index: number, reason?: string): Promise<{ success: boolean; error?: string }>;
+  verifyIntegrity(
+    tenantId: string,
+  ): Promise<{ success: boolean; error?: string; corruptedIndex?: number }>;
+  refund(
+    tenantId: string,
+    index: number,
+    reason?: string,
+  ): Promise<{ success: boolean; error?: string }>;
 }
 
 export interface DurableBookPiLegacyBlock {
@@ -229,9 +240,7 @@ class PostgresBookPiRuntime implements DurableBookPiRepository {
       const previousHash = latest.rows[0]?.block_hash
         ? String(latest.rows[0].block_hash)
         : GENESIS_HASH;
-      const index = latest.rows[0]?.index === undefined
-        ? 0
-        : Number(latest.rows[0].index) + 1;
+      const index = latest.rows[0]?.index === undefined ? 0 : Number(latest.rows[0].index) + 1;
 
       const payload: Omit<DurableBookPiBlock, "block_hash"> = {
         index,
@@ -326,16 +335,20 @@ class PostgresBookPiRuntime implements DurableBookPiRepository {
     return (await this.listBlocks(tenantId, MAX_LIMIT)).map(toLegacy);
   }
 
-  async query(tenantId: string, filter: {
-    category?: string;
-    userId?: string;
-    fromDate?: Date;
-    toDate?: Date;
-  }) {
+  async query(
+    tenantId: string,
+    filter: {
+      category?: string;
+      userId?: string;
+      fromDate?: Date;
+      toDate?: Date;
+    },
+  ) {
     let blocks = await this.list(tenantId);
     if (filter.category) blocks = blocks.filter((item) => item.category === filter.category);
     if (filter.userId) blocks = blocks.filter((item) => item.userId === filter.userId);
-    if (filter.fromDate) blocks = blocks.filter((item) => new Date(item.timestamp) >= filter.fromDate!);
+    if (filter.fromDate)
+      blocks = blocks.filter((item) => new Date(item.timestamp) >= filter.fromDate!);
     if (filter.toDate) blocks = blocks.filter((item) => new Date(item.timestamp) <= filter.toDate!);
     return blocks;
   }
@@ -361,7 +374,9 @@ class PostgresBookPiRuntime implements DurableBookPiRepository {
     const verification = await this.verifyLedger(tenantId);
     return {
       success: verification.valid,
-      ...(verification.valid ? {} : { error: "BOOKPI_CHAIN_INVALID", corruptedIndex: verification.brokenAt }),
+      ...(verification.valid
+        ? {}
+        : { error: "BOOKPI_CHAIN_INVALID", corruptedIndex: verification.brokenAt }),
     };
   }
 

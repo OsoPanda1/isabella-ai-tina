@@ -18,9 +18,7 @@ export interface AuthorizationObservation {
 const MAX_POINTS = 2_000;
 const observations: AuthorizationObservation[] = [];
 
-export function recordAuthorizationObservation(
-  observation: AuthorizationObservation,
-): void {
+export function recordAuthorizationObservation(observation: AuthorizationObservation): void {
   observations.push({ ...observation });
   if (observations.length > MAX_POINTS) observations.splice(0, observations.length - MAX_POINTS);
 }

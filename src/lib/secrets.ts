@@ -37,6 +37,7 @@ export function getOptionalSecret(name: string): string | null {
 export const secrets = {
   get: getSecret,
   getOptional: getOptionalSecret,
+  jwtSecret: () => getSecret("AUTH_JWT_SECRET"),
 };
 
 export default secrets;

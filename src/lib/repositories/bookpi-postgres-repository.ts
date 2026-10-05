@@ -73,9 +73,7 @@ class InMemoryBookPiRepository implements BookPiRepository {
       nonce,
     };
 
-    const block_hash = createHash("sha3-512")
-      .update(canonicalize(payload), "utf8")
-      .digest("hex");
+    const block_hash = createHash("sha3-512").update(canonicalize(payload), "utf8").digest("hex");
 
     const block: BookPiBlock = {
       ...payload,
@@ -93,7 +91,9 @@ class InMemoryBookPiRepository implements BookPiRepository {
     return tenantBlocks.length > 0 ? tenantBlocks[tenantBlocks.length - 1] : null;
   }
 
-  async verifyLedger(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: number }> {
+  async verifyLedger(
+    tenantId: string,
+  ): Promise<{ valid: boolean; count: number; brokenAt?: number }> {
     const tenantBlocks = this.blocks.filter((b) => b.tenant_id === tenantId);
     let previous = "GENESIS_BLOCK_HASH";
 
@@ -138,7 +138,6 @@ class InMemoryBookPiRepository implements BookPiRepository {
 export const bookpiPostgresRepository = new InMemoryBookPiRepository();
 export default bookpiPostgresRepository;
 
-
 /**
  * Durable production authority.
  *
@@ -156,23 +155,35 @@ export interface DurableBookPiRepository {
     category?: string;
     cost?: number;
     tokens?: number;
-    status?: "settled" | "pending" | "refunded" | "pruned" | "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
-  }): Promise<{ success: boolean; error?: string; block?: {
-    index: number;
-    timestamp: string;
-    tenantId: string;
-    userId: string;
-    operation: string;
-    category: "inference" | "processing" | "apis" | "skills" | "other";
-    costDecimal: string;
-    tokensConsumed: number;
-    previousHash: string;
-    blockHash: string;
-    pqcSignature: string | null;
-    signatureAlgorithm: string;
-    status: "settled" | "pending" | "refunded" | "pruned";
-    nonce: string;
-  } }>;
+    status?:
+      | "settled"
+      | "pending"
+      | "refunded"
+      | "pruned"
+      | "CONFIRMED"
+      | "PENDING"
+      | "FAILED"
+      | "REVERSED";
+  }): Promise<{
+    success: boolean;
+    error?: string;
+    block?: {
+      index: number;
+      timestamp: string;
+      tenantId: string;
+      userId: string;
+      operation: string;
+      category: "inference" | "processing" | "apis" | "skills" | "other";
+      costDecimal: string;
+      tokensConsumed: number;
+      previousHash: string;
+      blockHash: string;
+      pqcSignature: string | null;
+      signatureAlgorithm: string;
+      status: "settled" | "pending" | "refunded" | "pruned";
+      nonce: string;
+    };
+  }>;
   appendBlock(input: {
     tenant_id: string;
     user_id: string;
@@ -182,31 +193,46 @@ export interface DurableBookPiRepository {
     tokens_consumed?: number;
     status?: "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
   }): Promise<BookPiBlock>;
-  batchAppend(inputs: Array<{
-    tenantId: string;
-    userId: string;
-    operation: string;
-    category?: string;
-    cost?: number;
-    tokens?: number;
-    status?: "settled" | "pending" | "refunded" | "pruned";
-  }>): Promise<{ success: boolean; error?: string; blocks?: Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>> }>;
+  batchAppend(
+    inputs: Array<{
+      tenantId: string;
+      userId: string;
+      operation: string;
+      category?: string;
+      cost?: number;
+      tokens?: number;
+      status?: "settled" | "pending" | "refunded" | "pruned";
+    }>,
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    blocks?: Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>>;
+  }>;
   getLatestBlock(tenantId: string): Promise<BookPiBlock | null>;
   listBlocks(tenantId: string, limit?: number): Promise<readonly BookPiBlock[]>;
-  list(tenantId: string): Promise<Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>>>;
+  list(
+    tenantId: string,
+  ): Promise<Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>>>;
   verifyLedger(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: number }>;
-  verifyIntegrity(tenantId: string): Promise<{ success: boolean; error?: string; corruptedIndex?: number }>;
-  query?(tenantId: string, filter: { category?: string; userId?: string; fromDate?: Date; toDate?: Date }): Promise<Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>>>;
-  refund?(tenantId: string, index: number, reason?: string): Promise<{ success: boolean; error?: string }>;
+  verifyIntegrity(
+    tenantId: string,
+  ): Promise<{ success: boolean; error?: string; corruptedIndex?: number }>;
+  query?(
+    tenantId: string,
+    filter: { category?: string; userId?: string; fromDate?: Date; toDate?: Date },
+  ): Promise<Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>>>;
+  refund?(
+    tenantId: string,
+    index: number,
+    reason?: string,
+  ): Promise<{ success: boolean; error?: string }>;
 }
 
 const DURABLE_GENESIS_HASH = "GENESIS_BLOCK_HASH";
 const DURABLE_HASH_ALGORITHM = "SHA3-512-HASH-CHAIN";
 
 function durableNormalizeStatus(
-  status: DurableBookPiRepository["append"] extends (input: infer I) => Promise<any>
-    ? I extends { status?: infer S } ? S : never
-    : never,
+  status: Parameters<DurableBookPiRepository["append"]>[0]["status"],
 ): BookPiBlock["status"] {
   switch (status) {
     case "pending":
@@ -356,11 +382,10 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
         [tenantId],
       );
 
-      const previousHash =
-        latest.rows[0]?.block_hash ? String(latest.rows[0].block_hash) : DURABLE_GENESIS_HASH;
-      const index = latest.rows[0]?.index === undefined
-        ? 0
-        : Number(latest.rows[0].index) + 1;
+      const previousHash = latest.rows[0]?.block_hash
+        ? String(latest.rows[0].block_hash)
+        : DURABLE_GENESIS_HASH;
+      const index = latest.rows[0]?.index === undefined ? 0 : Number(latest.rows[0].index) + 1;
 
       const payload: Omit<BookPiBlock, "block_hash"> = {
         index,
@@ -413,7 +438,15 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
     category?: string;
     cost?: number;
     tokens?: number;
-    status?: "settled" | "pending" | "refunded" | "pruned" | "CONFIRMED" | "PENDING" | "FAILED" | "REVERSED";
+    status?:
+      | "settled"
+      | "pending"
+      | "refunded"
+      | "pruned"
+      | "CONFIRMED"
+      | "PENDING"
+      | "FAILED"
+      | "REVERSED";
   }) {
     try {
       const block = await this.appendBlock({
@@ -435,7 +468,9 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
   }
 
   async batchAppend(inputs: Array<Parameters<DurableBookPiRepository["append"]>[0]>) {
-    const blocks: Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>> = [];
+    const blocks: Array<
+      NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>
+    > = [];
     for (const input of inputs) {
       const result = await this.append(input);
       if (!result.success) return { success: false, error: result.error, blocks };
@@ -449,9 +484,7 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
       "SELECT * FROM bookpi_ledger WHERE tenant_id = $1 ORDER BY index DESC LIMIT 1",
       [tenantId.trim().slice(0, 128)],
     );
-    return result.rows[0]
-      ? durableMapRow(result.rows[0] as Record<string, unknown>)
-      : null;
+    return result.rows[0] ? durableMapRow(result.rows[0] as Record<string, unknown>) : null;
   }
 
   async listBlocks(tenantId: string, limit = 50): Promise<readonly BookPiBlock[]> {
@@ -474,8 +507,10 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
     let blocks = await this.list(tenantId);
     if (filter.category) blocks = blocks.filter((block) => block.category === filter.category);
     if (filter.userId) blocks = blocks.filter((block) => block.userId === filter.userId);
-    if (filter.fromDate) blocks = blocks.filter((block) => new Date(block.timestamp) >= filter.fromDate!);
-    if (filter.toDate) blocks = blocks.filter((block) => new Date(block.timestamp) <= filter.toDate!);
+    if (filter.fromDate)
+      blocks = blocks.filter((block) => new Date(block.timestamp) >= filter.fromDate!);
+    if (filter.toDate)
+      blocks = blocks.filter((block) => new Date(block.timestamp) <= filter.toDate!);
     return blocks;
   }
 
@@ -537,11 +572,11 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
     });
     return result.success ? { success: true } : { success: false, error: result.error };
   }
-  
+
   async prune(_tenantId: string, _maxAgeMs: number) {
     return { success: false, error: "BOOKPI_PRUNE_FORBIDDEN_APPEND_ONLY_LEDGER" };
   }
-  
+
   async pruneInactive(_inactiveDays: number) {
     return { success: false, error: "BOOKPI_PRUNE_INACTIVE_FORBIDDEN_APPEND_ONLY_LEDGER" };
   }

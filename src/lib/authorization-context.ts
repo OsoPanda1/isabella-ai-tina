@@ -64,11 +64,7 @@ function trustedGeo(request: Request): AuthorizationGeoContext | undefined {
   const country = vercelCountry || cloudflareCountry;
   if (!country || country.length !== 2) return undefined;
 
-  const source = vercelCountry
-    ? "vercel-edge"
-    : cloudflareCountry
-      ? "cloudflare-edge"
-      : "none";
+  const source = vercelCountry ? "vercel-edge" : cloudflareCountry ? "cloudflare-edge" : "none";
 
   const region =
     request.headers.get("x-vercel-ip-country-region")?.trim() ||
@@ -116,11 +112,7 @@ export function createUuidV7(): string {
     BigInt(bytes[9]!);
 
   const value =
-    (timestamp << 80n) |
-    (7n << 76n) |
-    (randA << 64n) |
-    (2n << 62n) |
-    (randB & ((1n << 62n) - 1n));
+    (timestamp << 80n) | (7n << 76n) | (randA << 64n) | (2n << 62n) | (randB & ((1n << 62n) - 1n));
 
   const hex = value.toString(16).padStart(32, "0");
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
@@ -147,8 +139,7 @@ export function buildAuthorizationDynamicContext(
   state.timestamps.push(now);
 
   const deviceChanged =
-    state.lastDeviceFingerprint !== undefined &&
-    state.lastDeviceFingerprint !== fingerprint;
+    state.lastDeviceFingerprint !== undefined && state.lastDeviceFingerprint !== fingerprint;
   const currentCountry = geo?.country;
   const geoMismatch =
     state.lastCountry !== undefined &&

@@ -251,7 +251,6 @@ export function gateOpenAiSseStream(
   });
 }
 
-
 /**
  * Backward-compatible contract retained for Sovereign Pipeline and older
  * callers. The canonical inspection remains evaluateOutputSecurity().
@@ -271,11 +270,7 @@ export function inspectAndSanitizeOutput(rawOutput: string): OutputSecurityInspe
   const redacted = redact(rawOutput);
   const redactionApplied = redacted !== rawOutput;
   const sanitizedText =
-    result.verdict === "deny"
-      ? redactionApplied
-        ? redacted
-        : OUTPUT_GATE_REFUSAL
-      : redacted;
+    result.verdict === "deny" ? (redactionApplied ? redacted : OUTPUT_GATE_REFUSAL) : redacted;
 
   return {
     safe: result.verdict === "allow",

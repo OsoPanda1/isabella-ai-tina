@@ -25,12 +25,12 @@ env:
 defaults:
   run:
     shell: bash
-    timeout-minutes: 45
 
 jobs:
   build:
     name: Build, SBOM and OCI image
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     if: github.event_name != 'pull_request' && github.event_name != 'workflow_dispatch' || github.event_name == 'workflow_dispatch'
     outputs:
       image_ref: ${{ steps.meta.outputs.image_ref }}
@@ -97,6 +97,7 @@ jobs:
   sign-and-attach:
     name: Sign image and attach SBOM
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: build
     permissions:
       id-token: write
@@ -149,6 +150,7 @@ jobs:
   verify:
     name: Registry vulnerability scan
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: build
     permissions:
       contents: read

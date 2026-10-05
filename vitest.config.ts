@@ -24,6 +24,11 @@ export default defineConfig({
             "test/unit/**/*.test.tsx",
             "test/*.test.ts",
             "test/native-ml/**/*.test.ts",
+            // Tests unitarios vivos dentro de src/ (firewall de inferencia y
+            // evaluación de refuerzo): estaban trackeados pero fuera de todo
+            // `include`, por lo que nunca se ejecutaban en `pnpm test`.
+            "src/**/*.test.ts",
+            "src/**/*.test.tsx",
           ],
           setupFiles: ["./test/setup.ts"],
         },

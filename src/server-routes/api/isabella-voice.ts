@@ -6,6 +6,7 @@
  * In development: provides native speech synthesis metadata.
  */
 import type { Request, Response } from "express";
+import { config } from "../../lib/config";
 import { isProductionLike } from "../../lib/runtime-mode";
 
 export async function handleVoiceSynthesize(req: Request, res: Response): Promise<void> {
@@ -15,7 +16,8 @@ export async function handleVoiceSynthesize(req: Request, res: Response): Promis
     return;
   }
 
-  const hasVoiceProvider = Boolean(process.env.ELEVENLABS_API_KEY || process.env.GOOGLE_TTS_API_KEY);
+  const runtime = config();
+  const hasVoiceProvider = Boolean(runtime.ELEVENLABS_API_KEY || runtime.GOOGLE_TTS_API_KEY);
 
   if (isProductionLike() && !hasVoiceProvider) {
     res.status(503).json({

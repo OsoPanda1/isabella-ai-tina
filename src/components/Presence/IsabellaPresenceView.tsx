@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useCrown } from "../../context/CrownContext";
 import {
   Sparkles,
@@ -30,18 +30,16 @@ import { ISABELLA_VERSION } from "../../lib/isabella-crown";
 const PARTICLE_SEED_COUNT = 18;
 
 const ParticleField = ({ activeHead }: { activeHead: string }) => {
-  const particles = useMemo(
-    () =>
-      Array.from({ length: PARTICLE_SEED_COUNT }, (_, i) => ({
-        id: i,
-        x: Math.random() * 280,
-        y: Math.random() * 380,
-        scale: Math.random() * 0.4 + 0.5,
-        duration: 10 + Math.random() * 8,
-        size: 3 + Math.random() * 4,
-        drift: Math.random() * 60 - 30,
-      })),
-    [],
+  const [particles] = useState(() =>
+    Array.from({ length: PARTICLE_SEED_COUNT }, (_, i) => ({
+      id: i,
+      x: Math.random() * 280,
+      y: Math.random() * 380,
+      scale: Math.random() * 0.4 + 0.5,
+      duration: 10 + Math.random() * 8,
+      size: 3 + Math.random() * 4,
+      drift: Math.random() * 60 - 30,
+    })),
   );
   const isAlpha = activeHead === "Alpha";
 
@@ -146,7 +144,7 @@ export const IsabellaPresenceView: React.FC = () => {
 
   const handleQuickSend = () => {
     if (!quickInput.trim()) return;
-    sendMessage(quickInput);
+    void sendMessage(quickInput);
     setQuickInput("");
     setActiveView("terminal");
   };

@@ -28,7 +28,16 @@ export interface QuantumGateState {
   fidelity: number;
 }
 
-const GATE_TYPES = ["Hadamard", "Pauli-X", "Pauli-Z", "CNOT", "Phase-S", "T-Gate", "Toffoli", "Swap"];
+const GATE_TYPES = [
+  "Hadamard",
+  "Pauli-X",
+  "Pauli-Z",
+  "CNOT",
+  "Phase-S",
+  "T-Gate",
+  "Toffoli",
+  "Swap",
+];
 
 export function generateMLKEMKeyPair(seed = "seed-default"): PQCKeyPair {
   const hash = Math.abs(seed.split("").reduce((acc, char) => acc * 31 + char.charCodeAt(0), 17));
@@ -74,7 +83,7 @@ export function evaluateLitle32Gates(input = "TAMV"): QuantumGateState[] {
   const seedNum = input.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return Array.from({ length: 32 }, (_, i) => {
     const type = GATE_TYPES[(i + seedNum) % GATE_TYPES.length];
-    const fidelity = 0.992 + (((i * 7 + seedNum) % 8) * 0.001);
+    const fidelity = 0.992 + ((i * 7 + seedNum) % 8) * 0.001;
     const qubitState = (i + seedNum) % 2 === 0 ? "|0⟩ + |1⟩ / √2" : "|ψ+⟩ Bell State";
     return {
       gateIndex: i + 1,
