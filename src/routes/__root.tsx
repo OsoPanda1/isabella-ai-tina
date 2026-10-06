@@ -12,7 +12,7 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { IsabellaErrorBoundary } from "@/components/isabella/ErrorBoundary";
 import { EmergencyModeView } from "@/components/isabella/EmergencyModeView";
 
-import appCss from "../index.css?inline";
+import appCss from "../styles.css?inline";
 
 export function NotFoundComponent() {
   return (

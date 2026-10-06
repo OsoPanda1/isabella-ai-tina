@@ -1,9 +1,10 @@
 import { z } from "zod";
 import * as crypto from "node:crypto";
 import { config } from "./config";
-import { isProductionLike, resolveRuntimeMode } from "./runtime-mode";
+import { isProductionLike } from "./runtime-mode";
 import { JWT_VERIFIER } from "./jwt-verifier";
 import { AuthVerificationLayer } from "./auth-verification-layer";
+import { isSsrfDeniedHost } from "./security/ssrf-deny";
 
 // ============================================================================
 // CANONICAL SEVEN LAYERS OF SECURITY HARDENING SYSTEM - ISABELLA v4.2.0
@@ -49,7 +50,11 @@ function isValidIpAddress(value: string): boolean {
 
 function isProductionLikeRuntime(): boolean {
   try {
-    return isProductionLike(resolveRuntimeMode(config().ISABELLA_RUNTIME_MODE));
+    // El modo configurado manda: staging/production/emergency/maintenance
+    // conservan fronteras de producción (fail-closed).
+    if (config().ISABELLA_RUNTIME_MODE !== "development") return true;
+    // Sin modo explícito productivo, cae al guard canónico (NODE_ENV/VERCEL).
+    return isProductionLike();
   } catch {
     return true;
   }
@@ -94,16 +99,144 @@ export interface TokenClaims {
   sub: string;
   aud: string;
   exp: number;
+  nbf?: number;
+  iat?: number;
   tenantId: string;
   role: string;
   scope: string;
+  /** Claim legacy de tenant (Supabase/PostgREST: request.jwt.claims.tenant_id). */
+  tenant_id?: string;
+  /** Claim legacy de scopes en arreglo (algunos emisores OIDC lo producen así). */
+  scopes?: string[];
   jti?: string;
+}
+
+export class SecurityError extends Error {
+  constructor(
+    public readonly code: string,
+    message: string,
+    public readonly status: number = 403,
+  ) {
+    super(message);
+    this.name = "SecurityError";
+  }
+}
+
+/**
+ * SSRF Host Allowlist
+ * Only strictly declared domains are permitted for outbound requests.
+ */
+const ALLOWED_EXTERNAL_HOSTS = new Set<string>([
+  "api.openai.com",
+  "generativelanguage.googleapis.com",
+  "api.anthropic.com",
+  "api.groq.com",
+  "api.cohere.ai",
+  "api.stripe.com",
+  "mux.com",
+  "api.mux.com",
+  "stream.mux.com",
+  "image.mux.com",
+  "localhost",
+  "127.0.0.1",
+]);
+
+export function isAllowedExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    // Protocol must be HTTPS (or HTTP in local test/dev)
+    if (url.protocol !== "https:" && (isProductionLike() || url.protocol !== "http:")) {
+      return false;
+    }
+    const hostname = url.hostname.toLowerCase();
+    // Denegacion SSRF explicita, anterior e independiente de la allowlist.
+    if (isSsrfDeniedHost(hostname)) return false;
+    // Block private/link-local IPv4 ranges in production
+    if (isProductionLike()) {
+      if (
+        hostname === "localhost" ||
+        hostname.startsWith("127.") ||
+        hostname.startsWith("10.") ||
+        hostname.startsWith("192.168.") ||
+        hostname.startsWith("169.254.") ||
+        hostname.endsWith(".internal") ||
+        hostname.endsWith(".local")
+      ) {
+        return false;
+      }
+    }
+    return ALLOWED_EXTERNAL_HOSTS.has(hostname) || hostname.endsWith(".supabase.co");
+  } catch {
+    return false;
+  }
+}
+
+export function validateSsrfSafeUrl(urlString: string): URL {
+  if (!isAllowedExternalUrl(urlString)) {
+    throw new SecurityError(
+      "SSRF_VIOLATION",
+      `Outbound request to ${urlString} is rejected by SSRF guard policy.`,
+      403,
+    );
+  }
+  return new URL(urlString);
+}
+
+/**
+ * Rate Limiter Fail-Closed Matrix
+ */
+interface RateLimitStatus {
+  allowed: boolean;
+  remaining: number;
+  resetSeconds: number;
+}
+
+const inMemoryRateLimits = new Map<string, { count: number; resetAt: number }>();
+
+export function checkDistributedRateLimit(
+  key: string,
+  limit: number = 100,
+  windowSeconds: number = 60,
+): RateLimitStatus {
+  const now = Date.now();
+  const entry = inMemoryRateLimits.get(key);
+
+  if (!entry || entry.resetAt <= now) {
+    inMemoryRateLimits.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
+    return { allowed: true, remaining: limit - 1, resetSeconds: windowSeconds };
+  }
+
+  if (entry.count >= limit) {
+    const resetSec = Math.ceil((entry.resetAt - now) / 1000);
+    return { allowed: false, remaining: 0, resetSeconds: resetSec };
+  }
+
+  entry.count += 1;
+  const resetSec = Math.ceil((entry.resetAt - now) / 1000);
+  return { allowed: true, remaining: limit - entry.count, resetSeconds: resetSec };
+}
+
+export function sanitizePayload<T>(data: T): T {
+  if (!data || typeof data !== "object") return data;
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizePayload(item)) as unknown as T;
+  }
+  const clean: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    if (key.toLowerCase().includes("secret") || key.toLowerCase().includes("token")) {
+      clean[key] = "[REDACTED]";
+    } else {
+      clean[key] = typeof value === "object" ? sanitizePayload(value) : value;
+    }
+  }
+  return clean as T;
 }
 
 const UPSTREAM_ALLOWLIST: readonly string[] = [
   "generativelanguage.googleapis.com",
   "api.groq.com",
   "api.x.ai",
+  "api.anthropic.com",
 ];
 
 /**
@@ -122,6 +255,23 @@ function isLiteralIpHost(hostname: string): boolean {
   return false;
 }
 
+const BEDROCK_REGION_PATTERN = /^[a-z0-9-]{2,32}$/;
+
+/**
+ * Host de datos de Bedrock Converse derivado de la región configurada.
+ * Solo se admite el host canónico `bedrock-runtime.<region>.amazonaws.com`,
+ * nunca un comodín: sin región configurada no hay egress a AWS.
+ */
+function isAllowedBedrockHost(host: string): boolean {
+  try {
+    const region = config().BEDROCK_REGION;
+    if (!region || !BEDROCK_REGION_PATTERN.test(region)) return false;
+    return host === `bedrock-runtime.${region}.amazonaws.com`;
+  } catch {
+    return false;
+  }
+}
+
 function isUpstreamAllowed(url: string): boolean {
   let parsed: URL;
   try {
@@ -136,7 +286,12 @@ function isUpstreamAllowed(url: string): boolean {
   if (parsed.port !== "" && parsed.port !== "443") return false;
   // Coincidencia exacta: sin trailing dot, sin literales IP.
   const host = parsed.hostname.toLowerCase();
-  if (host === "" || isLiteralIpHost(host)) return false;
+  if (host === "") return false;
+  // Denegacion SSRF explicita, anterior e independiente de la allowlist
+  // (IMDS/loopback/RFC1918/sufijos internos) — no puede ser sobreescrita
+  // por UPSTREAM_ALLOWLIST ni por host derivado de configuracion.
+  if (isSsrfDeniedHost(host)) return false;
+  if (isLiteralIpHost(host)) return false;
   if (UPSTREAM_ALLOWLIST.includes(host)) return true;
   try {
     const voice = config().VOICE_API_URL;
@@ -144,6 +299,13 @@ function isUpstreamAllowed(url: string): boolean {
   } catch {
     // Sin configuración válida: solo la allowlist estática.
   }
+  try {
+    const anthropic = config().ANTHROPIC_BASE_URL;
+    if (anthropic && new URL(anthropic).hostname.toLowerCase() === host) return true;
+  } catch {
+    // Sin base URL de Anthropic configurada no se abre ningun host nuevo.
+  }
+  if (isAllowedBedrockHost(host)) return true;
   return false;
 }
 
@@ -152,7 +314,7 @@ export const SecuritySystem = {
   // Only explicit proxy contracts are trusted. The legacy boolean mode and
   // arbitrary X-Forwarded-For are fail-closed.
   resolveClientIp(request: Request): string {
-    let mode = "";
+    let mode: string;
     try {
       mode = String(config().TRUSTED_PROXY_MODE ?? "")
         .trim()

@@ -1,7 +1,7 @@
 name: Production Readiness & Sovereign Security Matrix (Final)
 
 # Repository: https://github.com/OsoPanda1/isabella-mexa.git
-# Purpose: Hardened, provenance-first CI/CD pipeline for Isabella Core (Node + Rust + K8s)
+# Purpose: Hardened, provenance-first CI/CD pipeline for Isabella Core (Node/TypeScript + K8s)
 # Features:
 #  - Secret scanning baseline (gitleaks + trufflehog)
 #  - Multi-language build (Rust core + Node/TS web)
@@ -30,7 +30,8 @@ permissions:
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}/isabella-core
-  DEFAULT_NODE_VERSION: "22"
+  DEFAULT_NODE_VERSION: "24"
+  PNPM_VERSION: "10.34.5"
   PROVENANCE_SIGNER: "github-actions-provenance"
   CANONICAL_ORIGINS: ${{ vars.CANONICAL_ORIGINS }}
   SLSA_LEVEL: "2"
@@ -38,7 +39,6 @@ env:
 defaults:
   run:
     shell: bash
-    timeout-minutes: 45
 
 jobs:
   # =========================================================================
@@ -47,6 +47,7 @@ jobs:
   secret-scan:
     name: Secret Scan & Baseline
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     outputs:
       secret_scan_status: ${{ steps.gitleaks.outcome }}
     steps:
@@ -57,7 +58,7 @@ jobs:
 
       - name: Gitleaks scan (baseline + fail on new secrets)
         id: gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         with:
           args: --redact --exit-code 1
         env:
@@ -80,8 +81,9 @@ jobs:
   # JOB 2: Node.js / TypeScript Web & API Engine (strict, reproducible)
   # =========================================================================
   node-app:
-    name: Node 22 TS Build, Audit & SBOM
+    name: Node 24 TS Build, Audit & SBOM
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [secret-scan]
     env:
       NODE_OPTIONS: --enable-source-maps
@@ -117,6 +119,9 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Strict typecheck (tsc --noEmit)
+        run: pnpm run typecheck
+
+      - name: Lint (strict)
         run: pnpm run lint
 
       - name: Run tests (CI mode)
@@ -166,6 +171,7 @@ jobs:
     if: github.event_name != 'pull_request'
     name: Container Build, Trivy & Sign
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [node-app]
     permissions:
       contents: read
@@ -244,7 +250,8 @@ jobs:
   iac-scan:
     name: IaC & SAST Scans
     runs-on: ubuntu-latest
-    needs: [container-build]
+    timeout-minutes: 45
+    needs: [node-app]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -276,8 +283,10 @@ jobs:
   # =========================================================================
   production-gate:
     name: Production Gate Approval
-    needs: [secret-scan, rust-core, node-app, container-build, iac-scan]
+    needs: [secret-scan, node-app, container-build, iac-scan]
+    if: ${{ always() && needs.secret-scan.result == 'success' && needs.node-app.result == 'success' && needs.iac-scan.result == 'success' && (github.event_name == 'pull_request' || needs.container-build.result == 'success') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: production
       url: https://isabella-mexa.vercel.app
@@ -302,6 +311,7 @@ jobs:
           path: readiness.txt
 
       - name: Require manual approval (environment protection recommended)
+        if: github.event_name != 'pull_request'
         uses: chrnorm/deploy-approval@v1
         with:
           reviewers: '["platform-eng","security-team"]'
@@ -315,6 +325,7 @@ jobs:
     needs: [production-gate]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: production
       url: https://isabella-mexa.vercel.app
@@ -416,6 +427,7 @@ jobs:
     name: Post-Deploy Observability & SLO Check
     needs: [deploy-node-zero]
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Query metrics backend (placeholder)
         run: |
@@ -436,6 +448,7 @@ jobs:
   cleanup:
     name: Cleanup & Retention Enforcement
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [post-deploy-observability]
     steps:
       - name: Prune ephemeral artifacts older than 7 days (placeholder)

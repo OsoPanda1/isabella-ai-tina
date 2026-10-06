@@ -28,6 +28,27 @@ import {
   signBlockHash,
   verifyBlockSignature,
 } from "../crypto/bookpi-signer";
+import { bookpiPostgresRepository, type BookPiRepository } from "./bookpi-postgres-repository";
+
+/**
+ * Autoridad legacy in-memory (`BookPiRepository`: `appendBlock`, `listBlocks`,
+ * `getLatestBlock`, `verifyLedger`) y su factory, conservados tal cual para
+ * sus consumidores actuales (bookpi-dev-repository, tests de producción).
+ */
+export type { BookPiRepository };
+export { bookpiPostgresRepository };
+export default bookpiPostgresRepository;
+
+export function getBookPiRepository(): BookPiRepository {
+  return bookpiPostgresRepository;
+}
+
+/** Legacy compatibility factory. The historical sync engine intentionally
+ * keeps its existing in-memory algorithm; production callers use the
+ * explicit createBookpiPostgresRepository() runtime instead. */
+export function createBookpiRepository(): BookPiRepository {
+  return bookpiPostgresRepository;
+}
 
 export type LedgerCategory = "inference" | "processing" | "apis" | "skills" | "other";
 export type LedgerStatus = "settled" | "pending" | "refunded" | "pruned";
@@ -84,7 +105,7 @@ function findTenantBlock(
  * Crea un repositorio BookPI ligado a una ruta opcional (inyectable).
  * Análisis-estructura: expose métodos puros y capa de persistencia real.
  */
-export function createBookpiRepository(storePath: string = STORE_PATH) {
+export function createBookpiJsonRepository(storePath: string = STORE_PATH) {
   const runtime = config();
   const isProductionLike =
     runtime.NODE_ENV === "production" ||
@@ -100,7 +121,7 @@ export function createBookpiRepository(storePath: string = STORE_PATH) {
   // autoritativo DECLARADO (postgres|neon) invalida de plano el JSON: nunca
   // se puede caer a fichero cuando la autoridad durable es PostgreSQL.
   if (isStorageProviderExplicitlyDeclared()) {
-    const provider = (runtime as unknown as Record<string, unknown>).ISABELLA_STORAGE_PROVIDER;
+    const provider = runtime.ISABELLA_STORAGE_PROVIDER;
     const normalized = typeof provider === "string" ? provider.trim().toLowerCase() : "";
     if (["postgres", "neon"].includes(normalized)) {
       throw new Error(
@@ -464,7 +485,7 @@ export function createBookpiRepository(storePath: string = STORE_PATH) {
   };
 }
 
-export type BookpiRepository = ReturnType<typeof createBookpiRepository>;
+export type BookpiRepository = ReturnType<typeof createBookpiJsonRepository>;
 export const BOOKPI_REPOSITORY = {
-  create: createBookpiRepository,
+  create: createBookpiJsonRepository,
 };

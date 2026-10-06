@@ -69,16 +69,12 @@ export function createRedactor(extraValues: string[] = []): Redactor {
     const value = secureEnvLookup(key);
     if (value) dynamicValues.push(value);
   }
-  try {
-    for (const value of [
-      secrets.jwtSecret(),
-      secrets.aiGatewayKey(),
-      secrets.encryptionMasterKey(),
-    ]) {
-      if (value) dynamicValues.push(value);
-    }
-  } catch {
-    // Missing optional development secrets: generic patterns remain active.
+  for (const value of [
+    secrets.getOptional("AUTH_JWT_SECRET"),
+    secrets.getOptional("GEMINI_API_KEY"),
+    secrets.getOptional("ENCRYPTION_MASTER_KEY"),
+  ]) {
+    if (value) dynamicValues.push(value);
   }
 
   const pattern = buildSecretPatterns([...dynamicValues, ...extraValues]);
@@ -135,4 +131,57 @@ export function redactLogArg(value: unknown): unknown {
   } catch {
     return "[log no serializable]";
   }
+}
+
+const SENSITIVE_PATTERNS: ReadonlyArray<{ pattern: RegExp; replacement: string }> = [
+  // JWT tokens: header.payload.signature
+  {
+    pattern: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
+    replacement: "[REDACTED_JWT]",
+  },
+  // Private keys (RSA, EC, Ed25519)
+  {
+    pattern: /-----BEGIN[ A-Z0-9_-]*PRIVATE KEY-----[\s\S]*?-----END[ A-Z0-9_-]*PRIVATE KEY-----/g,
+    replacement: "[REDACTED_PRIVATE_KEY]",
+  },
+  // Bearer tokens in headers or strings
+  {
+    pattern: /Bearer\s+[A-Za-z0-9_.\-~+/=]+/gi,
+    replacement: "Bearer [REDACTED_TOKEN]",
+  },
+  // Postgres / database connection strings
+  {
+    pattern: /postgres(?:ql)?:\/\/[^:]+:[^@]+@[^/]+\/[^\s"']+/gi,
+    replacement: "postgresql://[REDACTED_USER]:[REDACTED_PASSWORD]@[REDACTED_HOST]/[REDACTED_DB]",
+  },
+  // Stripe secrets / API keys
+  {
+    pattern: /(?:sk|rk)_(?:live|test)_[0-9a-zA-Z]{24,}/g,
+    replacement: "[REDACTED_STRIPE_KEY]",
+  },
+  // Generic API keys (isa_live, sk-, ai-studio, etc.)
+  {
+    pattern: /(?:isa_(?:live|test)_[a-f0-9]{32,}|AIza[0-9A-Za-z\\-_]{35})/g,
+    replacement: "[REDACTED_API_KEY]",
+  },
+  // Passwords / secrets in JSON strings
+  {
+    pattern: /"(password|secret|token|apiKey|api_key|access_token|refresh_token)":\s*"[^"]+"/gi,
+    replacement: '"$1":"[REDACTED]"',
+  },
+];
+
+/**
+ * Redacción determinista de secretos estructurales (JWT, private keys, Bearer,
+ * connection strings, Stripe/API keys y credenciales JSON). Usada por el motor
+ * de attestation antes de firmar/verificar evidencia: debe ser estable entre
+ * `signAttestation` y `verifyAttestation` para que el hash coincida.
+ */
+export function redactSecrets(text: string): string {
+  if (!text) return text;
+  let redacted = text;
+  for (const { pattern, replacement } of SENSITIVE_PATTERNS) {
+    redacted = redacted.replace(pattern, replacement);
+  }
+  return redacted;
 }

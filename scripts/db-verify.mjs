@@ -36,6 +36,8 @@ const REQUIRED_COLUMNS = {
     "chain_hash",
     "expires_at",
     "source",
+    "user_id",
+    "metadata",
   ],
   audit_events: [
     "id",

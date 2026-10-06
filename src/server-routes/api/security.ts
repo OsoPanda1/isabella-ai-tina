@@ -83,7 +83,7 @@ function redactMetadata(metadata: Record<string, unknown>): Record<string, unkno
 }
 
 function calculateTsAegisResponse(event: z.infer<typeof securityEventSchema>) {
-  const hashSecret = secrets.apiKeyHashSecret(); // Resolved safely from secret provider
+  const hashSecret = secrets.get("API_KEY_HASH_SECRET"); // Resolved safely from secret provider
 
   // Hash helper: HMAC-SHA256 criptográfico (nunca FNV), truncado para redacción.
   const stableHash = (val: string, secret: string): string => {
@@ -158,7 +158,10 @@ function calculateTsAegisResponse(event: z.infer<typeof securityEventSchema>) {
   };
 }
 
-export const Route = createFileRoute("/api/security")({
+// Nota: src/routeTree.gen.ts (generado por el plugin de TanStack Start) no existe en este
+// árbol, por lo que `FileRoutesByPath` está vacío y el tipo del path resuelve a `never`.
+// El cast mantiene la llamada real a createFileRoute sin introducir `any` ni `@ts-ignore`.
+export const Route = createFileRoute("/api/security" as never)({
   server: {
     handlers: {
       // Audit-log reads are tenant-scoped and fail closed when the durable store is unavailable.
@@ -192,7 +195,10 @@ export const Route = createFileRoute("/api/security")({
             evidenceId: entry.id,
           }));
           return new Response(
-            JSON.stringify({ logs, auditSecretVerified: secrets.aegisAuditSecretConfigured() }),
+            JSON.stringify({
+              logs,
+              auditSecretVerified: secrets.getOptional("AEGIS_AUDIT_SECRET") !== null,
+            }),
             {
               headers: SecuritySystem.injectSecureHeaders(
                 new Headers({ "content-type": "application/json" }),
@@ -282,8 +288,8 @@ export const Route = createFileRoute("/api/security")({
             PYTHONPATH: pythonPath,
             // P0-APIKEYS (fail-closed): sin fallback a config() crudo; el HMAC
             // de llaves exige API_KEY_HASH_SECRET dedicada y resoluble por KMS.
-            AEGIS_HASH_SECRET: secrets.apiKeyHashSecret(),
-            AEGIS_AUDIT_SECRET: secrets.aegisAuditSecret(),
+            AEGIS_HASH_SECRET: secrets.get("API_KEY_HASH_SECRET"),
+            AEGIS_AUDIT_SECRET: secrets.get("AEGIS_AUDIT_SECRET"),
           };
 
           const inputJson = JSON.stringify(event);

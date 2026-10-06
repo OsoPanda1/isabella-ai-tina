@@ -44,6 +44,7 @@ export type AuthFailureReasonCode =
   | "TOKEN_NOT_YET_VALID"
   | "AUDIENCE_MISMATCH"
   | "SUBJECT_MISSING"
+  | "TENANT_MISSING"
   | "JWKS_KEY_NOT_FOUND"
   | "PRIVILEGE_SPOOFING_ATTEMPT"
   | "CRYPTO_ERROR";
@@ -442,6 +443,20 @@ class AuthVerificationLayerImpl {
       // Mapeo seguro de identidad y prevención de escalado de privilegios
       const p = verified.payload;
       const isSupabase = tokenIssuer.includes("supabase.co") || tokenIssuer.includes("/auth/v1");
+      const rawTenantId =
+        (p.tenantId as string | undefined) ??
+        ((p.app_metadata as Record<string, unknown> | undefined)?.tenant_id as string | undefined);
+      if (typeof rawTenantId !== "string" || rawTenantId.trim().length === 0) {
+        return this.fail({
+          traceId,
+          correlationId,
+          actorIp,
+          error: "Credencial rechazada: el token autenticado no demuestra un tenant explícito.",
+          reasonCode: "TENANT_MISSING",
+          spoofingAttempt: true,
+          severity: "S0",
+        });
+      }
       const providerType: AuthProviderType = isSupabase ? "supabase_auth" : "oidc_jwks";
 
       // Control Anti-Spoofing de Roles:
@@ -473,10 +488,7 @@ class AuthVerificationLayerImpl {
         sub: p.sub,
         aud: Array.isArray(p.aud) ? p.aud.join(" ") : String(p.aud ?? "isabella"),
         exp: p.exp ?? Math.floor(Date.now() / 1000) + 3600,
-        tenantId:
-          (p.tenantId as string) ??
-          ((p.app_metadata as Record<string, unknown> | undefined)?.tenant_id as string) ??
-          "sovereign-default",
+        tenantId: rawTenantId.trim(),
         role: mappedRole,
         scope: typeof p.scope === "string" ? p.scope : "isabella:chat",
         jti: (p.jti as string) ?? `oidc_${crypto.randomUUID().slice(0, 12)}`,
@@ -518,18 +530,24 @@ class AuthVerificationLayerImpl {
 
     try {
       await this.auditRepo.append({
-        traceId: params.traceId,
-        correlationId: params.correlationId,
-        actorIp: params.actorIp,
+        tenant_id: "unknown",
+        timestamp: new Date().toISOString(),
+        trace_id: params.traceId,
+        correlation_id: params.correlationId,
+        actor: "unknown",
+        actor_ip: params.actorIp,
+        action: eventName,
+        resource: "auth-token",
         event: eventName,
         severity: params.severity,
-        details: JSON.stringify({
+        result: "denied",
+        details: {
           error: params.error,
           reasonCode: params.reasonCode,
           spoofingAttempt: params.spoofingAttempt,
+          remediated: true, // Bloqueado activamente por la capa de verificación
           timestamp: new Date().toISOString(),
-        }),
-        remediated: true, // Bloqueado activamente por la capa de verificación
+        },
       });
     } catch (err) {
       console.error("[AuthVerificationLayer] Error al persistir evento de auditoría:", err);
@@ -552,14 +570,34 @@ class AuthVerificationLayerImpl {
     actorIp: string;
     provider: AuthProviderType;
     payload: JwtClaims;
-  }): Promise<AuthVerificationSuccess> {
+  }): Promise<AuthVerificationSuccess | AuthVerificationFailure> {
     const p = params.payload;
+    const tenantId =
+      typeof p.tenantId === "string" && p.tenantId.trim()
+        ? p.tenantId.trim()
+        : typeof (p as Record<string, unknown>).tenant_id === "string" &&
+            String((p as Record<string, unknown>).tenant_id).trim()
+          ? String((p as Record<string, unknown>).tenant_id).trim()
+          : "";
+
+    if (!tenantId) {
+      return this.fail({
+        traceId: params.traceId,
+        correlationId: params.correlationId,
+        actorIp: params.actorIp,
+        error: "Credencial rechazada: el token verificado no contiene un tenant explícito.",
+        reasonCode: "TENANT_MISSING",
+        spoofingAttempt: true,
+        severity: "S0",
+      });
+    }
+
     const claims: TokenClaims = {
       iss: p.iss ?? "unknown",
       sub: p.sub,
       aud: Array.isArray(p.aud) ? p.aud.join(" ") : String(p.aud ?? "isabella"),
       exp: p.exp ?? Math.floor(Date.now() / 1000) + 3600,
-      tenantId: (p.tenantId as string) ?? "sovereign-default",
+      tenantId,
       role:
         typeof p.role === "string" && (ROLES as readonly string[]).includes(p.role)
           ? p.role
@@ -570,20 +608,26 @@ class AuthVerificationLayerImpl {
 
     try {
       await this.auditRepo.append({
-        traceId: params.traceId,
-        correlationId: params.correlationId,
-        actorIp: params.actorIp,
+        tenant_id: claims.tenantId,
+        timestamp: new Date().toISOString(),
+        trace_id: params.traceId,
+        correlation_id: params.correlationId,
+        actor: claims.sub,
+        actor_ip: params.actorIp,
+        action: `AUTH_SUCCESS_${params.provider.toUpperCase()}`,
+        resource: "auth-token",
         event: `AUTH_SUCCESS_${params.provider.toUpperCase()}`,
         severity: "S3",
-        details: JSON.stringify({
+        result: "success",
+        details: {
           provider: params.provider,
           sub: claims.sub,
           tenantId: claims.tenantId,
           role: claims.role,
           scope: claims.scope,
           jti: claims.jti,
-        }),
-        remediated: false,
+          remediated: false,
+        },
       });
     } catch (err) {
       console.error("[AuthVerificationLayer] Error al persistir evento de éxito:", err);

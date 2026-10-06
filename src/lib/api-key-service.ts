@@ -337,4 +337,31 @@ export class ApiKeyService {
     const { items } = await this.repo.list(tenantId, { tenantId });
     return items.map(apiKeyToRecord).map(toPublicMetadata);
   }
+
+  public static async deleteApiKey(
+    id: string,
+    tenantId: string,
+    actorId?: string,
+  ): Promise<boolean> {
+    if (!id.trim() || !tenantId.trim()) throw new Error("invalid_api_key_delete_request");
+    const existing = await this.repo.read(tenantId, id);
+    if (!existing) return false;
+
+    const deleted = await this.repo.delete(tenantId, id);
+    if (!deleted) return false;
+
+    await this.auditRepo.audit({
+      id: crypto.randomUUID(),
+      tenantId,
+      traceId: `trace_ak_${crypto.randomUUID().slice(0, 8)}`,
+      timestamp: new Date().toISOString(),
+      action: "api_key.deleted",
+      resource: "api_key",
+      severity: "S2",
+      actor: actorId || existing.createdBy,
+      result: "success",
+      details: { keyId: id },
+    });
+    return true;
+  }
 }

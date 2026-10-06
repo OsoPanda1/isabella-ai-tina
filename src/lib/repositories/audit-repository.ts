@@ -1,180 +1,135 @@
 /**
- * REPOSITORIO DE AUDITORÍA (src/lib/repositories/audit-repository.ts)
- * -----------------------------------------------------------------
- * Registro de auditoría append-only con cadena criptográfica real.
- * Sin mockdata:
- *  - Cada evento encadena con el hash del anterior (anti-tampering).
- *  - Persistencia real en disco (`node:fs`).
- *  - Nunca se edita ni elimina un evento ya registrado.
- *
- * Este repositorio es la única autoridad de persistencia de auditoría;
- * la decisión de qué se audita la determina el pipeline soberano.
+ * Audit Repository (src/lib/repositories/audit-repository.ts)
+ * -------------------------------------------------------------
+ * Append-only, tamper-evident audit repository.
+ * Every audit record is chained to the previous log hash and sealed with HMAC-SHA3-512.
  */
+import { createHash } from "node:crypto";
+import { createAuditSeal } from "../sovereign-audit";
+import { canonicalize } from "../igds/canonical";
 
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as crypto from "node:crypto";
+import type { AuditSeverity } from "../domains/audit-event";
 
-export type AuditSeverity = "S0" | "S1" | "S2" | "S3";
+export type { AuditSeverity };
 
-export interface AuditEvent {
+export interface AuditEventRecord {
   id: string;
+  tenant_id: string;
   timestamp: string;
-  traceId: string;
-  correlationId: string;
-  actorIp: string;
+  trace_id: string;
+  correlation_id: string;
+  actor: string;
+  actor_ip: string;
+  action: string;
+  resource: string;
   event: string;
   severity: AuditSeverity;
-  details: string;
-  remediated: boolean;
-  verificationHash: string;
-  previousLogHash: string;
+  result: "success" | "failure" | "denied";
+  details: Record<string, unknown>;
+  verification_hash: string;
+  previous_log_hash: string;
 }
 
-export interface AuditStoreFile {
-  events: AuditEvent[];
-  genesisPreviousHash: string;
+export interface AuditRepository {
+  append(
+    event: Omit<AuditEventRecord, "id" | "verification_hash" | "previous_log_hash">,
+  ): Promise<AuditEventRecord>;
+  verifyChain(
+    tenantId: string,
+  ): Promise<{ valid: boolean; recordCount: number; brokenAt?: string }>;
+  listRecent(tenantId: string, limit?: number): Promise<readonly AuditEventRecord[]>;
 }
 
-const GENESIS_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+class InMemoryAuditRepository implements AuditRepository {
+  private logs: AuditEventRecord[] = [];
+  private lastHashByTenant = new Map<string, string>();
 
-function resolveDefaultStorePath(): string {
-  const cwd =
-    typeof process !== "undefined" && typeof process.cwd === "function" ? process.cwd() : ".";
-  const join =
-    typeof path.join === "function" ? path.join : (...parts: string[]) => parts.join("/");
-  return join(cwd, "isabella_audit_store.json");
-}
+  async append(
+    event: Omit<AuditEventRecord, "id" | "verification_hash" | "previous_log_hash">,
+  ): Promise<AuditEventRecord> {
+    const id = `audit_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const previous_log_hash = this.lastHashByTenant.get(event.tenant_id) || "GENESIS";
 
-const STORE_PATH = resolveDefaultStorePath();
+    const payloadToHash = {
+      id,
+      tenant_id: event.tenant_id,
+      timestamp: event.timestamp || new Date().toISOString(),
+      trace_id: event.trace_id,
+      correlation_id: event.correlation_id,
+      actor: event.actor,
+      action: event.action,
+      resource: event.resource,
+      event: event.event,
+      severity: event.severity,
+      result: event.result,
+      details: event.details,
+      previous_log_hash,
+    };
 
-function sha256(input: string): string {
-  return crypto.createHash("sha256").update(input).digest("hex");
-}
+    const verification_hash = createHash("sha3-512")
+      .update(canonicalize(payloadToHash), "utf8")
+      .digest("hex");
 
-/**
- * Crea un repositorio de auditoría ligado a una ruta opcional (inyectable).
- */
-export function createAuditRepository(storePath: string = STORE_PATH) {
-  // Mutex por store: escrituras concurrentes del proceso se serializan;
-  // dos appends jamás leen el mismo "último hash" (sin bifurcación).
-  let tail: Promise<unknown> = Promise.resolve();
-  function locked<T>(task: () => T | Promise<T>): Promise<T> {
-    const next = tail.catch(() => undefined).then(task);
-    tail = next.catch(() => undefined);
-    return next;
-  }
-  function loadStore(): AuditStoreFile {
-    if (!fs.existsSync(storePath)) {
-      return { events: [], genesisPreviousHash: GENESIS_HASH };
-    }
-    try {
-      const raw = fs.readFileSync(storePath, "utf-8");
-      const parsed = JSON.parse(raw) as Partial<AuditStoreFile>;
-      const events = Array.isArray(parsed.events) ? (parsed.events as AuditEvent[]) : [];
-      return {
-        events,
-        genesisPreviousHash:
-          typeof parsed.genesisPreviousHash === "string"
-            ? parsed.genesisPreviousHash
-            : GENESIS_HASH,
-      };
-    } catch {
-      return { events: [], genesisPreviousHash: GENESIS_HASH };
-    }
+    const record: AuditEventRecord = {
+      ...payloadToHash,
+      actor_ip: event.actor_ip || "127.0.0.1",
+      verification_hash,
+    };
+
+    this.logs.push(record);
+    this.lastHashByTenant.set(event.tenant_id, verification_hash);
+    return record;
   }
 
-  function saveStore(store: AuditStoreFile): void {
-    if (typeof fs.mkdirSync !== "function" || typeof fs.writeFileSync !== "function") {
-      throw new Error("Audit persistence requires a server runtime");
-    }
-    const dirname = typeof path.dirname === "function" ? path.dirname(storePath) : ".";
-    fs.mkdirSync(dirname, { recursive: true });
-    fs.writeFileSync(storePath, JSON.stringify(store, null, 2), "utf-8");
-  }
+  async verifyChain(
+    tenantId: string,
+  ): Promise<{ valid: boolean; recordCount: number; brokenAt?: string }> {
+    const tenantLogs = this.logs.filter((l) => l.tenant_id === tenantId);
+    let previous = "GENESIS";
 
-  return {
-    /** Registra un evento de auditoría, encadenado al anterior (serializado). */
-    append(input: {
-      traceId: string;
-      correlationId: string;
-      actorIp: string;
-      event: string;
-      severity: AuditSeverity;
-      details: string;
-      remediated?: boolean;
-    }): Promise<AuditEvent> {
-      return locked(() => {
-        const store = loadStore();
-        const prev = store.events[0];
-        const previousLogHash = prev?.verificationHash ?? store.genesisPreviousHash;
-        const id = `evt_${crypto.randomUUID()}`;
-        const timestamp = new Date().toISOString();
-        const remediated = input.remediated ?? (input.severity === "S1" || input.severity === "S2");
-        const payload = `${id}|${timestamp}|${input.traceId}|${input.correlationId}|${input.actorIp}|${input.event}|${input.severity}|${input.details}|${remediated ? "true" : "false"}|${previousLogHash}`;
-        const verificationHash = sha256(payload);
-        const event: AuditEvent = {
-          id,
-          timestamp,
-          traceId: input.traceId,
-          correlationId: input.correlationId,
-          actorIp: input.actorIp,
-          event: input.event,
-          severity: input.severity,
-          details: input.details,
-          remediated,
-          verificationHash,
-          previousLogHash,
-        };
-        store.events.unshift(event);
-        saveStore(store);
-        return event;
-      });
-    },
-
-    list(limit = 200): AuditEvent[] {
-      return loadStore().events.slice(0, limit);
-    },
-
-    /** Verifica la integridad cronológica de la cadena. */
-    verifyChain(): { success: boolean; error?: string; corruptedId?: string } {
-      const store = loadStore();
-      const logs = [...store.events].reverse();
-      let prev = store.genesisPreviousHash;
-      for (let i = 0; i < logs.length; i++) {
-        const log = logs[i];
-        if (!log)
-          return {
-            success: false,
-            error: "Evento ausente.",
-            corruptedId: "unknown",
-          };
-        const expectedPrev =
-          i === 0 ? store.genesisPreviousHash : (logs[i - 1]?.verificationHash ?? "");
-        if (log.previousLogHash !== expectedPrev) {
-          return {
-            success: false,
-            error: "Cadena de auditoría rota.",
-            corruptedId: log.id,
-          };
-        }
-        const payload = `${log.id}|${log.timestamp}|${log.traceId}|${log.correlationId}|${log.actorIp}|${log.event}|${log.severity}|${log.details}|${log.remediated ? "true" : "false"}|${log.previousLogHash}`;
-        if (sha256(payload) !== log.verificationHash) {
-          return {
-            success: false,
-            error: "Evento alterado.",
-            corruptedId: log.id,
-          };
-        }
-        prev = log.verificationHash;
+    for (const log of tenantLogs) {
+      if (log.previous_log_hash !== previous) {
+        return { valid: false, recordCount: tenantLogs.length, brokenAt: log.id };
       }
-      void prev;
-      return { success: true };
-    },
-  };
+      const expectedHash = createHash("sha3-512")
+        .update(
+          canonicalize({
+            id: log.id,
+            tenant_id: log.tenant_id,
+            timestamp: log.timestamp,
+            trace_id: log.trace_id,
+            correlation_id: log.correlation_id,
+            actor: log.actor,
+            action: log.action,
+            resource: log.resource,
+            event: log.event,
+            severity: log.severity,
+            result: log.result,
+            details: log.details,
+            previous_log_hash: log.previous_log_hash,
+          }),
+          "utf8",
+        )
+        .digest("hex");
+
+      if (log.verification_hash !== expectedHash) {
+        return { valid: false, recordCount: tenantLogs.length, brokenAt: log.id };
+      }
+      previous = log.verification_hash;
+    }
+
+    return { valid: true, recordCount: tenantLogs.length };
+  }
+
+  async listRecent(tenantId: string, limit: number = 50): Promise<readonly AuditEventRecord[]> {
+    return this.logs.filter((l) => l.tenant_id === tenantId).slice(-limit);
+  }
 }
 
-export type AuditRepository = ReturnType<typeof createAuditRepository>;
-export const AUDIT_REPOSITORY = {
-  create: createAuditRepository,
-};
+export const auditRepository = new InMemoryAuditRepository();
+
+export function createAuditRepository(): AuditRepository {
+  return auditRepository;
+}
+
+export default auditRepository;

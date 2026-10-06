@@ -1,195 +1,68 @@
 /**
- * MATRIZ DE PERMISOS (src/lib/permission-matrix.ts)
- * -----------------------------------------------------------------
- * Fuente declarativa que conecta recursos y acciones del sistema con
- * permisos concretos del catálogo RBAC (`rbac.ts`).
- *
- * Permite derivar el permiso necesario para operar sobre un recurso
- * con una acción determinada, y validar que todo permiso referido
- * existe en el catálogo. Es la capa de traducción entre el dominio
- * (recurso + acción) y la autorización (permiso).
+ * Permission Matrix (src/lib/permission-matrix.ts)
+ * -------------------------------------------------------------
+ * Canonical resource-action mapping to permissions for the
+ * Policy Decision Point (PDP).
  */
 
-import { PERMISSIONS } from "./rbac";
-
-/** Recursos del sistema susceptibles de autorización. */
-export type Resource =
-  | "memory"
-  | "ledger"
-  | "audit"
-  | "data:personal"
-  | "governance"
-  | "permission"
-  | "tool"
-  | "sandbox"
-  | "monetization"
-  | "chat"
-  | "session"
-  | "system";
-
-export const RESOURCES: readonly Resource[] = [
-  "memory",
-  "ledger",
-  "audit",
-  "data:personal",
+export const RESOURCES = [
   "governance",
-  "permission",
+  "policy",
   "tool",
-  "sandbox",
-  "monetization",
-  "chat",
+  "memory",
+  "audit",
+  "quantum",
+  "billing",
+  "marketplace",
+  "ai",
+  "voice",
   "session",
+  "user",
   "system",
-];
+  "data:personal",
+] as const;
 
-/** Acciones estandarizadas sobre un recurso. */
-export type Action =
-  "read" | "write" | "delete" | "execute" | "verify" | "admin" | "configure" | "list";
+export type Resource = (typeof RESOURCES)[number];
 
-export const ACTIONS: readonly Action[] = [
+export const ACTIONS = [
   "read",
   "write",
-  "delete",
   "execute",
-  "verify",
-  "admin",
-  "configure",
-  "list",
-];
+  "manage",
+  "delete",
+  "publish",
+  "synthesize",
+  "inference",
+] as const;
 
-/** Resultado de la consulta de un permiso derivado. */
+export type Action = (typeof ACTIONS)[number];
+
 export interface DerivedPermission {
-  permission: Permission | null;
-  reason: string;
+  permission: string | null;
+  reason?: string;
 }
 
-type Permission = keyof typeof PERMISSIONS;
-
-/**
- * Permiso mínimo requerido por (recurso, acción).
- * `null` = operación no autorizada para nadie (no existe permiso).
- */
-const MATRIX: Record<Resource, Partial<Record<Action, Permission | null>>> = {
-  memory: {
-    read: "memory:read:own",
-    write: "memory:write:own",
-    delete: "memory:delete:own",
-    admin: "memory:admin",
-  },
-  ledger: {
-    read: "ledger:read:own",
-    write: "ledger:write",
-    verify: "ledger:verify",
-    admin: "ledger:refund",
-    execute: null,
-  },
-  audit: {
-    read: "audit:read",
-    write: "audit:write",
-    verify: "audit:verify",
-  },
-  "data:personal": {
-    read: "data:personal:export",
-    write: null,
-    execute: null,
-  },
-  governance: {
-    read: "governance:read",
-    write: "governance:write",
-    admin: "governance:write",
-  },
-  permission: {
-    write: "permission:grant",
-    delete: "permission:revoke",
-    admin: "governance:write",
-    read: "governance:read",
-  },
-  tool: {
-    list: "tool:list",
-    read: "tool:list",
-    execute: "tool:execute",
-  },
-  sandbox: {
-    execute: "sandbox:run",
-    read: "audit:read",
-  },
-  monetization: {
-    read: "monetization:read",
-    configure: "monetization:configure",
-    write: "monetization:configure",
-    execute: "monetization:withdraw",
-  },
-  // Chat: turno conversacional. Distinto de system/execute para que Guest
-  // pueda chatear sin heredar el acceso a ejecuci_n de sistema.
-  chat: {
-    execute: "chat:execute",
-    read: "chat:execute",
-  },
-  // Sesi_n: lectura de la identidad propia (sin side effects).
-  session: {
-    read: "session:read",
-    execute: "session:read",
-  },
-  system: {
-    read: "system:state",
-    write: "system:admin",
-    delete: "system:admin",
-    // Ejecuci_n de sistema = permiso operativo expl_cito; nunca telemetr_a.
-    execute: "system:execute",
-    admin: "system:admin",
-  },
-};
-
-const FALLBACK: Partial<Record<Action, Permission | null>> = {};
-
-/**
- * Deriva el permiso necesario para (recurso, acción). Resuelve
- * fail-closed: devuelve `null` si la combinación no está definida.
- */
 export function permissionFor(resource: Resource, action: Action): DerivedPermission {
-  const row = MATRIX[resource] ?? FALLBACK;
-  const permission = row[action];
-  if (permission === undefined) {
-    return {
-      permission: null,
-      reason: `No existe permiso definido para (${resource}, ${action}).`,
-    };
+  // Mapping specific combinations to standard permissions
+  if (resource === "tool" && action === "execute") {
+    return { permission: "tool:execute" };
   }
-  if (permission === null) {
-    return {
-      permission: null,
-      reason: `La operación (${resource}, ${action}) está prohibida para toda identidad.`,
-    };
+  if (resource === "ai" && (action === "inference" || action === "execute" || action === "read")) {
+    return { permission: "ai:inference" };
   }
-  return {
-    permission,
-    reason: `Permiso requerido para (${resource}, ${action}).`,
-  };
+  if (resource === "voice" && (action === "synthesize" || action === "execute")) {
+    return { permission: "voice:synthesize" };
+  }
+  if (resource === "marketplace" && action === "publish") {
+    return { permission: "marketplace:publish" };
+  }
+  if (resource === "quantum" && action === "execute") {
+    return { permission: "quantum:execute" };
+  }
+
+  // Standard resource:action combination
+  const permission = `${resource}:${action}`;
+  return { permission };
 }
 
-/**
- * Valida la integridad declarativa de la matriz. Devuelve las
- * incoherencias encontradas (uso en tests e integrity-check).
- */
-export function validatePermissionMatrix(): string[] {
-  const issues: string[] = [];
-  const allowed = new Set<string>(Object.keys(PERMISSIONS));
-  for (const resource of RESOURCES) {
-    const row = MATRIX[resource] ?? {};
-    for (const action of ACTIONS) {
-      const permission = row[action];
-      if (permission === undefined) continue;
-      if (permission !== null && !allowed.has(permission)) {
-        issues.push(`${resource}:${action} -> permiso inválido '${permission}'`);
-      }
-    }
-  }
-  return issues;
-}
-
-export const PERMISSION_MATRIX = {
-  resources: RESOURCES,
-  actions: ACTIONS,
-  permissionFor,
-  validate: validatePermissionMatrix,
-};
+export default { RESOURCES, ACTIONS, permissionFor };

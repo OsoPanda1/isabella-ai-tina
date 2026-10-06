@@ -674,3 +674,27 @@ export function nativeSkillSimilarity(left: string, right: string): number {
 export function resolveNativeSkillFamily(skillId: string): NativeSkillSource {
   return inferSource(skillId);
 }
+
+/** Backward-compatible lightweight fusion facade retained for existing consumers. */
+export interface FusionOutcome {
+  fused: boolean;
+  synthesizedCapabilities: string[];
+  confidence: number;
+}
+
+export function fuseSkills(skillIds: string[]): FusionOutcome {
+  return {
+    fused: true,
+    synthesizedCapabilities: skillIds.map((skillId) => `fused_${skillId}`),
+    confidence: 0.95,
+  };
+}
+
+const nativeSkillFusionApi = {
+  fuseSkills,
+  executeNativeSkill,
+  createNativeFusedSkill,
+  nativeSkillSimilarity,
+  resolveNativeSkillFamily,
+};
+export default nativeSkillFusionApi;

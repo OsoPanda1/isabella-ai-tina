@@ -16,7 +16,11 @@ export interface EconomicIntegrityReport {
  * Verificación de integridad económica (autoridad canónica).
  * Fail-closed (§16): escrituras económicas solo si TODO está ok.
  */
-export async function checkEconomicIntegrity(): Promise<EconomicIntegrityReport> {
+export async function checkEconomicIntegrity(
+  // BookPI es una cadena por tenant (verifyLedger filtra por tenant_id):
+  // sin tenant el caller no puede evaluar integridad económica alguna.
+  tenantId = "default-tenant",
+): Promise<EconomicIntegrityReport> {
   // Signer disponible (sin exponer secretos).
   let signerAvailable = true;
   let simulated = false;
@@ -34,7 +38,7 @@ export async function checkEconomicIntegrity(): Promise<EconomicIntegrityReport>
     const { createBookpiPostgresRepository } =
       await import("@/lib/repositories/bookpi-postgres-repository");
     const repo = createBookpiPostgresRepository();
-    const integrity = await repo.verifyIntegrity();
+    const integrity = await repo.verifyIntegrity(tenantId);
     bookpi = { available: true, chainValid: integrity.success };
   } catch {
     bookpi = { available: false, chainValid: false };

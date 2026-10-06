@@ -1,6 +1,9 @@
 import { config } from "@/lib/config";
 import { SecuritySystem } from "@/lib/security";
+import { OpenAICompatibleTransport } from "./transports/openai-compatible";
 import type { IntelligenceProvider, IntelligenceRequest, IntelligenceResponse } from "./contracts";
+
+const transport = new OpenAICompatibleTransport();
 
 export type FreeAIEndpoint = {
   id: string;
@@ -74,27 +77,24 @@ class FreeCompatibleProvider implements IntelligenceProvider {
   }
   async invoke(request: IntelligenceRequest): Promise<IntelligenceResponse> {
     const started = performance.now();
+    const kwargs = transport.buildKwargs(this.modelId, request.messages, null, {
+      temperature: request.temperature,
+      maxTokens: request.maxTokens,
+    });
     const response = await SecuritySystem.fetchSafeUpstream(
       `${this.endpoint.baseUrl}/chat/completions`,
       {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          model: this.modelId,
-          messages: request.messages,
-          temperature: request.temperature ?? 0.7,
-          max_tokens: request.maxTokens ?? 2048,
-          stream: false,
-        }),
+        body: JSON.stringify(kwargs),
       },
     );
     if (!response.ok) throw new Error(`free federation upstream returned ${response.status}`);
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number };
-    };
-    const text = payload.choices?.[0]?.message?.content?.trim();
+    const payload: unknown = await response.json();
+    const normalized = transport.normalizeResponse(payload);
+    const text = normalized.content?.trim();
     if (!text) throw new Error("free federation upstream returned no text");
+    const cache = transport.extractCacheStats(payload);
     return {
       requestId: request.requestId,
       modelId: this.modelId,
@@ -104,9 +104,16 @@ class FreeCompatibleProvider implements IntelligenceProvider {
       degraded: true,
       risk: "MEDIUM",
       usage: {
-        inputTokens: payload.usage?.prompt_tokens,
-        outputTokens: payload.usage?.completion_tokens,
+        inputTokens: normalized.usage?.promptTokens,
+        outputTokens: normalized.usage?.completionTokens,
+        ...(normalized.usage ? { totalTokens: normalized.usage.totalTokens } : {}),
+        ...(cache
+          ? { cachedTokens: cache.cachedTokens, creationTokens: cache.creationTokens }
+          : {}),
       },
+      ...(normalized.finishReason !== "unknown" ? { finishReason: normalized.finishReason } : {}),
+      ...(normalized.toolCalls ? { toolCalls: normalized.toolCalls } : {}),
+      ...(normalized.reasoning ? { reasoning: normalized.reasoning } : {}),
     };
   }
 }

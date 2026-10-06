@@ -1,60 +1,58 @@
 /**
- * PostgreSQL Persistence Layer — Isabella
- * Connects via Supabase Pooler (pg). Async-first.
- * Used by API routes and server.ts for durable persistence.
- * Falls back to null when POSTGRES_URL is not set.
+ * PostgreSQL Persistence Manager (src/lib/persistence/postgres.ts)
+ * -------------------------------------------------------------
+ * Provides connection pooling, migration runner, and health checks
+ * for PostgreSQL / Neon / Supabase database authorities.
  */
-// @ts-nocheck
-import { Pool, type PoolClient, type QueryResult } from "pg";
+import pg, { type QueryResultRow } from "pg";
+import { config } from "../config";
 
-let pool: Pool | null = null;
-let initAttempted = false;
+let pool: pg.Pool | null = null;
 
-export function getPgPool(): Pool | null {
+export function getPgPool(): pg.Pool | null {
   if (pool) return pool;
-  if (initAttempted) return null;
-  initAttempted = true;
-
-  const connectionString = process.env.POSTGRES_URL;
+  const connectionString = config().DATABASE_URL;
   if (!connectionString) return null;
 
   try {
-    // P0 FIX: nunca desactivar la validación del certificado TLS del servidor.
-    // `rejectUnauthorized: false` permitía MITM contra la base de datos. Se
-    // mantiene una única válvula explícita (POSTGRES_SSL_REJECT_UNAUTHORIZED=false)
-    // solo para entornos de desarrollo con certificados autofirmados.
-    const rejectUnauthorized = process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED !== "false";
-    pool = new Pool({
+    pool = new pg.Pool({
       connectionString,
+      ssl:
+        connectionString.includes("sslmode=require") ||
+        connectionString.includes("neon.tech") ||
+        connectionString.includes("supabase.co")
+          ? { rejectUnauthorized: true }
+          : undefined,
       max: 10,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 5_000,
-      ssl: rejectUnauthorized ? { rejectUnauthorized: true } : { rejectUnauthorized: false },
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 30000,
     });
-
-    pool.on("error", (err) => {
-      console.error("[PostgreSQL] Pool error:", err.message);
-    });
-
     return pool;
   } catch (err) {
-    console.error("[PostgreSQL] Init failed:", err);
-    pool = null;
+    console.error("[Postgres] Failed to initialize pool:", err);
     return null;
   }
 }
 
-export async function pgQuery<T = Record<string, unknown>>(
+/**
+ * Consulta parametrizada. Devuelve las filas; lanza si el pool no está
+ * disponible (fail-closed: nunca degrada a un fallback en memoria).
+ */
+export async function pgQuery<T extends QueryResultRow = Record<string, unknown>>(
   text: string,
   params?: unknown[],
 ): Promise<T[]> {
   const p = getPgPool();
   if (!p) throw new Error("PostgreSQL unavailable");
 
-  const result: QueryResult<T> = await p.query(text, params);
+  const result = await p.query<T>(text, params);
   return result.rows;
 }
 
+/**
+ * Ejecución parametrizada (INSERT/UPDATE/DELETE). Devuelve el número de
+ * filas afectadas; lanza si el pool no está disponible.
+ */
 export async function pgExecute(text: string, params?: unknown[]): Promise<{ rowCount: number }> {
   const p = getPgPool();
   if (!p) throw new Error("PostgreSQL unavailable");
@@ -63,128 +61,44 @@ export async function pgExecute(text: string, params?: unknown[]): Promise<{ row
   return { rowCount: result.rowCount ?? 0 };
 }
 
-export async function pgHealthCheck(): Promise<boolean> {
+export async function runPostgresMigration(sql: string): Promise<boolean> {
   const p = getPgPool();
   if (!p) return false;
-
   try {
-    const client: PoolClient = await p.connect();
-    await client.query("SELECT 1");
-    client.release();
-    return true;
-  } catch {
+    const client = await p.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(sql);
+      await client.query("COMMIT");
+      return true;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("[Postgres] Migration error:", err);
     return false;
   }
 }
 
-/**
- * Run the Isabella schema migration on PostgreSQL.
- * Idempotent (CREATE IF NOT EXISTS).
- */
-export async function runPostgresMigration(): Promise<void> {
+export async function pgHealthCheck(): Promise<{
+  ok: boolean;
+  latencyMs?: number;
+  error?: string;
+}> {
   const p = getPgPool();
-  if (!p) return;
-
-  const client = await p.connect();
+  if (!p) {
+    return { ok: false, error: "DATABASE_URL_NOT_CONFIGURED" };
+  }
+  const start = Date.now();
   try {
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS memory_items (
-        memoryId TEXT PRIMARY KEY,
-        tenantId TEXT,
-        sessionId TEXT,
-        scope TEXT,
-        content TEXT,
-        contentJson TEXT,
-        sourceType TEXT,
-        relevance REAL,
-        expiresAt TEXT,
-        checksum TEXT,
-        createdAt TEXT,
-        updatedAt TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS audit_logs (
-        id TEXT PRIMARY KEY,
-        tenantId TEXT,
-        sessionId TEXT,
-        actorId TEXT,
-        eventType TEXT,
-        payload TEXT,
-        traceId TEXT,
-        checksum TEXT,
-        createdAt TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS quantum_events (
-        eventId TEXT PRIMARY KEY,
-        eventType TEXT,
-        schemaVersion TEXT,
-        traceId TEXT,
-        requestId TEXT,
-        tenantId TEXT,
-        subjectId TEXT,
-        originCore INTEGER,
-        targetCore INTEGER,
-        occurredAt TEXT,
-        policyVersion TEXT,
-        payloadHash TEXT,
-        previousEventHash TEXT,
-        data TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS bookpi_blocks (
-        blockHash TEXT PRIMARY KEY,
-        version TEXT,
-        previousHash TEXT,
-        requestId TEXT,
-        tenantId TEXT,
-        circuitHash TEXT,
-        implementation TEXT,
-        status TEXT,
-        policyVersion TEXT,
-        signerKeyId TEXT,
-        teeVerified INTEGER,
-        createdAt TEXT,
-        blockData TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS telemetry_counters (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        labels TEXT,
-        value INTEGER,
-        timestamp TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS telemetry_histograms (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        value REAL,
-        timestamp TEXT
-      );
-
-      CREATE TABLE IF NOT EXISTS telemetry_spans (
-        spanId TEXT PRIMARY KEY,
-        traceId TEXT,
-        parentSpanId TEXT,
-        operation TEXT,
-        startTime TEXT,
-        endTime TEXT,
-        durationMs INTEGER,
-        status TEXT,
-        attributes TEXT
-      );
-    `);
-    console.log("[PostgreSQL] Migration completed (7 tables)");
-  } finally {
-    client.release();
+    const res = await p.query("SELECT 1 as alive");
+    return { ok: res.rows.length > 0, latencyMs: Date.now() - start };
+  } catch (err) {
+    return { ok: false, latencyMs: Date.now() - start, error: String(err) };
   }
 }
 
-export async function closePgPool(): Promise<void> {
-  if (pool) {
-    await pool.end();
-    pool = null;
-    initAttempted = false;
-  }
-}
+export default { getPgPool, runPostgresMigration, pgHealthCheck };

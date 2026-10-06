@@ -42,6 +42,9 @@ export default defineConfig(({ command }) => {
       host: "0.0.0.0",
       port: 3000,
       strictPort: true,
+      // The hosted preview uses the Express middleware server; do not start
+      // Vite's separate HMR socket on the shared 24678 port.
+      hmr: false,
     },
     build: {
       target: "esnext",

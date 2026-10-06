@@ -5,7 +5,7 @@
  */
 import Stripe from "stripe";
 import { config } from "../config";
-import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-repository";
+import { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";
 
 export type CattleyaTier = 0 | 1 | 2 | 3; // Básica, Regular, Especial, Coleccionable
 export const CATTLEYA_MAX_SCORE = 2000;

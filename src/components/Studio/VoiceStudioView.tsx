@@ -16,12 +16,15 @@ import {
   Check,
   UserCheck,
   ShieldCheck,
+  Activity,
+  Waves,
   type LucideIcon,
 } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";
 import { VoiceSettings } from "../../types";
 import { getAvailableFemaleVoices, isStrictlyFemaleVoice } from "../../utils/voiceUtils";
 import { VoiceSpectrumVisualizer } from "../AudioVisualizer/VoiceSpectrumVisualizer";
+import { RealtimeWaveformVisualizer } from "../AudioVisualizer/RealtimeWaveformVisualizer";
 
 const TIMBRE_PRESETS: Array<{
   id: VoiceSettings["timbrePreset"];
@@ -115,6 +118,9 @@ export const VoiceStudioView: React.FC = () => {
   const [customText, setCustomText] = useState<string>(
     "Hola, soy Isabella Villaseñor AI. Mi voz ahora fluye con naturalidad, calidez y armonía para acompañar tus ideas y creaciones.",
   );
+  const [visualizerDisplay, setVisualizerDisplay] = useState<"waveform" | "spectrum" | "dual">(
+    "waveform",
+  );
 
   const handleTimbreSelect = (preset: (typeof TIMBRE_PRESETS)[0]) => {
     updateVoiceSettings({
@@ -194,8 +200,73 @@ export const VoiceStudioView: React.FC = () => {
             </div>
           </div>
 
-          {/* Real-time Visual Spectrum Analyzer & Waveform Visualizer */}
-          <VoiceSpectrumVisualizer height={190} />
+          {/* Visualizer Display Selector Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5 text-sky-400" />
+                <span>Retroalimentación Acústica en Tiempo Real:</span>
+              </span>
+            </div>
+
+            <div className="flex items-center rounded-xl border border-slate-800 bg-[#030712] p-0.5 text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => {
+                  setVisualizerDisplay("waveform");
+                  soundManager.playBeep(720, 0.02);
+                }}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  visualizerDisplay === "waveform"
+                    ? "bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/30"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Forma de Onda (AnalyserNode)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVisualizerDisplay("spectrum");
+                  soundManager.playBeep(800, 0.02);
+                }}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  visualizerDisplay === "spectrum"
+                    ? "bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/30"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>Espectro FFT</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVisualizerDisplay("dual");
+                  soundManager.playBeep(880, 0.02);
+                }}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  visualizerDisplay === "dual"
+                    ? "bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/30"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Waves className="w-3.5 h-3.5" />
+                <span>Vista Dual</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Real-time Web Audio API Waveform Visualizer & FFT Spectrum */}
+          {visualizerDisplay === "waveform" && <RealtimeWaveformVisualizer height={200} />}
+          {visualizerDisplay === "spectrum" && <VoiceSpectrumVisualizer height={200} />}
+          {visualizerDisplay === "dual" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <RealtimeWaveformVisualizer height={180} />
+              <VoiceSpectrumVisualizer height={180} />
+            </div>
+          )}
         </div>
       </div>
 

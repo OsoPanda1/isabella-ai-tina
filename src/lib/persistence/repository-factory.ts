@@ -23,7 +23,9 @@ class ProductionRepositoryFactory implements RepositoryFactory {
       }
       return cfg.NODE_ENV === "production" || mode === "production" || mode === "staging";
     } catch {
-      return false;
+      // La configuración es una frontera de seguridad: si no puede resolverse,
+      // asumir runtime productivo evita cualquier fallback a persistencia local.
+      return true;
     }
   }
 
@@ -126,4 +128,4 @@ export const repositoryFactory: RepositoryFactory = new ProductionRepositoryFact
 // Legacy export for direct JSON access in dev/test only — not for production routes
 export { JsonRepositoryFactory } from "./adapters/json-adapter";
 export { NeonRepository } from "./adapters/neon-adapter";
-export { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-repository";
+export { createBookpiPostgresRepository } from "../repositories/bookpi-postgres-runtime";

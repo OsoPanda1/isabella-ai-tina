@@ -134,12 +134,18 @@ export function createSovereignPipeline(opts?: {
 
           if (!gate.passed) {
             const auditEvent = await opts?.auditRepository?.append({
-              traceId: input.traceId,
-              correlationId: input.requestId,
-              actorIp: input.actorIp,
+              tenant_id: input.tenantId,
+              timestamp: new Date().toISOString(),
+              trace_id: input.traceId,
+              correlation_id: input.requestId,
+              actor: input.actorId,
+              actor_ip: input.actorIp,
+              action: "constitutional_gate_denied",
+              resource: "sovereign-pipeline",
               event: "constitutional_gate_denied",
               severity: "S1",
-              details: `Artículos denegados: ${gate.deniedArticles.join(", ")}`,
+              result: "denied",
+              details: { message: `Artículos denegados: ${gate.deniedArticles.join(", ")}` },
             });
 
             return {
@@ -199,12 +205,18 @@ export function createSovereignPipeline(opts?: {
 
               if (policyResult.decision === "denied") {
                 const auditEvent = await opts?.auditRepository?.append({
-                  traceId: input.traceId,
-                  correlationId: input.requestId,
-                  actorIp: input.actorIp,
+                  tenant_id: input.tenantId,
+                  timestamp: new Date().toISOString(),
+                  trace_id: input.traceId,
+                  correlation_id: input.requestId,
+                  actor: input.actorId,
+                  actor_ip: input.actorIp,
+                  action: "policy_denied",
+                  resource: "crown-policy",
                   event: "policy_denied",
                   severity: "S2",
-                  details: policyResult.reason,
+                  result: "denied",
+                  details: { message: policyResult.reason },
                 });
 
                 return {
@@ -246,12 +258,18 @@ export function createSovereignPipeline(opts?: {
             toolExecuted = outcome.executed;
             if (!outcome.executed) {
               const auditDeny = await opts?.auditRepository?.append({
-                traceId: input.traceId,
-                correlationId: input.requestId,
-                actorIp: input.actorIp,
+                tenant_id: input.tenantId,
+                timestamp: new Date().toISOString(),
+                trace_id: input.traceId,
+                correlation_id: input.requestId,
+                actor: input.actorId,
+                actor_ip: input.actorIp,
+                action: "tool_execution_denied",
+                resource: input.toolRequest ?? "sovereign-pipeline",
                 event: "tool_execution_denied",
                 severity: "S2",
-                details: `${outcome.stage}: ${outcome.reason}`,
+                result: "denied",
+                details: { message: `${outcome.stage}: ${outcome.reason}` },
               });
               return {
                 decision: routing,
@@ -268,19 +286,25 @@ export function createSovereignPipeline(opts?: {
           }
 
           const auditEvent = await opts?.auditRepository?.append({
-            traceId: input.traceId,
-            correlationId: input.requestId,
-            actorIp: input.actorIp,
+            tenant_id: input.tenantId,
+            timestamp: new Date().toISOString(),
+            trace_id: input.traceId,
+            correlation_id: input.requestId,
+            actor: input.actorId,
+            actor_ip: input.actorIp,
+            action: "pipeline_completed",
+            resource: input.toolRequest ?? "sovereign-pipeline",
             event: "pipeline_completed",
             severity: "S3",
-            details: JSON.stringify({
+            result: "success",
+            details: {
               intent: intent.category,
               action: intent.action,
               risk: routing.policy.risk,
               memoryUsed: memoryResult.records.length,
               toolRequest: input.toolRequest ?? null,
               toolExecuted,
-            }),
+            },
           });
 
           return {
@@ -305,9 +329,15 @@ export function createSovereignPipeline(opts?: {
       return outcome.result;
     },
 
-    verifyAuditChain() {
+    verifyAuditChain(tenantId?: string) {
+      if (!tenantId) {
+        return {
+          success: false,
+          error: "tenant_id requerido; la cadena de auditoría sólo verificable por tenant.",
+        };
+      }
       return (
-        opts?.auditRepository?.verifyChain() ?? {
+        opts?.auditRepository?.verifyChain(tenantId) ?? {
           success: false,
           error: "Sin repositorio de auditoría; la cadena no puede verificarse.",
         }

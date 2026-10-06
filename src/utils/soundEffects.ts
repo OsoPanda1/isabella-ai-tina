@@ -36,7 +36,7 @@ class SoundManager {
       osc.start();
       osc.stop(ctx.currentTime + duration);
     } catch {
-      // Audio playback fails gracefully if browser requires user interaction first
+      // Audio playback fails silently if browser policy blocks autoplay before interaction
     }
   }
 

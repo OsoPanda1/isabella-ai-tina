@@ -1,34 +1,39 @@
--- Durable runtime model authority. The in-memory registry is only a cache.
-CREATE TABLE IF NOT EXISTS public.fgais_model_registry (
-  tenant_id TEXT NOT NULL,
-  model_id TEXT NOT NULL,
-  version TEXT NOT NULL,
-  provider_id TEXT NOT NULL,
-  territory_id TEXT NOT NULL,
-  modalities JSONB NOT NULL DEFAULT '[]'::jsonb,
-  capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
-  enabled BOOLEAN NOT NULL DEFAULT FALSE,
-  production_approved BOOLEAN NOT NULL DEFAULT FALSE,
-  status TEXT NOT NULL CHECK (status IN ('PROPOSED','EVALUATED','APPROVED','DEPLOYED','REVOKED')),
-  artifact_hash TEXT NOT NULL,
-  license TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (tenant_id, model_id, version)
+-- 20260908123000_fgais_model_runtime_registry.sql
+-- FGAIS Model Runtime Registry and Federation
+
+CREATE TABLE IF NOT EXISTS fgais_model_registry (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  model_id text NOT NULL UNIQUE,
+  provider text NOT NULL,
+  version text NOT NULL,
+  capabilities jsonb NOT NULL DEFAULT '[]'::jsonb,
+  evaluation_score numeric NOT NULL DEFAULT 95.0,
+  certified boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'ACTIVE',
+  registered_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_fgais_model_registry_lookup
-  ON public.fgais_model_registry(tenant_id, model_id, enabled, production_approved, updated_at DESC);
+CREATE TABLE IF NOT EXISTS fgais_federation_replay (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  federation_id text NOT NULL,
+  event_hash text NOT NULL,
+  payload jsonb NOT NULL,
+  timestamp timestamptz NOT NULL DEFAULT now()
+);
 
-CREATE OR REPLACE FUNCTION public.fgais_model_registry_touch_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
+CREATE TABLE IF NOT EXISTS isabella_learning_state (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id text NOT NULL,
+  adapter_id text NOT NULL,
+  version text NOT NULL,
+  weights_hash text NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
-DROP TRIGGER IF EXISTS trg_fgais_model_registry_updated_at ON public.fgais_model_registry;
-CREATE TRIGGER trg_fgais_model_registry_updated_at
-BEFORE UPDATE ON public.fgais_model_registry
-FOR EACH ROW EXECUTE FUNCTION public.fgais_model_registry_touch_updated_at();
+ALTER TABLE fgais_model_registry ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fgais_federation_replay ENABLE ROW LEVEL SECURITY;
+ALTER TABLE isabella_learning_state ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON fgais_model_registry FROM anon, authenticated;
+REVOKE ALL ON fgais_federation_replay FROM anon, authenticated;
+REVOKE ALL ON isabella_learning_state FROM anon, authenticated;

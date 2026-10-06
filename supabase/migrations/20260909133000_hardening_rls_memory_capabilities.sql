@@ -1,52 +1,35 @@
--- HARDENING: memory rows are bound to the authenticated principal, not
--- merely to a client-supplied tenant claim. Service-role operations remain
--- server-side and bypass RLS by design.
-create or replace function public.current_user_id()
-returns varchar
-language sql stable security invoker set search_path = public
-as $$
-  select coalesce(
-    nullif(current_setting('request.jwt.claims', true)::jsonb->>'userId', ''),
-    nullif(current_setting('request.jwt.claims', true)::jsonb->>'user_id', ''),
-    nullif(current_setting('request.jwt.claims', true)::jsonb->>'sub', '')
-  )::varchar;
-$$;
+-- 20260909133000_hardening_rls_memory_capabilities.sql
+-- Memory partitioning and RLS hardening
 
-drop policy if exists "Tenant multi-tenant isolation policy for memories" on public.memories;
+CREATE TABLE IF NOT EXISTS episodic_memory (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id text NOT NULL,
+  session_id text,
+  episode_data jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 
--- Read: same tenant; sensitive rows additionally require owner or elevated role.
-create policy "Memory tenant read boundary" on public.memories
-  for select using (
-    tenant_id = public.current_tenant_id()
-    and (
-      sensitivity in ('low', 'medium')
-      or user_id = public.current_user_id()
-      or public.current_user_role() in ('SovereignOwner', 'Auditor')
-    )
-  );
+CREATE TABLE IF NOT EXISTS semantic_memory (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id text NOT NULL,
+  concept text NOT NULL,
+  embedding vector(768),
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 
--- Insert: tenant and principal are both derived from authenticated claims.
-create policy "Memory principal-bound insert" on public.memories
-  for insert with check (
-    tenant_id = public.current_tenant_id()
-    and user_id = public.current_user_id()
-  );
+CREATE TABLE IF NOT EXISTS procedural_memory (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id text NOT NULL,
+  skill_id text NOT NULL,
+  steps jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 
--- Update: owner/elevated role, never cross-tenant; updated ownership remains bound.
-create policy "Memory principal-bound update" on public.memories
-  for update using (
-    tenant_id = public.current_tenant_id()
-    and (user_id = public.current_user_id() or public.current_user_role() = 'SovereignOwner')
-  ) with check (
-    tenant_id = public.current_tenant_id()
-    and user_id = public.current_user_id()
-  );
+ALTER TABLE episodic_memory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE semantic_memory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE procedural_memory ENABLE ROW LEVEL SECURITY;
 
-create policy "Memory principal-bound delete" on public.memories
-  for delete using (
-    tenant_id = public.current_tenant_id()
-    and (user_id = public.current_user_id() or public.current_user_role() = 'SovereignOwner')
-  );
-
-create index if not exists idx_memories_tenant_user_created
-  on public.memories(tenant_id, user_id, created_at desc);
+REVOKE ALL ON episodic_memory FROM anon, authenticated;
+REVOKE ALL ON semantic_memory FROM anon, authenticated;
+REVOKE ALL ON procedural_memory FROM anon, authenticated;

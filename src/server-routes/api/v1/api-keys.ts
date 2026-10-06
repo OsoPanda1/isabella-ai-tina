@@ -52,7 +52,7 @@ function canIssueRole(callerRole: string, requestedRole: ApiKeyRole): boolean {
 export const Route = createFileRoute("/api/v1/api-keys")({
   server: {
     handlers: {
-      GET: withSovereignAuth("system", "admin", async (context) => {
+      GET: withSovereignAuth("system", "manage", async (context) => {
         const denied = requireManagementScope(context);
         if (denied) return denied;
         const keys = await ApiKeyService.listApiKeys(context.tenantId);
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/v1/api-keys")({
         });
       }),
 
-      POST: withSovereignAuth("system", "admin", async (context, request) => {
+      POST: withSovereignAuth("system", "manage", async (context, request) => {
         const denied = requireManagementScope(context);
         if (denied) return denied;
 
@@ -118,7 +118,7 @@ export const Route = createFileRoute("/api/v1/api-keys")({
         }
       }),
 
-      DELETE: withSovereignAuth("system", "admin", async (context, request) => {
+      DELETE: withSovereignAuth("system", "manage", async (context, request) => {
         const denied = requireManagementScope(context);
         if (denied) return denied;
 

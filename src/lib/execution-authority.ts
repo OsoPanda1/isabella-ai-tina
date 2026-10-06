@@ -305,7 +305,7 @@ export function createExecutionAuthority(opts?: {
     async execute(request: ExecutionRequest): Promise<ExecutionOutcome> {
       // ── KILL SWITCH: parada de emergencia antes de todo ───────
       if (opts?.killSwitch) {
-        let killed = false;
+        let killed: boolean;
         try {
           killed = await opts.killSwitch.isKilled("tool-execution");
         } catch {
@@ -576,18 +576,24 @@ export function createExecutionAuthority(opts?: {
       }
       const resultHash = hashResult(result);
       const event = await opts.auditRepository.append({
-        traceId: request.traceId,
-        correlationId: decision.decision_id,
-        actorIp: request.ip,
+        tenant_id: request.tenantId,
+        timestamp: new Date().toISOString(),
+        trace_id: request.traceId,
+        correlation_id: decision.decision_id,
+        actor: request.actorId,
+        actor_ip: request.ip,
+        action: tool.auditEvent,
+        resource: request.tool,
         event: tool.auditEvent,
         severity: tool.risk === "critical" || tool.risk === "high" ? "S2" : "S3",
-        details: JSON.stringify({
+        result: "success",
+        details: {
           tool: request.tool,
           actor: request.actorId,
           tenant: request.tenantId,
           approvalId,
           resultHash,
-        }),
+        },
       });
 
       return {

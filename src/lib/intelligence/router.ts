@@ -10,7 +10,7 @@ import type {
 import { approveModel, listModels, registerProvider } from "./model-registry";
 import { createMoERoute, executeMoE } from "./moe-engine";
 import { recordIntelligenceMetric } from "./observability";
-import { authorizeModelForRuntime } from "./production-model-gate";
+import { authorizeModelForRuntime, assertModelRuntimeAuthority } from "./production-model-gate";
 import { inspectInferenceInput } from "./inference-firewall";
 
 const providers = new Map<string, IntelligenceProvider>();
@@ -84,6 +84,23 @@ function evaluateGovernance(request: IntelligenceRequest): GovernanceDecision {
     riskScore: 0,
     policyIds: ["inference-firewall-v1"],
   };
+}
+
+export async function assertIntelligenceRuntimeAuthority(params: {
+  tenantId: string;
+  modelId: string;
+  providerId: string;
+}): Promise<void> {
+  const provider: IntelligenceProvider = {
+    providerId: params.providerId,
+    modelId: params.modelId,
+    capabilities: new Set(["text"]),
+    health: async () => false,
+    invoke: async () => {
+      throw new Error("runtime_authority_probe_not_executable");
+    },
+  };
+  await assertModelRuntimeAuthority(params.tenantId, provider);
 }
 
 export function governIntelligence(request: IntelligenceRequest): GovernanceDecision {

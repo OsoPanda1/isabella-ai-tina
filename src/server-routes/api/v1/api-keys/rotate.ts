@@ -22,7 +22,7 @@ function json(data: unknown, status = 200): Response {
 export const Route = createFileRoute("/api/v1/api-keys/rotate")({
   server: {
     handlers: {
-      POST: withSovereignAuth("system", "admin", async (context, request) => {
+      POST: withSovereignAuth("system", "manage", async (context, request) => {
         const scopes = new Set(context.scope.split(/\s+/).filter(Boolean));
         if (!scopes.has(MANAGE_SCOPE)) {
           return json(

@@ -87,3 +87,26 @@ export interface FederatedRound {
   status: "VALIDATING" | "REJECTED" | "COMMITTED";
   nextVersion?: string;
 }
+
+/** Legacy lexical classifier contract retained for compatibility. */
+export interface ClassifierResult {
+  intent: string;
+  confidence: number;
+  tokens: string[];
+  subIntents: string[];
+}
+
+/** Legacy route descriptor retained for compatibility with the native presentation layer. */
+export interface ExpertRoute {
+  expertId: string;
+  name: string;
+  weight: number;
+  domain: string;
+}
+
+/** Legacy routing response retained for compatibility. */
+export interface MoeRoutingDecision {
+  selectedExperts: ExpertRoute[];
+  routingConfidence: number;
+  routingLatencyMs: number;
+}

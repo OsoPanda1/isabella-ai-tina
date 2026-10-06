@@ -1,27 +1,19 @@
--- ============================================================================
--- APPROVAL LEDGER — aprobaciones humanas durables de un solo uso
--- Target Platform: PostgreSQL (Supabase / Neon Compatible)
--- ============================================================================
--- Las aprobaciones de la Execution Authority no pueden vivir solo en
--- memoria del proceso (multi-instancia en Vercel las perdería). Esta tabla
--- las hace durables con consumo atómico (UPDATE ... WHERE NOT consumed).
--- ============================================================================
+-- 20260907090000_approval_ledger.sql
+-- Durable approval ledger for human-in-the-loop governance
 
-CREATE TABLE IF NOT EXISTS approval_grants (
-    approval_id VARCHAR(64) PRIMARY KEY,
-    trace_id VARCHAR(128) NOT NULL,
-    tool VARCHAR(128) NOT NULL,
-    actor_id VARCHAR(128) NOT NULL,
-    tenant_id VARCHAR(128) NOT NULL,
-    granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMPTZ NOT NULL,
-    consumed BOOLEAN NOT NULL DEFAULT FALSE,
-    consumed_at TIMESTAMPTZ,
-    CONSTRAINT uq_approval_trace_tool UNIQUE (trace_id, tool, actor_id, tenant_id)
+CREATE TABLE IF NOT EXISTS approval_ledger (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL,
+  action text NOT NULL,
+  resource text NOT NULL,
+  requester_id text NOT NULL,
+  approver_id text,
+  status text NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'CONSUMED', 'REJECTED')),
+  payload jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  consumed_at timestamptz
 );
 
-CREATE INDEX IF NOT EXISTS idx_approval_grants_expiry
-    ON approval_grants(expires_at) WHERE consumed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_approval_ledger_tenant_status ON approval_ledger(tenant_id, status);
 
--- RLS defensiva deny-all (el runtime owner omite RLS; anon/authenticated denegados).
-ALTER TABLE approval_grants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE approval_ledger ENABLE ROW LEVEL SECURITY;

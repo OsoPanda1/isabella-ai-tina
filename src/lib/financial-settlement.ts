@@ -87,13 +87,16 @@ export interface SettlementSteps {
     idempotencyKey: string;
     reason: string;
   }) => Promise<unknown>;
-  audit: (event: string, details: string) => Promise<unknown> | unknown;
+  audit: (
+    event: string,
+    details: string,
+    result: "success" | "failure",
+  ) => Promise<unknown> | unknown;
 }
 
-async function defaultSteps(): Promise<SettlementSteps> {
+async function defaultSteps(settlement: SettlementInput): Promise<SettlementSteps> {
   const economic = await import("./economic-events");
-  const { createBookpiPostgresRepository } =
-    await import("./repositories/bookpi-postgres-repository");
+  const { createBookpiPostgresRepository } = await import("./repositories/bookpi-postgres-runtime");
   const { createAuditRepository } = await import("./repositories/audit-repository");
   const { PostgresAccountingRepository } =
     await import("./accounting/accounting-postgres-repository");
@@ -141,14 +144,20 @@ async function defaultSteps(): Promise<SettlementSteps> {
         idempotencyKey: input.idempotencyKey,
         metadata: { reason: input.reason },
       }),
-    audit: (event, details) =>
+    audit: (event, details, result) =>
       auditRepository.append({
-        traceId: `trc_settle_${randomUUID().slice(0, 8)}`,
-        correlationId: inputCorrelation(),
-        actorIp: "127.0.0.1",
+        tenant_id: settlement.tenantId,
+        timestamp: new Date().toISOString(),
+        trace_id: `trc_settle_${randomUUID().slice(0, 8)}`,
+        correlation_id: inputCorrelation(),
+        actor: settlement.actorId,
+        actor_ip: "127.0.0.1",
+        action: event,
+        resource: "financial-settlement",
         event,
         severity: "S2",
-        details,
+        result,
+        details: { details },
       }),
   };
 }
@@ -165,7 +174,7 @@ export async function settlePayment(
   input: SettlementInput,
   steps?: SettlementSteps,
 ): Promise<SettlementReceipt> {
-  const active = steps ?? (await defaultSteps());
+  const active = steps ?? (await defaultSteps(input));
   const completed: string[] = [];
   const compensations: string[] = [];
 
@@ -182,6 +191,7 @@ export async function settlePayment(
     await active.audit(
       "settlement.claim_failed",
       `Claim fallido para ${input.providerEventId}; reintento seguro por idempotencia.`,
+      "failure",
     );
     return {
       status: "aborted",
@@ -206,7 +216,11 @@ export async function settlePayment(
   });
   if (!recorded.ok) {
     if (recorded.duplicate) return { status: "duplicate", steps: completed, compensations };
-    await active.audit("settlement.record_failed", `Evento económico fallido: ${recorded.error}`);
+    await active.audit(
+      "settlement.record_failed",
+      `Evento económico fallido: ${recorded.error}`,
+      "failure",
+    );
     return {
       status: "aborted",
       steps: completed,
@@ -235,7 +249,11 @@ export async function settlePayment(
       reason: `ledger append fallido: ${appended.error}`,
     });
     compensations.push("reversal-recorded");
-    await active.audit("settlement.ledger_failed", `Compensación registrada: ${appended.error}`);
+    await active.audit(
+      "settlement.ledger_failed",
+      `Compensación registrada: ${appended.error}`,
+      "failure",
+    );
     return {
       status: "aborted",
       steps: completed,
@@ -255,6 +273,7 @@ export async function settlePayment(
     await active.audit(
       "settlement.accounting_deferred",
       `Asiento diferido (no bloqueante): ${accounted.error}`,
+      "failure",
     );
     compensations.push("accounting-deferred");
   } else {
@@ -264,6 +283,7 @@ export async function settlePayment(
   await active.audit(
     "settlement.settled",
     `Liquidación completa: ${completed.join("+")} (bloque ${appended.block?.index ?? "?"}).`,
+    "success",
   );
   return {
     status: "settled",

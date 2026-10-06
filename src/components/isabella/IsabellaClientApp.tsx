@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, FolderOpen } from "lucide-react";
+import { ArrowDown, ChevronLeft, ChevronRight, Download, FolderOpen } from "lucide-react";
 import { useIsabella } from "@/lib/useIsabella";
 import {
   CrystalNavigation,
@@ -161,6 +161,77 @@ function IsabellaInterface() {
     config?: Parameters<typeof isabella.send>[2];
   }>({ text: "", attachments: [] });
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const chatSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const isAutoScrollPinned = useRef(true);
+
+  // User-controlled auto-scroll toggle state
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem("isabella_autoscroll_enabled");
+      return stored !== null ? stored === "true" : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    const el = chatSurfaceRef.current;
+    if (!el) return;
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: smooth ? "smooth" : "auto",
+    });
+    isAutoScrollPinned.current = true;
+    setShowScrollBottom(false);
+  }, []);
+
+  const toggleAutoScroll = useCallback(() => {
+    setAutoScrollEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("isabella_autoscroll_enabled", String(next));
+      } catch {
+        // Storage access may be restricted
+      }
+      if (next) {
+        scrollToBottom(true);
+      }
+      return next;
+    });
+  }, [scrollToBottom]);
+
+  const handleChatScroll = useCallback(() => {
+    const el = chatSurfaceRef.current;
+    if (!el) return;
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const isNearBottom = distanceToBottom < 80;
+    isAutoScrollPinned.current = isNearBottom;
+    setShowScrollBottom(!isNearBottom);
+  }, []);
+
+  useEffect(() => {
+    if (autoScrollEnabled && isAutoScrollPinned.current) {
+      scrollToBottom(true);
+    }
+  }, [isabella.messages, isabella.isProcessing, scrollToBottom, autoScrollEnabled]);
+
+  useEffect(() => {
+    const el = chatSurfaceRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => {
+      if (autoScrollEnabled && isAutoScrollPinned.current) {
+        el.scrollTo({
+          top: el.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    });
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeTab, autoScrollEnabled]);
 
   const selectTab = useCallback((tab: NavTabId) => {
     setActiveTab(tab);
@@ -387,11 +458,52 @@ function IsabellaInterface() {
             {activeTab === "terminal" && (
               <div className="mx-auto grid h-full max-w-[1450px] items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
                 <section className="flex min-w-0 flex-col gap-4">
-                  <div className="isabella-chat-surface glass min-h-[56vh] flex-1 overflow-y-auto rounded-[1.35rem] border-border/30 p-1 shadow-surface">
-                    <div className="isabella-surface-label px-5 pb-1 pt-4">
-                      <span>Canal cognitivo</span>
-                      <span className="isabella-live-line" aria-hidden="true" />
-                      <span className="text-emerald-300/80">ENCRIPTADO</span>
+                  <div
+                    ref={chatSurfaceRef}
+                    onScroll={handleChatScroll}
+                    className="isabella-chat-surface glass relative min-h-[56vh] flex-1 overflow-y-auto rounded-[1.35rem] border-border/30 p-1 shadow-surface scroll-smooth"
+                  >
+                    <div className="isabella-surface-label px-5 pb-2 pt-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/5">
+                      <div className="flex items-center gap-2">
+                        <span>Canal cognitivo</span>
+                        <span className="isabella-live-line" aria-hidden="true" />
+                        <span className="text-emerald-300/80">ENCRIPTADO</span>
+                      </div>
+
+                      {/* User-controlled Auto-scroll Toggle Switch */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          role="switch"
+                          id="chat-autoscroll-toggle"
+                          aria-checked={autoScrollEnabled}
+                          aria-label="Alternar desplazamiento automático a los mensajes más recientes"
+                          onClick={toggleAutoScroll}
+                          className="group flex items-center gap-2 rounded-full border border-border/40 bg-secondary/20 px-2.5 py-1 text-[10px] font-mono transition-all hover:border-electric/40 hover:bg-secondary/40 cursor-pointer"
+                        >
+                          <span className="text-muted-foreground group-hover:text-platinum">
+                            Auto-scroll:
+                          </span>
+                          <span
+                            className={`relative inline-flex h-3.5 w-6 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                              autoScrollEnabled ? "bg-electric" : "bg-slate-700/80"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block size-2.5 transform rounded-full bg-black transition-transform duration-200 ease-in-out ${
+                                autoScrollEnabled ? "translate-x-3" : "translate-x-0.5"
+                              }`}
+                            />
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold tracking-wider ${
+                              autoScrollEnabled ? "text-electric" : "text-muted-foreground"
+                            }`}
+                          >
+                            {autoScrollEnabled ? "ON" : "OFF"}
+                          </span>
+                        </button>
+                      </div>
                     </div>
                     <MessageStream
                       messages={isabella.messages}
@@ -400,6 +512,21 @@ function IsabellaInterface() {
                         if (retry.text) send(retry.text, retry.attachments, retry.config);
                       }}
                     />
+
+                    {/* Floating Jump to Latest Message / Auto-scroll button */}
+                    {showScrollBottom && (
+                      <div className="sticky bottom-3 z-30 flex justify-center pb-2 pointer-events-none">
+                        <button
+                          type="button"
+                          onClick={() => scrollToBottom(true)}
+                          className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-electric/40 bg-[#070b14]/95 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-electric shadow-xl shadow-black/70 hover:bg-electric hover:text-black transition-all cursor-pointer backdrop-blur-md animate-bounce"
+                          aria-label="Desplazar hacia el mensaje más reciente"
+                        >
+                          <ArrowDown className="size-3" />
+                          <span>Último mensaje</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="rounded-2xl crystal-glow-electric">
                     <CommandLine

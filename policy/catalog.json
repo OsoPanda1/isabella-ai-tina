@@ -1,0 +1,52 @@
+{
+  "catalogId": "isabella-policy-2026-01",
+  "policyVersion": "4.0.0",
+  "authentication": {
+    "issuer": "https://issuer.example.com/",
+    "audience": "isabella-api",
+    "algorithms": ["RS256"],
+    "clockSkewSeconds": 5,
+    "maxTokenLifetimeSeconds": 900
+  },
+  "assuranceLevels": {
+    "local": {"rank": 1},
+    "aal2": {"rank": 2},
+    "aal3": {"rank": 3}
+  },
+  "roles": {
+    "citizen": 1,
+    "member": 1,
+    "agent": 2,
+    "operator": 3,
+    "auditor": 3,
+    "admin": 4,
+    "governance_admin": 5,
+    "system": 6
+  },
+  "scopes": {
+    "memory:read": {
+      "minimumRole": "member",
+      "assurance": "local",
+      "tenantBound": true
+    },
+    "memory:write": {
+      "minimumRole": "agent",
+      "assurance": "aal2",
+      "tenantBound": true,
+      "requiresStepUp": true
+    },
+    "governance:approve": {
+      "minimumRole": "governance_admin",
+      "assurance": "aal3",
+      "tenantBound": true,
+      "requiresStepUp": true,
+      "requiresDualControl": true,
+      "conditions": {
+        "controlled_environment": {
+          "type": "environment_equals",
+          "value": "controlled"
+        }
+      }
+    }
+  }
+}

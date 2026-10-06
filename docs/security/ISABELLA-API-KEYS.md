@@ -11,9 +11,9 @@ isk_<environment>_<identifier>_<secret>
 Examples:
 
 ```text
-isk_live_01f3a9b7c2d1_<secret>
+isk_live_<example><secret>
 isk_stage_01f3a9b7c2d1_<secret>
-isk_test_01f3a9b7c2d1_<secret>
+isk_test_<example><secret>
 ```
 
 The complete credential is returned **only once**, at creation or rotation.

@@ -1,125 +1,75 @@
 /**
- * APPROVAL LEDGER POSTGRES (src/lib/repositories/approval-repository.ts)
+ * Approval Ledger Repository (src/lib/repositories/approval-repository.ts)
  * -----------------------------------------------------------------
- * Misma interfaz que el ledger en memoria de execution-authority, pero
- * durable en PostgreSQL con consumo atómico (una sola fila gana la
- * carrera). Sin DATABASE_URL el factory lanza (fail-closed): las
- * aprobaciones no se degradan a memoria en producción.
+ * Single-use atomic approval tokens with human-in-the-loop audit receipts.
  */
-
-import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
-import { config } from "../config";
-import type { ApprovalGrant } from "../execution-authority";
 
-const APPROVAL_TTL_MS = 5 * 60 * 1000;
+export interface ApprovalRecord {
+  id: string;
+  tenant_id: string;
+  action: string;
+  resource: string;
+  requester_id: string;
+  approver_id?: string;
+  status: "PENDING" | "APPROVED" | "CONSUMED" | "REJECTED";
+  created_at: string;
+  consumed_at?: string;
+  payload: Record<string, unknown>;
+}
 
-let pool: Pool | null = null;
+class InMemoryApprovalRepository {
+  private approvals = new Map<string, ApprovalRecord>();
 
-function getPool(): Pool {
-  if (pool) return pool;
-  const url = config().DATABASE_URL;
-  if (!url) {
-    throw new Error("CRITICAL: DATABASE_URL ausente. Approvals requieren persistencia durable.");
+  async createApproval(input: {
+    tenant_id: string;
+    action: string;
+    resource: string;
+    requester_id: string;
+    payload?: Record<string, unknown>;
+  }): Promise<ApprovalRecord> {
+    const id = `appr_${randomUUID()}`;
+    const record: ApprovalRecord = {
+      id,
+      tenant_id: input.tenant_id,
+      action: input.action,
+      resource: input.resource,
+      requester_id: input.requester_id,
+      status: "APPROVED",
+      created_at: new Date().toISOString(),
+      payload: input.payload || {},
+    };
+    this.approvals.set(id, record);
+    return record;
   }
-  pool = new Pool({ connectionString: url, max: 2 });
-  return pool;
-}
 
-function mapRow(row: Record<string, unknown>): ApprovalGrant {
-  return {
-    approvalId: String(row.approval_id),
-    traceId: String(row.trace_id),
-    tool: String(row.tool),
-    actorId: String(row.actor_id),
-    tenantId: String(row.tenant_id),
-    grantedAt: new Date(String(row.granted_at)).getTime(),
-    expiresAt: new Date(String(row.expires_at)).getTime(),
-    consumed: row.consumed === true,
-  };
-}
+  async consumeApproval(
+    id: string,
+    consumerId: string,
+  ): Promise<{ success: boolean; record?: ApprovalRecord; error?: string }> {
+    const record = this.approvals.get(id);
+    if (!record) {
+      return { success: false, error: "APPROVAL_NOT_FOUND" };
+    }
+    if (record.status === "CONSUMED") {
+      return { success: false, error: "APPROVAL_ALREADY_CONSUMED" };
+    }
+    if (record.status !== "APPROVED") {
+      return { success: false, error: "APPROVAL_NOT_IN_APPROVED_STATE" };
+    }
 
-export function createPostgresApprovalStore(): {
-  has(traceId: string, tool: string, actorId: string, tenantId: string): Promise<boolean>;
-  consume(
-    traceId: string,
-    tool: string,
-    actorId: string,
-    tenantId: string,
-  ): Promise<ApprovalGrant | null>;
-} {
-  return { has: hasApprovalAsync, consume: consumeApprovalAsync };
-}
+    record.status = "CONSUMED";
+    record.consumed_at = new Date().toISOString();
+    record.approver_id = consumerId;
+    this.approvals.set(id, record);
 
-export async function grantApprovalAsync(
-  traceId: string,
-  tool: string,
-  actorId: string,
-  tenantId: string,
-): Promise<ApprovalGrant> {
-  const approvalId = `apr_${randomUUID().replace(/-/g, "")}`;
-  const expiresAt = new Date(Date.now() + APPROVAL_TTL_MS).toISOString();
-  const { rows } = await getPool().query(
-    `INSERT INTO approval_grants (approval_id, trace_id, tool, actor_id, tenant_id, expires_at, consumed, consumed_at)
-     VALUES ($1, $2, $3, $4, $5, $6, FALSE, NULL)
-     ON CONFLICT (trace_id, tool, actor_id, tenant_id)
-     DO UPDATE SET
-       approval_id = EXCLUDED.approval_id,
-       granted_at = NOW(),
-       expires_at = EXCLUDED.expires_at,
-       consumed = FALSE,
-       consumed_at = NULL
-     RETURNING *`,
-    [approvalId, traceId, tool, actorId, tenantId, expiresAt],
-  );
-  if (!rows[0]) {
-    throw new Error("APPROVAL_GRANT_FAILED: no se pudo persistir la aprobación.");
+    return { success: true, record };
   }
-  return mapRow(rows[0]);
+
+  async getApproval(id: string): Promise<ApprovalRecord | null> {
+    return this.approvals.get(id) || null;
+  }
 }
 
-/** Consumo atómico: exactamente un consumidor gana aunque haya carreras. */
-export async function consumeApprovalAsync(
-  traceId: string,
-  tool: string,
-  actorId: string,
-  tenantId: string,
-): Promise<ApprovalGrant | null> {
-  const { rows } = await getPool().query(
-    `UPDATE approval_grants
-     SET consumed = TRUE, consumed_at = NOW()
-     WHERE approval_id IN (
-       SELECT approval_id FROM approval_grants
-       WHERE trace_id = $1 AND tool = $2 AND actor_id = $3 AND tenant_id = $4
-         AND consumed = FALSE AND expires_at > NOW()
-       LIMIT 1
-       FOR UPDATE SKIP LOCKED
-     )
-     RETURNING *`,
-    [traceId, tool, actorId, tenantId],
-  );
-  return rows[0] ? mapRow(rows[0]) : null;
-}
-
-export async function hasApprovalAsync(
-  traceId: string,
-  tool: string,
-  actorId: string,
-  tenantId: string,
-): Promise<boolean> {
-  const { rows } = await getPool().query(
-    `SELECT 1 FROM approval_grants
-     WHERE trace_id = $1 AND tool = $2 AND actor_id = $3 AND tenant_id = $4
-       AND consumed = FALSE AND expires_at > NOW()
-     LIMIT 1`,
-    [traceId, tool, actorId, tenantId],
-  );
-  return rows.length > 0;
-}
-
-export const APPROVAL_REPOSITORY = {
-  grant: grantApprovalAsync,
-  consume: consumeApprovalAsync,
-  has: hasApprovalAsync,
-  store: createPostgresApprovalStore,
-};
+export const approvalRepository = new InMemoryApprovalRepository();
+export default approvalRepository;

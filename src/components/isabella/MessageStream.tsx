@@ -190,9 +190,14 @@ export function MessageStream({
 }) {
   const endRef = useRef<HTMLDivElement | null>(null);
 
+  // Reactive signature detecting both new messages and real-time streaming/synthesis growth
+  const contentSignature = messages
+    .map((m) => `${m.id}:${m.content.length}:${m.streaming ? 1 : 0}`)
+    .join("|");
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages]);
+  }, [contentSignature]);
 
   return (
     <div className="flex flex-col gap-6 px-5 py-7 sm:px-9">

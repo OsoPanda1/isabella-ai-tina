@@ -19,6 +19,11 @@ dist-ssr/
 .vercel/
 *.local
 
+# Árbol de rutas generado por el plugin de TanStack Start durante `pnpm build`.
+# No está rastreado en ninguna rama; si se versionara, cada build dejaría el
+# árbol sucio y `pnpm production:evidence` nunca podría declarar PASS.
+src/routeTree.gen.ts
+
 # Cloudflare / Wrangler
 .wrangler/
 .dev.vars
@@ -100,4 +105,8 @@ __pycache__/
 
 # JDR generator build artifacts
 contrib/jdr-generator/api/target/
+
+
+# Runtime persistence written by src/lib/persistence/adapters/json-adapter.ts
+/isabella_data/
 

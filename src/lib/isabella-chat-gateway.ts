@@ -26,7 +26,7 @@ import {
   IsabellaChatErrorCode,
 } from "@/lib/api-contracts";
 import { redactLogArg } from "@/lib/secret-redactor";
-import { governIntelligence } from "@/lib/intelligence/router";
+import { governIntelligence, assertIntelligenceRuntimeAuthority } from "@/lib/intelligence/router";
 import {
   createOutputGateTracker,
   evaluateOutputSecurity,
@@ -471,9 +471,9 @@ export async function handleIsabellaChat(
   void requestContext;
   // Provider contracts: GEMINI_API_KEY, GROQ_API_KEY, XAI_API_KEY
   const providerKeys = {
-    gemini: secrets.optionalProviderKey("gemini"),
-    groq: secrets.optionalProviderKey("groq"),
-    xai: secrets.optionalProviderKey("xai"),
+    gemini: secrets.getOptional("GEMINI_API_KEY"),
+    groq: secrets.getOptional("GROQ_API_KEY"),
+    xai: secrets.getOptional("XAI_API_KEY"),
   };
   const serverSystem = [
     "Eres Isabella Villaseñor AI, interfaz cognitiva soberana del Nodo Cero.",
@@ -709,28 +709,6 @@ export async function handleIsabellaChat(
       );
     }
   }
-  try {
-    const { createMemoryKillSwitchStore, createPostgresKillSwitchStore } =
-      await import("@/lib/kill-switch");
-    const store = config().DATABASE_URL
-      ? createPostgresKillSwitchStore()
-      : createMemoryKillSwitchStore();
-    if (await store.isKilled("inference"))
-      return contractError(
-        context,
-        IsabellaChatErrorCode.KILL_SWITCH_ACTIVE,
-        "La inferencia está detenida por el interruptor de emergencia.",
-        503,
-      );
-  } catch {
-    return contractError(
-      context,
-      IsabellaChatErrorCode.KILL_SWITCH_ACTIVE,
-      "No fue posible verificar el estado del interruptor de emergencia; inferencia bloqueada.",
-      503,
-      true,
-    );
-  }
   const nativeSignal = config().NATIVE_COMPREHENSION_ENABLED
     ? (() => {
         try {
@@ -882,11 +860,19 @@ export async function handleIsabellaChat(
       ) {
         // Skip gateway when no direct provider keys — go directly to sovereign fallback
         // (AI_GATEWAY es opcional; se resuelve vía secrets/config validada por Zod)
-        const gwKey = secrets.optionalProviderKey("ai-gateway");
+        const gwKey = secrets.getOptional("AI_GATEWAY_API_KEY");
         if (!gwKey) continue;
       }
       const isGemini = attempt.provider === "gemini";
       const isAiGateway = attempt.provider === "ai-gateway";
+
+      // Canonical production authority: direct provider fallback paths must not
+      // bypass the durable model registry. Development remains unchanged.
+      await assertIntelligenceRuntimeAuthority({
+        tenantId: context.tenantId,
+        modelId: attempt.model,
+        providerId: attempt.provider,
+      });
       if (isAiGateway) {
         const headers = sseHeaders(
           context,

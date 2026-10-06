@@ -298,3 +298,29 @@ export async function latestRevocationForTarget(
   const row = (rows as Array<{ payload: GenesisRevocationPayload }>)[0];
   return row?.payload ?? null;
 }
+
+class InMemoryIgdsGenesisRepository {
+  private readonly seals = new Map<string, unknown>();
+
+  async saveSeal(seal: unknown): Promise<void> {
+    const key = seal as { sealId?: unknown; id?: unknown };
+    const id =
+      typeof key.sealId === "string"
+        ? key.sealId
+        : typeof key.id === "string"
+          ? key.id
+          : `seal_${Date.now()}`;
+    this.seals.set(id, seal);
+  }
+
+  async getSeal(id: string): Promise<unknown> {
+    return this.seals.get(id) ?? null;
+  }
+
+  async listSeals(): Promise<readonly unknown[]> {
+    return Array.from(this.seals.values());
+  }
+}
+
+export const igdsGenesisRepository = new InMemoryIgdsGenesisRepository();
+export default igdsGenesisRepository;

@@ -13,6 +13,7 @@ import * as path from "node:path";
 import * as crypto from "node:crypto";
 import { config } from "@/lib/config";
 import { isProductionLike, resolveRuntimeMode } from "@/lib/runtime-mode";
+import { canonicalize } from "@/lib/igds/canonical";
 
 export type MemoryScope = "turn" | "session" | "project" | "territorial" | "historical";
 export type MemorySource = "user" | "system" | "tool" | "document";
@@ -223,3 +224,141 @@ export function createMemoryRepository(storePath: string = STORE_PATH) {
 
 export type MemoryRepository = ReturnType<typeof createMemoryRepository>;
 export const MEMORY_REPOSITORY = { create: createMemoryRepository };
+
+/**
+ * Legacy SHA3-512 compatibility plane.
+ *
+ * This adapter preserves the pre-regression append/query/verifyChain algorithm
+ * so existing callers or forensic fixtures can still execute it without changing
+ * the canonical production repository API above. It is intentionally isolated
+ * from the production runtime memory path.
+ */
+export interface LegacyMemoryRecordV1 {
+  id: string;
+  tenant_id: string;
+  content: Record<string, unknown> | string;
+  scope: MemoryScope;
+  sensitivity: "low" | "medium" | "high" | "restricted";
+  purpose: string;
+  consent_required: boolean;
+  consent: boolean;
+  provenance: string;
+  content_hash: string;
+  previous_chain_hash: string;
+  chain_hash: string;
+  expires_at?: string;
+  source: string;
+  created_at: string;
+}
+
+export interface LegacyMemoryRepositoryV1 {
+  append(input: {
+    tenant_id: string;
+    content: Record<string, unknown> | string;
+    scope?: MemoryScope;
+    sensitivity?: "low" | "medium" | "high" | "restricted";
+    purpose?: string;
+    provenance?: string;
+    source?: string;
+  }): Promise<LegacyMemoryRecordV1>;
+  query(
+    tenantId: string,
+    scope?: MemoryScope,
+    limit?: number,
+  ): Promise<readonly LegacyMemoryRecordV1[]>;
+  verifyChain(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: string }>;
+}
+
+class LegacySha3MemoryRepository implements LegacyMemoryRepositoryV1 {
+  private memories: LegacyMemoryRecordV1[] = [];
+  private lastHashByTenant = new Map<string, string>();
+  private mutexLocks = new Map<string, Promise<void>>();
+
+  private async acquire(tenantId: string): Promise<() => void> {
+    while (this.mutexLocks.has(tenantId)) await this.mutexLocks.get(tenantId);
+    let release!: () => void;
+    const lock = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    this.mutexLocks.set(tenantId, lock);
+    return () => {
+      this.mutexLocks.delete(tenantId);
+      release();
+    };
+  }
+
+  async append(input: {
+    tenant_id: string;
+    content: Record<string, unknown> | string;
+    scope?: MemoryScope;
+    sensitivity?: "low" | "medium" | "high" | "restricted";
+    purpose?: string;
+    provenance?: string;
+    source?: string;
+  }): Promise<LegacyMemoryRecordV1> {
+    const release = await this.acquire(input.tenant_id);
+    try {
+      const id = `mem_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      const previous_chain_hash = this.lastHashByTenant.get(input.tenant_id) || "GENESIS";
+      const contentStr =
+        typeof input.content === "string" ? input.content : canonicalize(input.content);
+      const content_hash = crypto.createHash("sha3-512").update(contentStr, "utf8").digest("hex");
+      const chain_hash = crypto
+        .createHash("sha3-512")
+        .update(`${previous_chain_hash}:${content_hash}:${input.tenant_id}`, "utf8")
+        .digest("hex");
+      const record: LegacyMemoryRecordV1 = {
+        id,
+        tenant_id: input.tenant_id,
+        content: input.content,
+        scope: input.scope ?? "session",
+        sensitivity: input.sensitivity ?? "medium",
+        purpose: input.purpose ?? "cognitive_context",
+        consent_required: false,
+        consent: true,
+        provenance: input.provenance ?? "user_turn",
+        content_hash,
+        previous_chain_hash,
+        chain_hash,
+        source: input.source ?? "isabella_chat",
+        created_at: new Date().toISOString(),
+      };
+      this.memories.push(record);
+      this.lastHashByTenant.set(input.tenant_id, chain_hash);
+      return record;
+    } finally {
+      release();
+    }
+  }
+
+  async query(
+    tenantId: string,
+    scope?: MemoryScope,
+    limit = 50,
+  ): Promise<readonly LegacyMemoryRecordV1[]> {
+    return this.memories
+      .filter((record) => record.tenant_id === tenantId && (!scope || record.scope === scope))
+      .slice(-limit);
+  }
+
+  async verifyChain(
+    tenantId: string,
+  ): Promise<{ valid: boolean; count: number; brokenAt?: string }> {
+    const records = this.memories.filter((record) => record.tenant_id === tenantId);
+    let previous = "GENESIS";
+    for (const record of records) {
+      if (record.previous_chain_hash !== previous)
+        return { valid: false, count: records.length, brokenAt: record.id };
+      const expected = crypto
+        .createHash("sha3-512")
+        .update(`${previous}:${record.content_hash}:${record.tenant_id}`, "utf8")
+        .digest("hex");
+      if (record.chain_hash !== expected)
+        return { valid: false, count: records.length, brokenAt: record.id };
+      previous = record.chain_hash;
+    }
+    return { valid: true, count: records.length };
+  }
+}
+
+export const LEGACY_MEMORY_REPOSITORY_V1 = new LegacySha3MemoryRepository();
