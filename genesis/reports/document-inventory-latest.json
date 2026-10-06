@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T05:02:38.647Z",
+  "generatedAt": "2026-10-04T17:01:54.993Z",
   "policy": "Inventory only: no file is deleted or promoted to canonical authority automatically.",
   "files": [
     {
@@ -11,14 +11,6 @@
       "categories": [
         "security"
       ]
-    },
-    {
-      "path": ".vercel/output/static/robots.txt",
-      "bytes": 1369,
-      "sha256": "1b7245008de033fa20e4e61f1c170ab46a437e3323a67b8438407557dc78c24d",
-      "characters": 1366,
-      "headings": 3,
-      "categories": []
     },
     {
       "path": "AGENTS.md",
@@ -106,10 +98,10 @@
     },
     {
       "path": "README.md",
-      "bytes": 71025,
-      "sha256": "d5146c771e775a62f26d2c3f9dd2079a1506698b488d014ff274926ad733b4ea",
-      "characters": 70229,
-      "headings": 57,
+      "bytes": 5591,
+      "sha256": "e04d5f8f7fa59dca1e7bd1a57288f963b5ca238b302d812c51253f3a516d87d5",
+      "characters": 5485,
+      "headings": 11,
       "categories": [
         "api",
         "architecture",
@@ -194,6 +186,129 @@
         "operations",
         "security"
       ]
+    },
+    {
+      "path": "data/BLUEPRINT100-7d9456.docx",
+      "bytes": 1064402,
+      "sha256": "2c75740d2f65962a5fac88e730e998dc8764382e9400c82b57a83af6d417ae3f",
+      "characters": 8902,
+      "headings": 0,
+      "categories": [
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": " 🏛️ 1. Identidad Institucional y Propósito Civilizatorio TAMV – Territorio Autónomo de Memoria Viva es una infraestructura digital federada, antifrágil y auditable, diseñada como civilización XR con gobernanza ética, economía creativa y soberanía computacional. Fundador: Edwin O"
+    },
+    {
+      "path": "data/Document-1-5f7090.docx",
+      "bytes": 45067,
+      "sha256": "813b09e6b648be4889287bd46848f79117504b9a44c8a4b1550dea827e062a33",
+      "characters": 36217,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "Soberanía tecnológica verificable en América Latina: diagnóstico estructural, análisis del costo total de propiedad y propuesta arquitectónica del ecosistema Isabella Villaseñor AI / TINA Tipo de artículo: Reportaje de investigación original Estilo: Investigación aplicada con exc"
+    },
+    {
+      "path": "data/archivordm4-947ad5.docx",
+      "bytes": 187330,
+      "sha256": "ef6b3ba54b9bb876d3d8635ac953b50d14f264242980e389461b96d46ef4bc72",
+      "characters": 70496,
+      "headings": 0,
+      "categories": [
+        "architecture",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": " ARCHIVO HISTORICO RDM DIGITAL HUB INVESTIGACION Y RECOLECCION DE DATOS HISTORICOS REAL DEL MONTE HIDALGO, MEXICO. Agosto 10de 2026 Autor: Edwin Oswaldo Castillo Trejo “Un pueblo que se niega a permanecer en el olvido, que grita desde lo mas profundo de sus minas, relata entre su"
+    },
+    {
+      "path": "data/blindajes-467cdd.docx",
+      "bytes": 1372306,
+      "sha256": "4bc4dd83e1d9fb442808b3b485f0f09844e138870663cdd238db7de901fab99d",
+      "characters": 160423,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "Especificación Técnica Mejorada de la Librería Isabella AI Introducción La inteligencia artificial bajo el nombre 'Isabella AI' o 'Isabella Artificial Intelligence' ha emergido en los últimos años como un concepto multifacético, abarcando desde soluciones comerciales y académicas"
+    },
+    {
+      "path": "data/comienzo_atlas-5bfa83.docx",
+      "bytes": 73519,
+      "sha256": "16f6d773315da0c69ef14c6f4a7287eae25737b1ab2648c31156e57c0a6540cd",
+      "characters": 64959,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "tienes secrets, tokens, api keys que se ingresaron revisalas para que con ellas completes el atlas trascendece: Aquí tienes la propuesta final del archivo en formato de apertura editorial y técnica, ya consolidada para Atlas Trascendence / TAMV. La escribí para que funcione como "
+    },
+    {
+      "path": "data/crear_api-d1bb20.docx",
+      "bytes": 109660,
+      "sha256": "bb34ed4de2f367ca704fba9e0831e0019191d494011db0b85e6a88dfcfc60711",
+      "characters": 107283,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": "TAMV ONLINE CONSTITUCIÓN OPERATIVA CIVILIZATORIA TOTAL Estado: ejecutable · federado · irreversibleNaturaleza: infraestructura de especieHorizonte: multi-generacional 0. DEFINICIÓN CANÓNICA (no interpretativa) TAMV Online es una infraestructura civilizatoria digital soberana, dis"
+    },
+    {
+      "path": "data/db_yun-fc26f9.docx",
+      "bytes": 65212,
+      "sha256": "78605f8666af574d3f642ca65ffa7f2c4b79ee9df965a67dff72037b4d50952a",
+      "characters": 53127,
+      "headings": 0,
+      "categories": [
+        "api",
+        "architecture",
+        "governance",
+        "intelligence",
+        "operations",
+        "security",
+        "source-attachment",
+        "territory"
+      ],
+      "preview": " YUN Always by your side Documento Fundacional – Versión 1.0 Este documento unifica la propuesta final del sistema de datos, seguridad, orquestación, federación, monitoreo, resiliencia y coordinación operativa para TAMV Online, Nodo Cero, RDM Digital, Isabella y las 7 federacione"
     },
     {
       "path": "docs/01-ISABELLA-CANONICA-UNIFICADA.md",
@@ -311,9 +426,9 @@
     },
     {
       "path": "docs/README.md",
-      "bytes": 13578,
-      "sha256": "932ca31e56edb60ee16bcd23f63a519a4f2256c856ae956b1fec196bf88ab8cd",
-      "characters": 13329,
+      "bytes": 13411,
+      "sha256": "3a186a30351274222caf61f1df104fdd14280b3a42d6be996120d84d794dba35",
+      "characters": 13162,
       "headings": 10,
       "categories": [
         "api",
@@ -1796,17 +1911,6 @@
       "categories": []
     },
     {
-      "path": "docs/operations/PRODUCTION-BOOKPI-AUTHORITY.md",
-      "bytes": 1234,
-      "sha256": "cffd49ac041b65fa41cd7a96da1733b469c7a419dafbf7947c86b3af5ba9e5b7",
-      "characters": 1232,
-      "headings": 4,
-      "categories": [
-        "api",
-        "operations"
-      ]
-    },
-    {
       "path": "docs/operations/RATE-LIMITING.md",
       "bytes": 750,
       "sha256": "9f24d7fdb8117148f8ab32ffe88c87f7c1c3a6db85d9d85af76acb7d2c76e57e",
@@ -1958,9 +2062,9 @@
     },
     {
       "path": "docs/security/ISABELLA-API-KEYS.md",
-      "bytes": 3641,
-      "sha256": "83a68a03faa60f21441454d5f6ed4f90d9b60b78a6233fef4b61b4bb311eb929",
-      "characters": 3639,
+      "bytes": 3649,
+      "sha256": "552c5584a936e5cdbb043ebc99742bebfdc759f4832f25efbd027f0073650e79",
+      "characters": 3647,
       "headings": 12,
       "categories": [
         "api",
@@ -2067,14 +2171,6 @@
       ]
     },
     {
-      "path": "g-tmp.txt",
-      "bytes": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "characters": 0,
-      "headings": 0,
-      "categories": []
-    },
-    {
       "path": "genesis/reports/genesis-report-2026-09-07T23-58-41-581Z.md",
       "bytes": 18840,
       "sha256": "3e2254f47e9b2c54c91eddb408f10eb4392a0073521dfe75df56012e0a4bbe10",
@@ -2172,19 +2268,6 @@
         "architecture",
         "governance",
         "intelligence",
-        "operations",
-        "security"
-      ]
-    },
-    {
-      "path": "jdr-generator/docs/threat-model.md",
-      "bytes": 3155,
-      "sha256": "c6c39906feb0314c5dc83c8a5f494d02e75dc30c7da546cd26060e6bbca369ea",
-      "characters": 3112,
-      "headings": 6,
-      "categories": [
-        "api",
-        "governance",
         "operations",
         "security"
       ]
@@ -2409,17 +2492,6 @@
       ]
     },
     {
-      "path": "release/checksums.txt",
-      "bytes": 880,
-      "sha256": "eeb4aeafefc86be36f65d42a92639a33ccf5420a606434b114bfc4bc16988f07",
-      "characters": 880,
-      "headings": 0,
-      "categories": [
-        "operations",
-        "security"
-      ]
-    },
-    {
       "path": "scripts/quantum/requirements.txt",
       "bytes": 222,
       "sha256": "fa6fb0f9d297f32b0c13fec121f08a114d0860392b852757d822a090b0e2dbae",
@@ -2459,21 +2531,12 @@
       ]
     }
   ],
-  "exactDuplicates": [
-    [
-      ".vercel/output/static/robots.txt",
-      "public/robots.txt"
-    ],
-    [
-      "contrib/jdr-generator/docs/threat-model.md",
-      "jdr-generator/docs/threat-model.md"
-    ]
-  ],
+  "exactDuplicates": [],
   "counts": {
-    "total": 194,
-    "markdown": 186,
-    "text": 8,
-    "word": 0,
-    "exactDuplicateGroups": 2
+    "total": 196,
+    "markdown": 184,
+    "text": 5,
+    "word": 7,
+    "exactDuplicateGroups": 0
   }
 }

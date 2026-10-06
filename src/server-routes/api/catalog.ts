@@ -16,7 +16,7 @@ const executeSchema = z.object({
 export const Route = createFileRoute("/api/catalog")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
+      GET: async ({ request }: IsabellaRouteContext) => {
         const ip = resolveTrustedClientIp(request);
         const rateLimit = SecuritySystem.checkRateLimit(ip, 60); // 60 search requests/min allowed
         if (!rateLimit.allowed) {
@@ -90,7 +90,7 @@ export const Route = createFileRoute("/api/catalog")({
         );
       },
 
-      POST: async ({ request }) => {
+      POST: async ({ request }: IsabellaRouteContext) => {
         const authResult = await PrincipalContext.authorize(request, "isabella:chat");
         if (!authResult.success) return authResult.response;
         const { context } = authResult;
