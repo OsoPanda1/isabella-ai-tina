@@ -1,4 +1,4 @@
-import type { IntelligenceRisk, Modality } from "../contracts";
+import type { IntelligenceResponse, IntelligenceRisk, Modality } from "../contracts";
 
 export type ExpertTemperature = "HOT" | "WARM" | "COLD";
 export type EvidenceLevel = "E0" | "E1" | "E2" | "E3" | "E4";
@@ -112,8 +112,6 @@ export function assertEvidence(citation: EvidenceCitation): void {
     throw new Error("moe_evidence_invalid");
 }
 
-export type { IntelligenceRisk, Modality };
-
 export interface AggregatedAnswer {
   readonly text: string;
   readonly confidence: number;
@@ -186,3 +184,217 @@ export const MOE_CONTRACT_MANIFEST: MoEContractManifest = {
   evidence: "BookPI",
   sideEffects: "forbidden-in-router",
 };
+
+/* ============================================================================
+ * Provider-routed MoE (legacy src/lib/intelligence/moe-engine.ts surface).
+ * ========================================================================== */
+
+export interface MoEExpert {
+  readonly modelId: string;
+  readonly providerId: string;
+  readonly capabilities: readonly string[];
+  readonly priority: number;
+  readonly productionApproved: boolean;
+}
+
+export interface MoERoute {
+  requestId: string;
+  selected: MoEExpert[];
+  topK: number;
+  strategy: "capability-weighted-top-k";
+}
+
+export interface MoERunResult {
+  route: MoERoute;
+  responses: IntelligenceResponse[];
+  selected: IntelligenceResponse;
+  executedExpertCount: number;
+}
+
+export interface MoEProviderDescriptor {
+  modalities: readonly string[];
+  enabled: boolean;
+  productionApproved: boolean;
+}
+
+/* ============================================================================
+ * Numerically routed MoE (legacy src/lib/intelligence/tri-hepta surface).
+ * ========================================================================== */
+
+export type RiskLevel = "R0" | "R1" | "R2" | "R3";
+export type ConsensusState = "STRONG" | "PARTIAL" | "WEAK" | "CONFLICT";
+export type FinalVerdict = "ALLOW" | "ALLOW_WITH_CAUTION" | "REVIEW" | "DENY";
+export type ExpertSideEffect = "NONE" | "READ" | "WRITE" | "FINANCIAL" | "TRAINING";
+
+/**
+ * Same value set as `ExpertTemperature`; the TRI-HEPTA public surface keeps its
+ * own name so the two call sites read in their own vocabulary.
+ */
+export type ExecutionTemperature = ExpertTemperature;
+
+export interface MoeExpertArtifact {
+  expertId: string;
+  version: string;
+  modelHash: string;
+  datasetId: string;
+  datasetVersion: string;
+  license: string;
+  capacity: number;
+  providerFamily?: string;
+  modelFamily?: string;
+  dataResidency?: readonly string[];
+  sideEffect?: ExpertSideEffect;
+  execute: (input: number[]) => number[] | Promise<number[]>;
+}
+
+export interface MoeGateDecision {
+  expertId: string;
+  logit: number;
+  weight: number;
+  rank: number;
+}
+
+export interface MoeTrace {
+  inputHash: string;
+  selected: MoeGateDecision[];
+  overflow: boolean;
+  fallbackUsed: boolean;
+  contributions: Array<{
+    expertId: string;
+    weight: number;
+    outputHash: string;
+  }>;
+}
+
+export interface MoeExecutionResult {
+  output: number[];
+  trace: MoeTrace;
+}
+
+export interface MoeRouteOptions {
+  topK?: number;
+  capacityFactor?: number;
+  fallbackExpertId?: string;
+}
+
+export interface MoENumericRoute {
+  readonly topK: number;
+  readonly capacityFactor: number;
+  readonly experts: readonly MoeExpertArtifact[];
+  readonly registry: ReadonlyMap<string, MoeExpertArtifact>;
+  route(input: readonly number[], logits: readonly number[]): MoeGateDecision[];
+}
+
+export interface TriHeptaRequest {
+  requestId: string;
+  traceId: string;
+  tenantId: string;
+  principalId: string;
+  text: string;
+  modality: "text" | "image" | "audio" | "structured";
+  purpose: string;
+  sensitivity: "public" | "internal" | "confidential" | "restricted";
+  risk: RiskLevel;
+  maxLatencyMs: number;
+  maxCostCents: number;
+  requireCitations: boolean;
+  requireLocalProcessing: boolean;
+}
+
+export interface TriHeptaPolicyDecision {
+  decisionId: string;
+  allowed: boolean;
+  reasonCode: string;
+  policyVersion: string;
+  executionMode: "LOCAL_ONLY" | "EDGE" | "HYBRID" | "EXTERNAL_ALLOWED";
+  expiresAt: string;
+  obligations: readonly string[];
+}
+
+export interface InferenceCandidate {
+  pipeline: "ALPHA" | "BETA";
+  expertId: string;
+  answer: string;
+  confidence: number;
+  grounding: number;
+  risk: RiskLevel;
+  evidenceLevel: EvidenceLevel;
+  citations: readonly string[];
+  latencyMs: number;
+  outputHash: string;
+  cancelled?: boolean;
+}
+
+export interface VerificationCandidate {
+  pipeline: "GAMMA";
+  verifierId: string;
+  verdict: FinalVerdict;
+  semanticAgreement: number;
+  evidenceAgreement: number;
+  policyAgreement: number;
+  riskAgreement: number;
+  confidence: number;
+  latencyMs: number;
+  reasons: readonly string[];
+}
+
+export interface TriangulationResult {
+  alpha: InferenceCandidate | null;
+  beta: InferenceCandidate | null;
+  gamma: VerificationCandidate | null;
+  semanticAgreement: number;
+  evidenceAgreement: number;
+  policyAgreement: number;
+  riskAgreement: number;
+  consensus: ConsensusState;
+  consensusScore: number;
+  verdict: FinalVerdict;
+}
+
+export interface TriHeptaExecutionResult {
+  route: MoENumericRoute;
+  triangulation: TriangulationResult;
+  selectedAnswer: string | null;
+  selectedExpertId: string | null;
+  executedExpertCount: number;
+  cancelledExpertCount: number;
+  temperature: ExecutionTemperature;
+  trace: MoeTrace;
+}
+
+export interface TriHeptaOptions {
+  hotThreshold?: number;
+  warmThreshold?: number;
+  earlyExitThreshold?: number;
+  conflictThreshold?: number;
+  maxTopK?: number;
+  alphaTimeoutMs?: number;
+  betaTimeoutMs?: number;
+  gammaTimeoutMs?: number;
+  weights?: {
+    semantic?: number;
+    evidence?: number;
+    policy?: number;
+    confidence?: number;
+    risk?: number;
+  };
+}
+
+export interface TriHeptaExecutor {
+  executeNumericExpert(
+    expert: MoeExpertArtifact,
+    input: readonly number[],
+    signal: AbortSignal,
+  ): Promise<number[]>;
+
+  executeAlpha(request: TriHeptaRequest, signal: AbortSignal): Promise<InferenceCandidate | null>;
+
+  executeBeta(request: TriHeptaRequest, signal: AbortSignal): Promise<InferenceCandidate | null>;
+
+  executeGamma(
+    request: TriHeptaRequest,
+    alpha: InferenceCandidate | null,
+    beta: InferenceCandidate | null,
+    signal: AbortSignal,
+  ): Promise<VerificationCandidate | null>;
+}
