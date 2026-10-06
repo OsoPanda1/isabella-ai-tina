@@ -4,6 +4,7 @@ import { config } from "./config";
 import { isProductionLike } from "./runtime-mode";
 import { JWT_VERIFIER } from "./jwt-verifier";
 import { AuthVerificationLayer } from "./auth-verification-layer";
+import { isSsrfDeniedHost } from "./security/ssrf-deny";
 
 // ============================================================================
 // CANONICAL SEVEN LAYERS OF SECURITY HARDENING SYSTEM - ISABELLA v4.2.0
@@ -148,6 +149,8 @@ export function isAllowedExternalUrl(urlString: string): boolean {
       return false;
     }
     const hostname = url.hostname.toLowerCase();
+    // Denegacion SSRF explicita, anterior e independiente de la allowlist.
+    if (isSsrfDeniedHost(hostname)) return false;
     // Block private/link-local IPv4 ranges in production
     if (isProductionLike()) {
       if (
@@ -233,6 +236,7 @@ const UPSTREAM_ALLOWLIST: readonly string[] = [
   "generativelanguage.googleapis.com",
   "api.groq.com",
   "api.x.ai",
+  "api.anthropic.com",
 ];
 
 /**
@@ -251,6 +255,23 @@ function isLiteralIpHost(hostname: string): boolean {
   return false;
 }
 
+const BEDROCK_REGION_PATTERN = /^[a-z0-9-]{2,32}$/;
+
+/**
+ * Host de datos de Bedrock Converse derivado de la región configurada.
+ * Solo se admite el host canónico `bedrock-runtime.<region>.amazonaws.com`,
+ * nunca un comodín: sin región configurada no hay egress a AWS.
+ */
+function isAllowedBedrockHost(host: string): boolean {
+  try {
+    const region = config().BEDROCK_REGION;
+    if (!region || !BEDROCK_REGION_PATTERN.test(region)) return false;
+    return host === `bedrock-runtime.${region}.amazonaws.com`;
+  } catch {
+    return false;
+  }
+}
+
 function isUpstreamAllowed(url: string): boolean {
   let parsed: URL;
   try {
@@ -265,7 +286,12 @@ function isUpstreamAllowed(url: string): boolean {
   if (parsed.port !== "" && parsed.port !== "443") return false;
   // Coincidencia exacta: sin trailing dot, sin literales IP.
   const host = parsed.hostname.toLowerCase();
-  if (host === "" || isLiteralIpHost(host)) return false;
+  if (host === "") return false;
+  // Denegacion SSRF explicita, anterior e independiente de la allowlist
+  // (IMDS/loopback/RFC1918/sufijos internos) — no puede ser sobreescrita
+  // por UPSTREAM_ALLOWLIST ni por host derivado de configuracion.
+  if (isSsrfDeniedHost(host)) return false;
+  if (isLiteralIpHost(host)) return false;
   if (UPSTREAM_ALLOWLIST.includes(host)) return true;
   try {
     const voice = config().VOICE_API_URL;
@@ -273,6 +299,13 @@ function isUpstreamAllowed(url: string): boolean {
   } catch {
     // Sin configuración válida: solo la allowlist estática.
   }
+  try {
+    const anthropic = config().ANTHROPIC_BASE_URL;
+    if (anthropic && new URL(anthropic).hostname.toLowerCase() === host) return true;
+  } catch {
+    // Sin base URL de Anthropic configurada no se abre ningun host nuevo.
+  }
+  if (isAllowedBedrockHost(host)) return true;
   return false;
 }
 

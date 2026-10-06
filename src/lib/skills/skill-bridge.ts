@@ -231,6 +231,12 @@ export async function processSkillInvocation(
       cost: 0,
       tokens: 0,
       status: "settled",
+      metadata: {
+        skillId: invocation.skillId,
+        requestId,
+        traceId,
+        decisionId,
+      },
     });
 
     if (blockRes.success && blockRes.block) {

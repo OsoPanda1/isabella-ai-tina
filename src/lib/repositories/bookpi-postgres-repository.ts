@@ -155,6 +155,7 @@ export interface DurableBookPiRepository {
     category?: string;
     cost?: number;
     tokens?: number;
+    metadata?: Record<string, unknown>;
     status?:
       | "settled"
       | "pending"
@@ -438,6 +439,7 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
     category?: string;
     cost?: number;
     tokens?: number;
+    metadata?: Record<string, unknown>;
     status?:
       | "settled"
       | "pending"

@@ -4,6 +4,7 @@ import type {
   IntelligenceResponse,
   Modality,
 } from "./contracts";
+import { OpenAICompatibleTransport } from "./transports/openai-compatible";
 
 export interface HttpProviderOptions {
   providerId: string;
@@ -19,6 +20,8 @@ function assertHttps(url: string): void {
   if (parsed.protocol !== "https:" && parsed.hostname !== "localhost")
     throw new Error("Intelligence upstream must use HTTPS");
 }
+
+const transport = new OpenAICompatibleTransport();
 
 export class OpenAICompatibleProvider implements IntelligenceProvider {
   readonly providerId: string;
@@ -48,6 +51,10 @@ export class OpenAICompatibleProvider implements IntelligenceProvider {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     const started = performance.now();
     try {
+      const kwargs = transport.buildKwargs(this.modelId, request.messages, null, {
+        temperature: request.temperature,
+        maxTokens: request.maxTokens,
+      });
       const response = await fetch(this.endpoint, {
         method: "POST",
         signal: controller.signal,
@@ -55,20 +62,14 @@ export class OpenAICompatibleProvider implements IntelligenceProvider {
           "content-type": "application/json",
           authorization: `Bearer ${this.apiKey}`,
         },
-        body: JSON.stringify({
-          model: this.modelId,
-          messages: request.messages,
-          temperature: request.temperature ?? 0.7,
-          max_tokens: request.maxTokens ?? 2048,
-        }),
+        body: JSON.stringify(kwargs),
       });
       if (!response.ok) throw new Error(`Upstream ${this.providerId} returned ${response.status}`);
-      const payload = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
-        usage?: { prompt_tokens?: number; completion_tokens?: number };
-      };
-      const text = payload.choices?.[0]?.message?.content;
+      const payload: unknown = await response.json();
+      const normalized = transport.normalizeResponse(payload);
+      const text = normalized.content;
       if (!text) throw new Error(`Upstream ${this.providerId} returned no text`);
+      const cache = transport.extractCacheStats(payload);
       return {
         requestId: request.requestId,
         modelId: this.modelId,
@@ -78,9 +79,16 @@ export class OpenAICompatibleProvider implements IntelligenceProvider {
         degraded: false,
         risk: "LOW",
         usage: {
-          inputTokens: payload.usage?.prompt_tokens,
-          outputTokens: payload.usage?.completion_tokens,
+          inputTokens: normalized.usage?.promptTokens,
+          outputTokens: normalized.usage?.completionTokens,
+          ...(normalized.usage ? { totalTokens: normalized.usage.totalTokens } : {}),
+          ...(cache
+            ? { cachedTokens: cache.cachedTokens, creationTokens: cache.creationTokens }
+            : {}),
         },
+        ...(normalized.finishReason !== "unknown" ? { finishReason: normalized.finishReason } : {}),
+        ...(normalized.toolCalls ? { toolCalls: normalized.toolCalls } : {}),
+        ...(normalized.reasoning ? { reasoning: normalized.reasoning } : {}),
       };
     } finally {
       clearTimeout(timer);

@@ -1,6 +1,7 @@
 import * as crypto from "node:crypto";
 import { config } from "./config";
 import { repositoryFactory } from "./persistence/repository-factory";
+import { credentialEnvNames } from "./security/credential-env";
 import type { AuditEntry } from "./persistence/repository";
 
 function isSandboxEnabled(): boolean {
@@ -333,6 +334,30 @@ export class SovereignSandboxService {
 
     if (!this.containerExecutor) {
       return this.generateResult(false, FAIL_MSG_NO_CONTAINER, startTime, 1, 0, 0, 0);
+    }
+
+    // Aislamiento de credenciales: el env de un contexto no confiable no
+    // puede recibir claves, tokens, passwords ni URLs de base de datos.
+    // Fail-closed: si algo califica, el ejecutor jamas se invoca.
+    const credentialKeys = credentialEnvNames(envVars);
+    if (credentialKeys.length > 0) {
+      void auditSandbox(
+        this.traceId,
+        "cor_sandbox_env_credential_blocked",
+        "127.0.0.1",
+        "Sandbox Credential Env Blocked",
+        "S1",
+        `Env vetado en sandbox (solo nombres): ${credentialKeys.slice(0, 8).join(", ")}`,
+      );
+      return this.generateResult(
+        false,
+        "Violación de Seguridad: el env del sandbox contiene credenciales vetadas.",
+        startTime,
+        403,
+        0,
+        0,
+        0,
+      );
     }
 
     for (const cmd of command) {

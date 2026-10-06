@@ -3,6 +3,26 @@ export type Modality = "text" | "image" | "audio";
 export type IntelligenceDecision = "ALLOW" | "DENY" | "REVIEW" | "MODIFY";
 export type IntelligenceRisk = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
+/**
+ * Provider-agnostic termination reason. Every transport maps its native stop
+ * reason onto this vocabulary; unrecognised reasons normalize to "unknown"
+ * instead of leaking a provider-specific string.
+ */
+export type FinishReason = "stop" | "tool_calls" | "length" | "content_filter" | "unknown";
+
+/** A tool invocation requested by the model. `arguments` is JSON-encoded. */
+export interface ToolCall {
+  id: string;
+  name: string;
+  arguments: string;
+  /**
+   * Per-call protocol metadata a provider needs to pair the result on the next
+   * turn (Responses `call_id` and response item id, Gemini thought signatures).
+   * Optional: transports that have nothing protocol-specific leave it unset.
+   */
+  providerData?: Record<string, unknown> | null;
+}
+
 export interface IntelligenceMessage {
   role: "system" | "user" | "assistant";
   content: string;
@@ -25,7 +45,19 @@ export interface IntelligenceResponse {
   latencyMs: number;
   degraded: boolean;
   risk: IntelligenceRisk;
-  usage?: { inputTokens?: number; outputTokens?: number };
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+    cachedTokens?: number;
+    creationTokens?: number;
+  };
+  /** Populated when the provider reported a termination reason. */
+  finishReason?: FinishReason;
+  /** Tool invocations the model requested, when the provider supports them. */
+  toolCalls?: ToolCall[];
+  /** Provider reasoning/thinking trace, when the provider returns one. */
+  reasoning?: string;
 }
 export interface GovernanceDecision {
   decision: IntelligenceDecision;

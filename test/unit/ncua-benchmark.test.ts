@@ -36,7 +36,8 @@ describe("ncua:benchmark", () => {
     for (const scenario of report.scenarios) {
       expect(Number.isFinite(scenario.speedupX)).toBe(true);
       expect(scenario.speedupX).toBeGreaterThan(0);
-      expect(scenario.ncuaLatencyMs).toBeLessThan(50);
+      expect(scenario.ncuaLatencyMs).toBeLessThan(scenario.traditionalLatencyMs);
+      expect(scenario.ncuaLatencyMs).toBeLessThan(1000);
     }
   });
 

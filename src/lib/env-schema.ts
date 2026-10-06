@@ -214,6 +214,17 @@ export const envSchema = z
     OPENAI_COMPATIBLE_BASE_URL: optionalUrl(),
     OPENAI_COMPATIBLE_MODEL: optionalString(),
     OPENAI_COMPATIBLE_API_KEY: optionalString(),
+    // --- ANTHROPIC (Messages API) ---
+    ANTHROPIC_API_KEY: optionalString(),
+    ANTHROPIC_BASE_URL: optionalUrl(),
+    ANTHROPIC_MODEL: optionalString(),
+    // --- AWS BEDROCK (Converse API) ---
+    BEDROCK_ENABLED: bool(false),
+    BEDROCK_MODEL: optionalString(),
+    BEDROCK_REGION: optionalString(),
+    AWS_ACCESS_KEY_ID: optionalString(),
+    AWS_SECRET_ACCESS_KEY: optionalString(),
+    AWS_SESSION_TOKEN: optionalString(),
     // --- VERCEL ---
     VERCEL: bool(false),
     // --- NATIVE COMPREHENSION ---
@@ -238,6 +249,20 @@ export const envSchema = z
     MUX_INTRO_FALLBACK_TYPE: enumish(["none", "procedural", "static"] as const, "procedural"),
     // --- FEATURE FLAGS & AUDIT ---
     ISABELLA_FEATURE_FLAGS: optionalString(),
+    // --- SECRET SOURCES (src/lib/secret-sources/) ---
+    // Selector de fuente de resolución de secretos. Falla cerrada: un valor
+    // fuera del enum rompe el arranque en lugar de caer a otra fuente.
+    ISABELLA_SECRET_SOURCE: enumish(["env", "command", "bitwarden"] as const, "env"),
+    // Helper NO interactivo para la fuente `command` (imprime el valor en
+    // stdout). La clave solicitada viaja en ISABELLA_SECRET_KEY, nunca en la
+    // cadena del comando.
+    ISABELLA_SECRET_COMMAND: optionalString(),
+    // Bitwarden Secrets Manager (CLI `bws` ya instalado en PATH; nunca se
+    // descarga ni instala binarios en runtime).
+    BWS_ACCESS_TOKEN: optionalString(),
+    BWS_PROJECT_ID: optionalString(),
+    // Región / self-hosted (vacío = US Cloud); URL validada por Zod.
+    BWS_SERVER_URL: optionalUrl(),
     GENESIS_MAX_TEST_FILES: coercedInt(8),
   })
   .passthrough();
@@ -260,6 +285,9 @@ export type EnvVarProvider =
   | "otel"
   | "oidc"
   | "vercel"
+  | "anthropic"
+  | "aws"
+  | "bitwarden"
   | "self";
 export interface EnvVarDescriptor {
   name: keyof Env;
@@ -634,6 +662,84 @@ export const ENV_VAR_CATALOG: EnvVarDescriptor[] = [
     forbidden: [],
     provider: "openai",
     criticality: "HIGH",
+  },
+  {
+    name: "ANTHROPIC_API_KEY",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "anthropic",
+    criticality: "CRITICAL",
+    rotation: "90d",
+    description:
+      "Clave de la Anthropic Messages API. Sin ella el proveedor Anthropic no se registra; nunca se registra un proveedor con una clave inventada.",
+  },
+  {
+    name: "ANTHROPIC_BASE_URL",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "anthropic",
+    criticality: "MEDIUM",
+  },
+  {
+    name: "ANTHROPIC_MODEL",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "anthropic",
+    criticality: "MEDIUM",
+  },
+  {
+    name: "BEDROCK_ENABLED",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "aws",
+    criticality: "HIGH",
+  },
+  {
+    name: "BEDROCK_MODEL",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "aws",
+    criticality: "MEDIUM",
+  },
+  {
+    name: "BEDROCK_REGION",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "aws",
+    criticality: "MEDIUM",
+  },
+  {
+    name: "AWS_ACCESS_KEY_ID",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "aws",
+    criticality: "CRITICAL",
+    rotation: "90d",
+  },
+  {
+    name: "AWS_SECRET_ACCESS_KEY",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "aws",
+    criticality: "CRITICAL",
+    rotation: "90d",
+  },
+  {
+    name: "AWS_SESSION_TOKEN",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "aws",
+    criticality: "CRITICAL",
+    rotation: "session",
   },
   {
     name: "VERCEL",
@@ -1271,6 +1377,54 @@ export const ENV_VAR_CATALOG: EnvVarDescriptor[] = [
     provider: "self",
     criticality: "HIGH",
     description: "Clave del proveedor TTS de Google (solo server-side).",
+  },
+  {
+    name: "ISABELLA_SECRET_SOURCE",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "self",
+    criticality: "HIGH",
+    description:
+      "Fuente de resolución de secretos (src/lib/secret-sources/): env (default) | command | bitwarden. Fail-closed: sin cadena de fallback.",
+  },
+  {
+    name: "ISABELLA_SECRET_COMMAND",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "self",
+    criticality: "HIGH",
+    description:
+      "Helper no interactivo de la fuente command (timeout 3s, tope 1 MiB). Nunca se registra su salida ni la cadena.",
+  },
+  {
+    name: "BWS_ACCESS_TOKEN",
+    visibility: "secret",
+    required: [],
+    forbidden: [],
+    provider: "bitwarden",
+    criticality: "CRITICAL",
+    description:
+      "Token de cuenta máquina de Bitwarden Secrets Manager; único bootstrap de la fuente bitwarden.",
+  },
+  {
+    name: "BWS_PROJECT_ID",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "bitwarden",
+    criticality: "HIGH",
+    description: "UUID del proyecto BSM listado con `bws secret list --output json`.",
+  },
+  {
+    name: "BWS_SERVER_URL",
+    visibility: "public",
+    required: [],
+    forbidden: [],
+    provider: "bitwarden",
+    criticality: "LOW",
+    description: "Región o instancia self-hosted de Bitwarden (vacío = US Cloud).",
   },
 ];
 

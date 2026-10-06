@@ -1,6 +1,9 @@
 import { localProviderConfig } from "./local-provider-config";
 import { fetchSafeLocalModel } from "./local-egress";
+import { OpenAICompatibleTransport } from "./transports/openai-compatible";
 import type { IntelligenceProvider, IntelligenceRequest, IntelligenceResponse } from "./contracts";
+
+const transport = new OpenAICompatibleTransport();
 
 /** Local-only Ollama provider. Production authorization remains external to provider availability. */
 export class OllamaProvider implements IntelligenceProvider {
@@ -38,10 +41,7 @@ export class OllamaProvider implements IntelligenceProvider {
       body: JSON.stringify({
         model: this.modelId,
         stream: false,
-        messages: request.messages.map((message) => ({
-          role: message.role,
-          content: message.content,
-        })),
+        messages: transport.convertMessages(request.messages),
         options: {
           temperature: request.temperature ?? 0.7,
           num_predict: request.maxTokens ?? 2048,
@@ -49,11 +49,11 @@ export class OllamaProvider implements IntelligenceProvider {
       }),
     });
     if (!response.ok) throw new Error(`Ollama upstream returned ${response.status}`);
-    const payload = (await response.json()) as {
+    const payload: {
       message?: { content?: string };
       prompt_eval_count?: number;
       eval_count?: number;
-    };
+    } = await response.json();
     const text = payload.message?.content?.trim();
     if (!text) throw new Error("Ollama returned no text");
     return {

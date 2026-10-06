@@ -101,7 +101,7 @@ export async function handleStripeWebhook(req: Request, res: Response): Promise<
       if (!tenantId) {
         res.status(422).json({
           received: false,
-          error: "STRIPE_EVENT_MISSING_TENANT_IDENTITY",
+          error: "STRIPE_DISPUTE_MISSING_TENANT_IDENTITY",
           eventType: event.type,
         });
         return;
