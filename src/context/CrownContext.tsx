@@ -957,7 +957,7 @@ Puedes conversar conmigo, pedirme que sintetice voz en tiempo real, me solicites
             presenceIndex: 0.99,
             presentationQuality: 0.99,
           },
-          engine: "Isabella Core CROWN v4.2",
+          engine: "Isabella Core CROWN v4.3.3",
         },
       ],
     });
@@ -1472,7 +1472,7 @@ Puedes conversar conmigo, pedirme que sintetice voz en tiempo real, me solicites
         const errorMsg: TerminalMessage = {
           id: "err-" + Date.now(),
           role: "system",
-          content: `[CROWN ERROR] Disrupción en el canal cognitivo: ${(err as Error)?.message || "Imposible conectar con el nodo central"}. Verifica que el servidor esté activo (npm run dev).`,
+          content: `[CROWN ERROR] Disrupción en el canal cognitivo: ${(err as Error)?.message || "Imposible conectar con el nodo central"}. Si el servidor responde, completa la sesión OIDC requerida antes de reintentar.`,
           timestamp: new Date().toLocaleTimeString(),
         };
         dispatch({ type: "ADD_MESSAGE", payload: errorMsg });

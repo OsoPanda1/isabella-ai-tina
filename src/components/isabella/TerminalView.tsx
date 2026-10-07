@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type KeyboardEvent } from "react";
 import { Terminal, RefreshCw } from "lucide-react";
 import { useIsabella } from "@/lib/useIsabella";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
+import { ISABELLA_VERSION } from "@/lib/isabella-crown";
 
 interface TerminalLine {
   text: string;
@@ -15,7 +16,7 @@ export function TerminalView() {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [lines, setLines] = useState<TerminalLine[]>([
-    { text: "ISABELLA COGNITIVE SHELL v4.2.0-SOVEREIGN", type: "header" },
+    { text: `ISABELLA COGNITIVE SHELL v${ISABELLA_VERSION}-SOVEREIGN`, type: "header" },
     {
       text: "TAMV ONLINE NETWORK · Nodo Cero · Real del Monte, Hidalgo",
       type: "system",

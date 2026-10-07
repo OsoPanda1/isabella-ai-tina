@@ -708,7 +708,7 @@ export function MetricsDashboard() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-[10px] font-mono text-muted-foreground">
-            <span>Soberanía Cognitiva v4.2.0</span>
+            <span>Soberanía Cognitiva v4.3.3</span>
             <span className="text-emerald-400 font-medium">
               Cero dependencias externas en bucle crítico
             </span>

@@ -241,32 +241,23 @@ export const Route = createFileRoute("/api/db")({
             const headers = SecuritySystem.injectSecureHeaders(
               new Headers({ "content-type": "application/json" }),
             );
-            const { runSecurityTestSuite } = await import("../../../test/security/security-runner");
-            const testResults = runSecurityTestSuite();
-
-            if (testResults.success) {
-              await sovereignStateRepository.appendAuditLog(
-                context.traceId,
-                context.correlationId,
-                context.ip,
-                "Auditoría de Sistemas Automatizada Exitosa",
-                "S3",
-                `Paso exitoso de todas las pruebas automatizadas del criptosistema (${testResults.results.length} de ${testResults.results.length} aprobadas).`,
-                context.tenantId,
-              );
-            } else {
-              await sovereignStateRepository.appendAuditLog(
-                context.traceId,
-                context.correlationId,
-                context.ip,
-                "CRITICAL: Fallo en Auditoría de Sistemas",
-                "S0",
-                "Las pruebas del criptosistema de seguridad han fallado.",
-                context.tenantId,
-              );
-            }
-
-            return new Response(JSON.stringify(testResults), { headers });
+            const testResults = {
+              success: false,
+              status: "UNAVAILABLE",
+              results: [],
+              message:
+                "La suite de seguridad se ejecuta únicamente mediante pnpm test:security y no está disponible como endpoint runtime.",
+            };
+            await sovereignStateRepository.appendAuditLog(
+              context.traceId,
+              context.correlationId,
+              context.ip,
+              "Auditoría de Sistemas Runtime No Disponible",
+              "S2",
+              "Se rechazó ejecutar pruebas de CI dentro del servidor de aplicación.",
+              context.tenantId,
+            );
+            return new Response(JSON.stringify(testResults), { status: 501, headers });
           })({ request });
         }
 
