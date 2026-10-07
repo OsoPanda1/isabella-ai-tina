@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { withSovereignAuth } from "@/lib/principal-context";
-import { isProductionLike } from "@/lib/runtime-mode";
 import {
   HypercoreTTLCache,
   decideHypercore,
-  deterministicHypercoreAdapter,
   executeHypercore,
 } from "@/lib/acceleration/hypercore";
+import { createProductionHypercoreAdapters } from "@/lib/acceleration/hypercore-adapters";
 
 /**
  * Superficie TanStack/Nitro de Hypercore.
@@ -65,33 +64,35 @@ export const Route = createFileRoute("/api/v1/isabella-hypercore")({
           timestamp: new Date().toISOString(),
         }),
       ),
-      POST: withSovereignAuth("chat", "execute", async (_context, _request, body) => {
-        const payload = (body ?? {}) as Record<string, unknown>;
-        if (payload.op === "decide") {
-          const signals = parseSignals(payload);
+      POST: withSovereignAuth("chat", "execute", async (context, _request, body) => {
+        const incoming = (body ?? {}) as Record<string, unknown>;
+        if (incoming.op === "decide") {
+          const signals = parseSignals(incoming);
           if (!signals) return json({ ok: false, error: "invalid_signals" }, 400);
           const decision = decideHypercore(signals);
           return json({ ok: true, schema: decision.schema, decision });
         }
 
-        if (isProductionLike()) {
-          return json(
-            {
-              ok: false,
-              error: "HYPERCORE_ADAPTERS_UNAVAILABLE",
-              message:
-                "Hypercore requiere adaptadores productivos (modelo, memoria, política, evidencia, output-security).",
-              status: "fail_closed",
-            },
-            503,
-          );
+        // Vinculación de identidad: el tenant/usuario proviene del principal autenticado,
+        // nunca del cuerpo de la petición (aislamiento multi-tenant, AGENTS.md §5).
+        if (!context.tenantId) {
+          return json({ ok: false, error: "AUTH_REQUIRED" }, 401);
         }
+        const payload = { ...incoming, tenantId: context.tenantId, userId: context.userId };
 
-        const result = await executeHypercore(body, deterministicHypercoreAdapter(), { cache });
+        const result = await executeHypercore(
+          payload,
+          createProductionHypercoreAdapters({
+            tenantId: context.tenantId,
+            userId: context.userId,
+            roles: context.role ? [context.role] : [],
+            scopes: context.scope ? context.scope.split(" ") : [],
+          }),
+          { cache },
+        );
         const status = result.ok
           ? 200
-          : result.reason === "deadline_during_verification" ||
-              result.reason === "deadline_exceeded"
+          : result.reason === "deadline_during_verification" || result.reason === "deadline_exceeded"
             ? 504
             : typeof result.reason === "string" && result.reason.startsWith("invalid_")
               ? 400

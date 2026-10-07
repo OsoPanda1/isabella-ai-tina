@@ -1,14 +1,8 @@
 import { Router } from "express";
 import { authenticate } from "../auth.server";
 import { rateLimit, quotaGate } from "../../middleware/rateLimit";
-import { isProductionLike } from "../runtime-mode";
-import {
-  HypercoreTTLCache,
-  decideHypercore,
-  deterministicHypercoreAdapter,
-  executeHypercore,
-  type Risk,
-} from "./hypercore";
+import { HypercoreTTLCache, decideHypercore, executeHypercore, type Risk } from "./hypercore";
+import { createProductionHypercoreAdapters } from "./hypercore-adapters";
 
 /**
  * Superficie HTTP de Hypercore (Express).
@@ -98,19 +92,24 @@ hypercoreRouter.post(
   authenticate,
   quotaGate("chat"),
   async (req, res) => {
-    // En producción exigimos adaptadores reales; sin ellos, fail-closed (nunca simular).
-    if (isProductionLike()) {
-      return res.status(503).json({
-        ok: false,
-        error: "HYPERCORE_ADAPTERS_UNAVAILABLE",
-        message:
-          "Hypercore requiere adaptadores productivos (modelo, memoria, política, evidencia, output-security).",
-        status: "fail_closed",
-      });
+    // Vinculación de identidad: el tenant/usuario SIEMPRE proviene del principal autenticado,
+    // nunca del cuerpo de la petición (aislamiento multi-tenant, AGENTS.md §5).
+    const principal = req.principal;
+    if (!principal?.tenantId) {
+      return res.status(401).json({ ok: false, error: "AUTH_REQUIRED" });
     }
-    const result = await executeHypercore(req.body, deterministicHypercoreAdapter(), {
-      cache: sharedCache,
-    });
+    const incoming = req.body && typeof req.body === "object" ? (req.body as Record<string, unknown>) : {};
+    const payload = { ...incoming, tenantId: principal.tenantId, userId: principal.sub };
+    const result = await executeHypercore(
+      payload,
+      createProductionHypercoreAdapters({
+        tenantId: principal.tenantId,
+        userId: principal.sub,
+        roles: principal.roles,
+        scopes: principal.scopes,
+      }),
+      { cache: sharedCache },
+    );
     const status = result.ok
       ? 200
       : result.reason === "deadline_during_verification" || result.reason === "deadline_exceeded"

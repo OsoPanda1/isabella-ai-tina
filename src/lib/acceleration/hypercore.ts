@@ -355,27 +355,37 @@ async function runVerificationRails(
 
   // EARLY_EXIT: si un rail obligatorio deniega, se puede dejar de esperar a los demás,
   // pero el gate obligatorio igualmente evalúa el veredicto final (fail-closed).
+  // IMPORTANTE: cada rail se envuelve con .catch para que un rechazo se convierta en
+  // { ok: false } y NUNCA cuelgue la promesa de agregación (evita fail-open por hang).
+  const asRail = (key: string, promise: Promise<Verdict>): Promise<{ key: string; verdict: Verdict }> =>
+    promise
+      .then((verdict) => ({ key, verdict }))
+      .catch((error: unknown) => ({
+        key,
+        verdict: { ok: false, reason: error instanceof Error ? error.message : "rail_error" },
+      }));
+
   const verdicts: Record<string, Verdict> = { input: { ok: true } };
   await new Promise<void>((resolve) => {
     let pending = 3;
     let settled = false;
-    const done = (): void => {
-      pending -= 1;
-      if (pending === 0 || settled) resolve();
-    };
-    const record = (key: string) => (verdict: Verdict) => {
+    const settle = (): void => {
       if (settled) return;
+      settled = true;
+      resolve();
+    };
+    const onSettled = ({ key, verdict }: { key: string; verdict: Verdict }): void => {
       verdicts[key] = verdict;
       if (!verdict.ok) {
-        settled = true;
-        resolve();
+        settle();
         return;
       }
-      done();
+      pending -= 1;
+      if (pending === 0) settle();
     };
-    void adapters.policyCheck(request, candidate, signal).then(record("policy"));
-    void adapters.evidenceCheck(request, candidate, memory, signal).then(record("evidence"));
-    void adapters.outputSafety(request, candidate, signal).then(record("safety"));
+    void asRail("policy", adapters.policyCheck(request, candidate, signal)).then(onSettled);
+    void asRail("evidence", adapters.evidenceCheck(request, candidate, memory, signal)).then(onSettled);
+    void asRail("safety", adapters.outputSafety(request, candidate, signal)).then(onSettled);
   });
   return verdicts;
 }
