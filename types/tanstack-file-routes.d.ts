@@ -79,6 +79,12 @@ declare module "@tanstack/react-router" {
       path: "/api/v1/isabella";
       fullPath: "/api/v1/isabella";
     };
+    "/api/v1/isabella-hypercore": {
+      parentRoute: AnyRoute;
+      id: "/api/v1/isabella-hypercore";
+      path: "/api/v1/isabella-hypercore";
+      fullPath: "/api/v1/isabella-hypercore";
+    };
     "/ops/cockpit": {
       parentRoute: AnyRoute;
       id: "/ops/cockpit";

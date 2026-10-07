@@ -97,8 +97,8 @@ Pipeline real de una petición de chat (ruta de archivo verificada):
 ## Estado de producción (2026-10-06)
 
 ### ✅ Verificado
-- Typecheck: `tsc --noEmit --strict` PASS (0 errores)
-- Lint: `eslint .` PASS (0 errores críticos)
+- Typecheck: `pnpm typecheck` (`tsc --noEmit`) **NO pasa en su totalidad** — medición local 2026-10-06: **247 errores preexistentes** (deuda heredada). Los módulos nuevos de Hypercore sí compilan limpios (verificado con `tsc` dirigido a sus archivos).
+- Lint: `eslint` sin errores en los módulos de Hypercore; el repositorio arrastra deuda de lint heredada.
 - Tests: 545+ tests en suite completa
 - Build: `vite build` SUCCESS
 - Production gates: todos los scripts npm listados en `package.json` están implementados
@@ -149,6 +149,61 @@ Pipeline real de una petición de chat (ruta de archivo verificada):
 - Bridge y executor con validación de contrato
 - 5 herramientas ejecutables en `tools-catalog.ts`
 - 28 descriptores de política en `tool-registry.ts`
+
+---
+
+## Isabella Hypercore — aceleración adaptativa gobernada
+
+**Isabella Hypercore** es la capa de aceleración adaptativa (analogía: el _Tsuru_ con turbos). El
+núcleo ordinario y resistente —CROWN, autorización, policy-as-code, evidencia y output-security—
+permanece como **autoridad final**; los turbos reducen latencia sin comprar velocidad a costa de
+seguridad.
+
+> **Invariante:** ningún turbo ni nitro concede autoridad. El `mandatoryGate`
+> (policy + evidence + safety) se ejecuta **siempre**. Un timeout, error o resultado malformado de
+> un rail obligatorio equivale a **DENY**, nunca a **ALLOW**.
+
+### Tres turbos, seis nitros
+
+| Turbo           | Nitro               | Función                                                                          |
+| --------------- | ------------------- | -------------------------------------------------------------------------------- |
+| **VECTOR**      | `PREFIX_CACHE`      | Reutilizar cómputo de prefijos estables (sistema, política, contexto).            |
+| **VECTOR**      | `SEMANTIC_CACHE`    | Reutilizar resultados validados bajo la misma huella de política.                 |
+| **SPECULATIVE** | `DRAFT_MODEL`       | Candidatos económicos que nunca son respuesta final sin verificación.             |
+| **SPECULATIVE** | `PARALLEL_BRANCHES` | Probar varios candidatos/rutas en paralelo.                                       |
+| **VERITAS**     | `VERIFIER_FANOUT`   | Comprobaciones independientes en paralelo (obligatorio).                          |
+| **VERITAS**     | `EARLY_EXIT`        | Reducir verificaciones redundantes; **prohibido** en riesgo elevado.              |
+
+### Modos
+
+`CRUISE` (presupuesto sano) → `BOOST` (presión de latencia o complejidad) → `HYPERBOOST`
+(presupuesto crítico). Los modos alteran estrategia y presupuestos, **nunca** eliminan el gate.
+
+### Superficie y artefactos
+
+| Ruta / artefacto                          | Rol                                                            |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `GET /api/v1/isabella/hypercore`          | Metadatos (turbos, nitros, invariantes).                       |
+| `POST /api/v1/isabella/hypercore/decide`  | Decisión del plano de aceleración (sin efectos secundarios).   |
+| `POST /api/v1/isabella/hypercore/run`     | Ejecución gobernada (requiere adaptadores productivos).        |
+| `src/lib/acceleration/hypercore.ts`       | Motor unificado (decisión + pipeline + caché + telemetría).    |
+| `src/lib/acceleration/hypercore-routes.ts`| Superficie Express.                                            |
+| `src/routes/api/v1/isabella-hypercore.ts` | Superficie TanStack/Nitro.                                     |
+| `hypercore-runtime/`                      | Runtime de referencia ejecutable (Node nativo) + `node --test`.|
+| `docs/acceleration/`                      | Arquitectura, protocolo, OpenAPI y manifiesto.                |
+| `test/unit/acceleration/hypercore.test.ts`| Pruebas del motor y de los invariantes.                        |
+
+### Estado
+
+- **(A)\*** Motor, superficies HTTP y runtime de referencia: implementado, cableado y con tests
+  (10 vitest + 10 `node --test` verdes en local, 2026-10-06).
+- **(EXPERIMENTAL)** `/run` responde `503` (fail-closed) en producción hasta cablear adaptadores
+  reales (modelo, memoria, política, evidencia, output-security). El adaptador incluido es
+  determinista y **no** es el modelo real de Isabella.
+- Aprender de un resultado no lo convierte en verdad: la caché no concede autorización y solo
+  cachea riesgo bajo tras aprobar el gate.
+
+Detalle completo en [`docs/acceleration/README.md`](docs/acceleration/README.md).
 
 ---
 

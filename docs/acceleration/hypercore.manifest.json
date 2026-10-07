@@ -1,0 +1,52 @@
+{
+  "name": "isabella-hypercore",
+  "version": "1.0.0",
+  "schema": "isabella.hypercore.decision.v1",
+  "description": "Capa de aceleración adaptativa gobernada de Isabella. Tres turbos, seis nitros. La autoridad final se preserva siempre.",
+  "invariants": [
+    "NINGUN_TURBO_CONCEDE_AUTORIDAD",
+    "MANDATORY_GATE_SIEMPRE_SE_EJECUTA",
+    "FALLO_DE_RAIL_OBLIGATORIO_EQUIVALE_A_DENY",
+    "CACHE_NO_CONCEDE_AUTORIZACION",
+    "DRAFT_NO_ES_VERDAD_NI_RESPUESTA_FINAL"
+  ],
+  "turbos": {
+    "VECTOR": {
+      "purpose": "Reutilizar trabajo ya validado bajo la misma huella de política.",
+      "nitros": ["PREFIX_CACHE", "SEMANTIC_CACHE"]
+    },
+    "SPECULATIVE": {
+      "purpose": "Producir candidatos verificables; un draft nunca es verdad por sí mismo.",
+      "nitros": ["DRAFT_MODEL", "PARALLEL_BRANCHES"]
+    },
+    "VERITAS": {
+      "purpose": "Verificar en paralelo sin eliminar la verificación.",
+      "nitros": ["VERIFIER_FANOUT", "EARLY_EXIT"]
+    }
+  },
+  "modes": ["CRUISE", "BOOST", "HYPERBOOST"],
+  "nitroRules": {
+    "PREFIX_CACHE": "always",
+    "SEMANTIC_CACHE": "risk in {low,medium}",
+    "DRAFT_MODEL": "mode != CRUISE && risk not elevated",
+    "PARALLEL_BRANCHES": "DRAFT active && (mode == HYPERBOOST || complexity >= 0.7)",
+    "VERIFIER_FANOUT": "always",
+    "EARLY_EXIT": "mode == HYPERBOOST && risk in {low,medium}"
+  },
+  "mandatoryRails": ["policy", "evidence", "safety"],
+  "implementation": {
+    "engine": "src/lib/acceleration/hypercore.ts",
+    "expressRouter": "src/lib/acceleration/hypercore-routes.ts",
+    "tanstackRoute": "src/routes/api/v1/isabella-hypercore.ts",
+    "runtime": "hypercore-runtime/",
+    "tests": "test/unit/acceleration/hypercore.test.ts"
+  },
+  "endpoints": {
+    "metadata": "GET /api/v1/isabella/hypercore",
+    "decide": "POST /api/v1/isabella/hypercore/decide",
+    "run": "POST /api/v1/isabella/hypercore/run"
+  },
+  "productionAdaptersRequired": true,
+  "status": "IMPLEMENTED",
+  "certification": "EXPERIMENTAL"
+}

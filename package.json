@@ -39,6 +39,8 @@
     "dev": "vite dev --host 0.0.0.0 --port 3000",
     "format": "prettier --write .github/workflows/*.yml",
     "format:check": "prettier --check .github/workflows/*.yml",
+    "hypercore:serve": "node hypercore-runtime/src/server.mjs",
+    "hypercore:test": "node --test hypercore-runtime/test/hypercore.test.mjs",
     "k8s:image:verify": "node scripts/k8s-image-pin.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

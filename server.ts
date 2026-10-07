@@ -17,6 +17,7 @@ import { creatorEconomyRouter } from "./src/lib/creator-economy/routes";
 import { QuantumBridgeRequestSchema, quantumGuard, runQuantumBridge } from "./src/lib/quantum-bridge.server";
 import { summarizeIsabellaV5Fusion } from "./src/lib/isabella-v5";
 import { tamvPlatformRouter } from "./src/lib/tamv-platform.server";
+import { hypercoreRouter } from "./src/lib/acceleration/hypercore-routes";
 import { resolveIntroConfig } from "./src/lib/media/intro-config";
 import { loadConfig } from "./src/lib/config";
 import {
@@ -245,6 +246,7 @@ app.use(promptInjectionGuard);
 app.use(atlasRouter);
 app.use("/api/v1", creatorEconomyRouter);
 app.use(tamvPlatformRouter);
+app.use(hypercoreRouter);
 
 // ─── NATIVE AUTH BOOTSTRAP ──────────────────────────────────────────
 // P0 FIX: Bootstrap is ONLY available in non-production environments.
