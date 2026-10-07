@@ -270,7 +270,7 @@ jobs:
           echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
 
       - name: Upload schema artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: supabase-schema-artifacts
@@ -432,7 +432,7 @@ jobs:
           fi
 
       - name: "Upload backup artifacts (retention: 90 days)"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: supabase-backup-artifacts
@@ -652,7 +652,7 @@ jobs:
           echo "📄 Migration report generated: migration-report.md"
 
       - name: Upload migration report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: migration-compliance-report
           path: migration-report.md
