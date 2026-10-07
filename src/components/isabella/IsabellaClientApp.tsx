@@ -454,14 +454,14 @@ function IsabellaInterface() {
             </div>
           </header>
 
-          <main className="isabella-content flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <main className="isabella-content flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
             {activeTab === "terminal" && (
-              <div className="mx-auto grid h-full max-w-[1450px] items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
+              <div className="mx-auto flex h-full w-full max-w-[1120px] flex-col items-stretch gap-4">
                 <section className="flex min-w-0 flex-col gap-4">
                   <div
                     ref={chatSurfaceRef}
                     onScroll={handleChatScroll}
-                    className="isabella-chat-surface glass relative min-h-[56vh] flex-1 overflow-y-auto rounded-[1.35rem] border-border/30 p-1 shadow-surface scroll-smooth"
+                    className="isabella-chat-surface glass relative min-h-[58vh] flex-1 overflow-y-auto rounded-2xl border-border/30 p-0 shadow-surface scroll-smooth"
                   >
                     <div className="isabella-surface-label px-5 pb-2 pt-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/5">
                       <div className="flex items-center gap-2">
@@ -538,7 +538,7 @@ function IsabellaInterface() {
                   </div>
                 </section>
                 <div
-                  className={`${panel ? "block animate-rise" : "hidden lg:block"} flex flex-col gap-4`}
+                  className={`${panel ? "block animate-rise" : "hidden"} flex flex-col gap-4 lg:hidden`}
                 >
                   <RightRails
                     presetId={isabella.presetId}

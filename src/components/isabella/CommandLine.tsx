@@ -12,7 +12,6 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-import { Waveform } from "./Waveform";
 import { fileToDataUrl, humanSize, MAX_ATTACHMENT_BYTES, type Attachment } from "@/lib/attachments";
 import { usePerformanceMonitor } from "@/hooks/usePerformanceMonitor";
 const uid = () => crypto.randomUUID();
@@ -307,7 +306,7 @@ export function CommandLine({ onSend, onStop, onReset, isProcessing }: CommandLi
     Math.ceil(value.length / 4) +
     attachments.reduce((sum, item) => sum + (item.kind === "image" ? 256 : 512), 0);
   return (
-    <div className="glass-strong relative flex flex-col gap-3 rounded-3xl border border-border/40 p-4 shadow-glass transition-all sm:p-6">
+    <div className="glass-strong relative flex flex-col gap-3 rounded-2xl border border-electric/25 bg-background/95 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.24)] transition-all sm:p-5">
       {showCommandsMenu && (
         <div className="absolute bottom-full left-6 right-6 z-50 mb-2 space-y-1 rounded-2xl border border-border/50 bg-background/95 p-2 font-mono text-[11px] shadow-2xl backdrop-blur-xl">
           <div className="px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -404,7 +403,14 @@ export function CommandLine({ onSend, onStop, onReset, isProcessing }: CommandLi
           </button>
         </div>
       </div>
-      <Waveform active={isProcessing || recording} height={36} />
+      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+        <span
+          className={`size-1.5 rounded-full ${isProcessing || recording ? "animate-pulse bg-electric" : "bg-emerald-400"}`}
+        />
+        {isProcessing
+          ? "Isabella está preparando una respuesta"
+          : "Listo para recibir tu instrucción"}
+      </div>
       <div className="relative">
         <textarea
           id={inputId}
@@ -424,7 +430,7 @@ export function CommandLine({ onSend, onStop, onReset, isProcessing }: CommandLi
           }}
           rows={1}
           aria-label="Mensaje para Isabella AI"
-          placeholder="Habla con Isabella… · ⌘/Ctrl+K enfoca · ⌘/Ctrl+Enter envía · Shift+Enter salto"
+          placeholder="Escribe tu mensaje para Isabella…"
           className="w-full resize-none bg-transparent text-[14.5px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-0"
         />
       </div>
