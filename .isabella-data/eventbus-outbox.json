@@ -148798,5 +148798,57 @@
     "attempts": 1,
     "status": "published",
     "published_at": "2026-10-07T00:28:36.624Z"
+  },
+  {
+    "event_id": "evt_muxddeoh_45b6e66f4124",
+    "envelope": {
+      "event_id": "evt_muxddeoh_45b6e66f4124",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:28:44.561Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDDEOHBD4F98E086-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:cfd5921a88bdecff674c8d669cf93d059a91728e069a17bc951b62221ee05f3a"
+    },
+    "inserted_at": "2026-10-07T00:28:44.561Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:28:44.599Z"
+  },
+  {
+    "event_id": "evt_muxddm0m_4007a4cd264f",
+    "envelope": {
+      "event_id": "evt_muxddm0m_4007a4cd264f",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:28:54.070Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDDM0M52290A8B4E-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:2f25aa868162e6969c5cb9fed5954d7364bd1c3292395ab53039511eea06576e"
+    },
+    "inserted_at": "2026-10-07T00:28:54.070Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:28:54.116Z"
   }
 ]
