@@ -1,11 +1,11 @@
 /**
- * Isabella Villaseñor AI v5.0.0 — Canonical specification data (client-safe).
+ * Isabella Villaseñor AI v4.3.3 — Canonical specification data (client-safe).
  * Author: Edwin Oswaldo Castillo Trejo (Anubis Villaseñor) · ORCID 0009-0008-5050-1539
  * Ecosystem: TAMV ONLINE NETWORK / RDM Digital Hub / Nodo Cero (Real del Monte, Hidalgo)
  * License: CC BY 4.0
  */
 
-export const ISABELLA_VERSION = "5.0.0";
+export const ISABELLA_VERSION = "4.3.3";
 export const ISABELLA_NODE_ZERO = "Real del Monte, Hidalgo, México";
 export const ISABELLA_ORCID = "0009-0008-5050-1539";
 

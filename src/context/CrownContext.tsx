@@ -957,7 +957,7 @@ Puedes conversar conmigo, pedirme que sintetice voz en tiempo real, me solicites
             presenceIndex: 0.99,
             presentationQuality: 0.99,
           },
-          engine: "Isabella Core CROWN v4.2",
+          engine: "Isabella Core CROWN v4.3.3",
         },
       ],
     });
