@@ -149994,5 +149994,551 @@
     "attempts": 1,
     "status": "published",
     "published_at": "2026-10-07T00:35:05.125Z"
+  },
+  {
+    "event_id": "evt_muxdpwm6_3ab0adb3ed55",
+    "envelope": {
+      "event_id": "evt_muxdpwm6_3ab0adb3ed55",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:27.678Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDPWM52CAA2911FC-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:b7cf4ad5823c790632da70eb03a2a6d7370f7ef03a4d82490dd35ffc1c7797db"
+    },
+    "inserted_at": "2026-10-07T00:38:27.678Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:27.718Z"
+  },
+  {
+    "event_id": "evt_muxdq062_c08b9410794d",
+    "envelope": {
+      "event_id": "evt_muxdq062_c08b9410794d",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:32.282Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQ06209931FB424-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:fce4bfaf9fea5532977af6bfd799faca491095c4742ba711a929eead3886a798"
+    },
+    "inserted_at": "2026-10-07T00:38:32.282Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:32.324Z"
+  },
+  {
+    "event_id": "evt_muxdq3mg_55f30666bd0f",
+    "envelope": {
+      "event_id": "evt_muxdq3mg_55f30666bd0f",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:36.760Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQ3MG065F24C6AC-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:43fba51e62e4dc1952259d1f45da013c776fd48df17a3403a76630e02583855e"
+    },
+    "inserted_at": "2026-10-07T00:38:36.760Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:36.797Z"
+  },
+  {
+    "event_id": "evt_muxdq72q_c8771958be6d",
+    "envelope": {
+      "event_id": "evt_muxdq72q_c8771958be6d",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:41.234Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQ72PA3662F1826-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:ec208af025fd1770f1f4f0f5dc1a8fda60c1f26b07419758d2f5048711af68c8"
+    },
+    "inserted_at": "2026-10-07T00:38:41.234Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:41.275Z"
+  },
+  {
+    "event_id": "evt_muxdqaeh_5942008fb402",
+    "envelope": {
+      "event_id": "evt_muxdqaeh_5942008fb402",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:45.545Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQAEG9F51AF2D7C-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:45bd67f07cf157d8cf7c766b252d7cb769133ad8c7f25fca94cfff7740b256d3"
+    },
+    "inserted_at": "2026-10-07T00:38:45.545Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:45.598Z"
+  },
+  {
+    "event_id": "evt_muxdqdqz_317a6823185e",
+    "envelope": {
+      "event_id": "evt_muxdqdqz_317a6823185e",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:49.883Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQDQZAEAC6498F0-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:505fcb42f494224406196330a0c415b298adfb2de98e8400f16ae5c64ffb1edd"
+    },
+    "inserted_at": "2026-10-07T00:38:49.883Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:49.924Z"
+  },
+  {
+    "event_id": "evt_muxdqhie_949a203333f9",
+    "envelope": {
+      "event_id": "evt_muxdqhie_949a203333f9",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:54.758Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQHIE7D322FE7EE-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:af8c6f15de6c25c63dd5d547bbb7e30195c7e1516a9fd434fa939de214c10bce"
+    },
+    "inserted_at": "2026-10-07T00:38:54.758Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:54.798Z"
+  },
+  {
+    "event_id": "evt_muxdqkys_7c93bcad70f6",
+    "envelope": {
+      "event_id": "evt_muxdqkys_7c93bcad70f6",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:38:59.236Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQKYSC2AA113B97-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:3fa6d264e297e66bbcf8f5549779fc0abe923d81e63cc049af5b8e8adc37a6ad"
+    },
+    "inserted_at": "2026-10-07T00:38:59.236Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:38:59.272Z"
+  },
+  {
+    "event_id": "evt_muxdqolf_2108fb6e5d87",
+    "envelope": {
+      "event_id": "evt_muxdqolf_2108fb6e5d87",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:03.939Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQOLF699274A246-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:cd4309a6d923cbac85f6b4f726f02c34484e7a8b44406bfd28bef278c887e2e1"
+    },
+    "inserted_at": "2026-10-07T00:39:03.939Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:03.996Z"
+  },
+  {
+    "event_id": "evt_muxdqs7a_4120457a4ea5",
+    "envelope": {
+      "event_id": "evt_muxdqs7a_4120457a4ea5",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:08.614Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQS796A6BAF7911-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:191611dcbad9a1eeb5a232cdcb7ade79b6798bea2d286aea978e8899847a55ba"
+    },
+    "inserted_at": "2026-10-07T00:39:08.614Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:08.653Z"
+  },
+  {
+    "event_id": "evt_muxdqviu_a99ba13609ba",
+    "envelope": {
+      "event_id": "evt_muxdqviu_a99ba13609ba",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:12.918Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQVIU3F7BA10576-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:8f933850bb1040243390096e4575cfe261efc533ccb341bc6c58425f6039fb48"
+    },
+    "inserted_at": "2026-10-07T00:39:12.918Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:12.960Z"
+  },
+  {
+    "event_id": "evt_muxdqz0k_d281131086c9",
+    "envelope": {
+      "event_id": "evt_muxdqz0k_d281131086c9",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:17.444Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDQZ0J85F5FBA22B-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:17df5cd524e66b781122c0c5a831e7d85b413abacaef635437c11def0954d74c"
+    },
+    "inserted_at": "2026-10-07T00:39:17.444Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:17.494Z"
+  },
+  {
+    "event_id": "evt_muxdr2r9_8159c5528759",
+    "envelope": {
+      "event_id": "evt_muxdr2r9_8159c5528759",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:22.293Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDR2R8B2F31E8461-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:ff651f35730fa4a12503c29a93446b04a3487399d0a04fa30e3108dcd8a57cf5"
+    },
+    "inserted_at": "2026-10-07T00:39:22.293Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:22.332Z"
+  },
+  {
+    "event_id": "evt_muxdr6ah_7382bc034ea0",
+    "envelope": {
+      "event_id": "evt_muxdr6ah_7382bc034ea0",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:26.873Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDR6AG00705D1BDF-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:2e19865c8bf543e9938d635de6d9c4f0cca823f75531f629943814b1ff5b95d8"
+    },
+    "inserted_at": "2026-10-07T00:39:26.873Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:26.926Z"
+  },
+  {
+    "event_id": "evt_muxdr9vh_cbe6cdf50a39",
+    "envelope": {
+      "event_id": "evt_muxdr9vh_cbe6cdf50a39",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:31.517Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDR9VH53909C1B83-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:1a20f892ed01e82e438e7a84dbe7640cdb2d11f3605435710140436fbcaa2743"
+    },
+    "inserted_at": "2026-10-07T00:39:31.517Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:31.555Z"
+  },
+  {
+    "event_id": "evt_muxdrdqn_382c9bb2be3e",
+    "envelope": {
+      "event_id": "evt_muxdrdqn_382c9bb2be3e",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:36.527Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDRDQMCE822DDE9F-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:618d2593e368d5b0695d39e098ffb3bfbc906d6c4e7a462d423eaa9ad7aa4115"
+    },
+    "inserted_at": "2026-10-07T00:39:36.527Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:36.565Z"
+  },
+  {
+    "event_id": "evt_muxdrh96_cc60ca3d2f41",
+    "envelope": {
+      "event_id": "evt_muxdrh96_cc60ca3d2f41",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:41.082Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDRH96AB31E20F15-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:36fe37e301612228ab3251c111cfdad3a636eb17e6e3387d1e24dd3ae0f95f1e"
+    },
+    "inserted_at": "2026-10-07T00:39:41.082Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:41.119Z"
+  },
+  {
+    "event_id": "evt_muxdrkub_98574cf1e5a3",
+    "envelope": {
+      "event_id": "evt_muxdrkub_98574cf1e5a3",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:45.731Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDRKUB702DC85AF3-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:46f5182487f76b3c09f8f47ed35ad7644886dcf2ce4121a5b11854f9faf96b25"
+    },
+    "inserted_at": "2026-10-07T00:39:45.731Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:45.768Z"
+  },
+  {
+    "event_id": "evt_muxdrojy_089baa45af87",
+    "envelope": {
+      "event_id": "evt_muxdrojy_089baa45af87",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:50.542Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDROJX5016D49AB6-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:3a9220ce4844523d49dfb95e59aad3132d74e9a9e42bcc7285b45725f7984ecb"
+    },
+    "inserted_at": "2026-10-07T00:39:50.542Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:50.578Z"
+  },
+  {
+    "event_id": "evt_muxdrsgs_77f8e4ea847c",
+    "envelope": {
+      "event_id": "evt_muxdrsgs_77f8e4ea847c",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:39:55.612Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDRSGS1E1EDC35B7-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:ae14a8894ea2612bb0f1dd5e07f72aec4b5a745ec140567e11275759b59d3c89"
+    },
+    "inserted_at": "2026-10-07T00:39:55.612Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:39:55.667Z"
+  },
+  {
+    "event_id": "evt_muxdrwkg_6ee9414be4d4",
+    "envelope": {
+      "event_id": "evt_muxdrwkg_6ee9414be4d4",
+      "event_type": "documents.created",
+      "timestamp": "2026-10-07T00:40:00.929Z",
+      "actor_id": "kernel.bootstrap",
+      "federation_id": "TAMV-NODO-0",
+      "hash_before": null,
+      "hash_after": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa",
+      "payload": {
+        "document_uid": "ATLAS-DOC-TAMV-NODO-0-CANON-MUXDRWKG8609CE96FF-1d30e05f",
+        "federation_id": "TAMV-NODO-0",
+        "namespace": "CANON",
+        "title": "ISABELLA VILLASEÑOR AI - Documento Canónico",
+        "created_by": "kernel.bootstrap",
+        "version": 1,
+        "canonical_hash": "1d30e05f725ba6d43b9e6f62cd996d9b34b9e17271535c09ad8e509d218c8faa"
+      },
+      "signature": "hmac-sha256:72af8ab2a6d86bea04021aa4d85f90abea0155c43b037e9e590064291adbf60e"
+    },
+    "inserted_at": "2026-10-07T00:40:00.929Z",
+    "attempts": 1,
+    "status": "published",
+    "published_at": "2026-10-07T00:40:00.997Z"
   }
 ]
