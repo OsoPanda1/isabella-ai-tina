@@ -20,33 +20,38 @@ function videoXRateLimit(request: Request): Response | null {
 }
 
 const createProjectSchema = z.object({
-  title: z.string().min(3),
-  premise: z.string().min(5),
-  genre: z.string().default("Documental & Ficción Cinematográfica"),
+  title: z.string().trim().min(3).max(200),
+  premise: z.string().trim().min(5).max(10_000),
+  genre: z.string().trim().min(1).max(120).default("Documental & Ficción Cinematográfica"),
 });
 
 const advanceStatusSchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().trim().min(1).max(128),
 });
 
 const mutateNodeSchema = z.object({
-  projectId: z.string(),
-  nodeId: z.string(),
-  properties: z.record(z.unknown()),
+  projectId: z.string().trim().min(1).max(128),
+  nodeId: z.string().trim().min(1).max(128),
+  properties: z.record(z.unknown()).refine((value) => Object.keys(value).length <= 64),
 });
 
 const regenerateShotSchema = z.object({
-  projectId: z.string(),
-  shotId: z.string(),
+  projectId: z.string().trim().min(1).max(128),
+  shotId: z.string().trim().min(1).max(128),
 });
 
 const runQASchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().trim().min(1).max(128),
 });
 
 const exportC2PASchema = z.object({
-  projectId: z.string(),
+  projectId: z.string().min(1).max(128),
 });
+
+function ownedProject(projectId: string, tenantId: string) {
+  const project = videoEngineXManager.getProject(projectId);
+  return project?.tenantId === tenantId ? project : undefined;
+}
 
 export const Route = createFileRoute("/api/video-engine-x")({
   server: {
@@ -66,14 +71,16 @@ export const Route = createFileRoute("/api/video-engine-x")({
           return new Response(
             JSON.stringify({
               success: true,
-              projects: videoEngineXManager.getProjects(),
+              projects: videoEngineXManager
+                .getProjects()
+                .filter((project) => project.tenantId === authResult.context.tenantId),
             }),
             { headers: { "Content-Type": "application/json" } },
           );
         }
 
         if (action === "project") {
-          const project = videoEngineXManager.getProject(projectId);
+          const project = ownedProject(projectId, authResult.context.tenantId);
           if (!project) {
             return new Response(
               JSON.stringify({ success: false, error: "Proyecto no encontrado" }),
@@ -151,6 +158,7 @@ export const Route = createFileRoute("/api/video-engine-x")({
               parsed.title,
               parsed.premise,
               parsed.genre,
+              authResult.context.tenantId,
             );
             return new Response(JSON.stringify({ success: true, project }), {
               headers: { "Content-Type": "application/json" },
@@ -159,6 +167,11 @@ export const Route = createFileRoute("/api/video-engine-x")({
 
           if (action === "advance-status") {
             const parsed = advanceStatusSchema.parse(body);
+            if (!ownedProject(parsed.projectId, authResult.context.tenantId))
+              return new Response(
+                JSON.stringify({ success: false, error: "Proyecto no encontrado" }),
+                { status: 404, headers: { "Content-Type": "application/json" } },
+              );
             const updated = videoEngineXManager.advanceProjectStatus(parsed.projectId);
             if (!updated) {
               return new Response(
@@ -173,6 +186,11 @@ export const Route = createFileRoute("/api/video-engine-x")({
 
           if (action === "mutate-node") {
             const parsed = mutateNodeSchema.parse(body);
+            if (!ownedProject(parsed.projectId, authResult.context.tenantId))
+              return new Response(
+                JSON.stringify({ success: false, error: "Proyecto no encontrado" }),
+                { status: 404, headers: { "Content-Type": "application/json" } },
+              );
             const impact = videoEngineXManager.mutateGraphNode(
               parsed.projectId,
               parsed.nodeId,
@@ -185,6 +203,11 @@ export const Route = createFileRoute("/api/video-engine-x")({
 
           if (action === "regenerate-shot") {
             const parsed = regenerateShotSchema.parse(body);
+            if (!ownedProject(parsed.projectId, authResult.context.tenantId))
+              return new Response(
+                JSON.stringify({ success: false, error: "Proyecto no encontrado" }),
+                { status: 404, headers: { "Content-Type": "application/json" } },
+              );
             const result = videoEngineXManager.regenerateShot(parsed.projectId, parsed.shotId);
             return new Response(JSON.stringify({ success: true, result }), {
               headers: { "Content-Type": "application/json" },
@@ -193,6 +216,11 @@ export const Route = createFileRoute("/api/video-engine-x")({
 
           if (action === "run-qa") {
             const parsed = runQASchema.parse(body);
+            if (!ownedProject(parsed.projectId, authResult.context.tenantId))
+              return new Response(
+                JSON.stringify({ success: false, error: "Proyecto no encontrado" }),
+                { status: 404, headers: { "Content-Type": "application/json" } },
+              );
             const report = videoEngineXManager.runMultimodalQA(parsed.projectId);
             return new Response(JSON.stringify({ success: true, qaReport: report }), {
               headers: { "Content-Type": "application/json" },
@@ -201,7 +229,7 @@ export const Route = createFileRoute("/api/video-engine-x")({
 
           if (action === "export-c2pa") {
             const parsed = exportC2PASchema.parse(body);
-            const project = videoEngineXManager.getProject(parsed.projectId);
+            const project = ownedProject(parsed.projectId, authResult.context.tenantId);
             if (!project) {
               return new Response(
                 JSON.stringify({ success: false, error: "Proyecto no encontrado" }),
