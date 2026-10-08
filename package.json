@@ -24,6 +24,7 @@
     "audit:repository": "node scripts/repository-audit.mjs",
     "audit:documents": "node scripts/document-inventory.mjs",
     "audit:architecture": "node scripts/audit-architecture.mjs",
+    "audit:dependencies": "pnpm audit --prod",
     "audit:recipes": "node scripts/verify-recipe.mjs --check",
     "audit:routes": "node scripts/genesis-route-audit.mjs",
     "build": "vite build && node scripts/generate-client-shell.mjs",
