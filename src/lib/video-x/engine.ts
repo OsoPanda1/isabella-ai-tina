@@ -38,6 +38,7 @@ export const PROJECT_STATUS_FLOW: ProjectStatus[] = [
 
 export const INITIAL_DEMO_PROJECT: VideoProject = {
   id: "proj-isabella-mineral-01",
+  tenantId: "nodo_cero_rdm",
   version: "1.0.0",
   title: "Isabella: Sombras y Luz en Mineral del Monte",
   brief: {
@@ -333,13 +334,19 @@ class VideoEngineXManager {
     return this.manifests.get(projectId);
   }
 
-  public createProject(title: string, premise: string, genre: string): VideoProject {
+  public createProject(
+    title: string,
+    premise: string,
+    genre: string,
+    tenantId: string,
+  ): VideoProject {
     const id = `proj-${Date.now().toString(36)}`;
     const ngId = `ng-${id}`;
     const tlId = `tl-${id}`;
 
     const newProject: VideoProject = {
       id,
+      tenantId,
       version: "1.0.0",
       title,
       brief: {

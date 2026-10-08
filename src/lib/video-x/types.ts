@@ -54,6 +54,8 @@ export interface BudgetPolicy {
 
 export interface VideoProject {
   id: string;
+  /** Tenant that owns this project; required for every server-side lookup. */
+  tenantId: string;
   version: string;
   title: string;
   brief: CreativeBrief;

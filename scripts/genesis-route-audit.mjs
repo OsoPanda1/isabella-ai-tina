@@ -94,7 +94,9 @@ const routes = entries.map((file) => {
     .filter((candidate) => fs.existsSync(candidate))
     .map((candidate) => fs.readFileSync(candidate, "utf8"));
   const effectiveSource = [source, ...delegated].join("\n");
-  const methods = [...source.matchAll(/\b(GET|POST|PUT|PATCH|DELETE)\s*:/g)].map((m) => m[1]);
+  const methods = [
+    ...new Set([...source.matchAll(/\b(GET|POST|PUT|PATCH|DELETE)\s*:/g)].map((m) => m[1])),
+  ];
   const mutation = methods.some((method) => method !== "GET");
   const publicException = PUBLIC_EXCEPTIONS.some((pattern) => pattern.test(meta.route));
   const sensitive = !publicException && (mutation || SENSITIVE.test(meta.route));
