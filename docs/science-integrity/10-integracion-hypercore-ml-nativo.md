@@ -91,6 +91,17 @@ POST /api/v2/ingest (JSON-LD + artefactos)
 
 ## 8. Estado de activación
 
-- **[PLAN]** Todo lo anterior. Pendiente de arrancar la Fase B en la ronda de tareas en cola.
+- **[TESTED]** Fase B implementada en `src/lib/science-integrity/` (B0–B6) e interconectada con los módulos nativos:
+  - **B0** `ingest.ts` (JSON-LD + Merkle RFC 6962 + `ingest_event`/`verification_event`) · **B1** `claims.ts`
+    (claim-radar real, 100 casos de contrato) · **B2** `classifiers.ts` (native-ml + gates governed-ml)
+    · **B3** `pipeline.ts` (reglas §4.2, umbrales 0.70/0.90, banderas críticas, fail-closed) + `hypercore.ts`
+    (rail `executeHypercore` real) · **B4** `review.ts` (firma Ed25519) · **B5** `certification.ts`
+    (VC/IGDS, verificación con revocación) · **B6** gates limpios + tests.
+  - Superficie: `routes.ts` montada en `server.ts` (`/api/v1/science-integrity/*`); runtime por defecto en `runtime.ts`.
+  - Evidencia same-commit: `test/unit/science-integrity/` (33 tests) + typecheck 0 + suite completa
+    `1258 passed / 9 skipped` (2026-10-08). Registro en `00-INDICE.md` §8.
+- **Honestidad:** estado **TESTED** (local), no **CERTIFIED**. Faltan para producción/Nivel 4: TSA/hardening
+  HSM-KMS, persistencia PostgreSQL del ledger (`approval-repository` en memoria es referencia), cableado de
+  adaptadores MCP en runtime, auditoría externa independiente y CI remoto.
 - Deuda técnica conocida para la Fase B: rutas OpenAPI `/api/v2/*` (aún no mapeadas al router),
   integración `claim-radar` ↔ `intelligence` no probada, y HAR de sellos IGDS con procesadores HSM opcionales.

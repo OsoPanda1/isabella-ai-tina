@@ -92,7 +92,8 @@ Cada módulo enviado por el responsable se revisa (debilidades → correcciones)
 | 2026-10-07 | OpenAPI v2 mínimo | `artifacts/openapi.yaml` (v1) | — |
 | 2026-10-07 | OpenAPI v2 ampliado | `artifacts/openapi.yaml` (v2, canónico) | C1–C4 (`07-playbooks-operativos.md` §7) |
 | 2026-10-07 | Playbooks por rol (Revisor, SRE, Gobernanza, Legal, ML/DS) | `07-playbooks-operativos.md` | C5–C9 (`07-playbooks-operativos.md` §7) |
-| — | Plantillas legales (TOS, DPA, DUA, contrato revisor) | `09-plantillas-y-artefactos.md` *(pendiente)* | Pendientes de revisión |
+| 2026-10-07 | Plantillas legales (TOS, DPA, DUA, contrato revisor) | `artifacts/legal/{01-TOS,02-DPA,03-DUA,04-CONTRATO-REVISOR}.md` | Integradas y referenciadas en `09-plantillas-y-artefactos.md` + README |
+| 2026-10-08 | **Fase B — puente nativo implementado (B0–B6)** | `src/lib/science-integrity/` (ingest, claims, classifiers, pipeline, hypercore, review, certification, ledger, runtime, routes) | TESTS: 33 nuevos en `test/unit/science-integrity/`; gates typecheck 0, suite `1258 passed/9 skipped`, ORCID regex corregido (ISO 27729), banderas críticas solo sobre señales disponibles, verificación de certificado consulta revocaciones Genesis |
 | — | Scripts reproducibles y Dockerfile (piloto) | `09-plantillas-y-artefactos.md` + `artifacts/` *(pendiente)* | Pendientes de revisión |
 | — | Cronograma detallado y costos | `08-hoja-de-ruta-cronograma-y-piloto.md` *(pendiente)* | Pendientes de revisión |
 | — | Archivos exportables (.puml, .yaml, .md, .csv, scripts) | `artifacts/` *(pendiente)* | Pendientes de revisión |

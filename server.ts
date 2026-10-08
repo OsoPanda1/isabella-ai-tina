@@ -18,6 +18,7 @@ import { QuantumBridgeRequestSchema, quantumGuard, runQuantumBridge } from "./sr
 import { summarizeIsabellaV5Fusion } from "./src/lib/isabella-v5";
 import { tamvPlatformRouter } from "./src/lib/tamv-platform.server";
 import { hypercoreRouter } from "./src/lib/acceleration/hypercore-routes";
+import { scienceIntegrityRouter } from "./src/lib/science-integrity/routes";
 import { resolveIntroConfig } from "./src/lib/media/intro-config";
 import { loadConfig } from "./src/lib/config";
 import {
@@ -247,6 +248,7 @@ app.use(atlasRouter);
 app.use("/api/v1", creatorEconomyRouter);
 app.use(tamvPlatformRouter);
 app.use(hypercoreRouter);
+app.use(scienceIntegrityRouter);
 
 // ─── NATIVE AUTH BOOTSTRAP ──────────────────────────────────────────
 // P0 FIX: Bootstrap is ONLY available in non-production environments.
