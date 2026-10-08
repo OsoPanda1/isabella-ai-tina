@@ -98,9 +98,6 @@ const REQUIRED_GATES = {
   postRelease: ["health_check", "smoke_test", "monitoring_verification"],
 };
 
-const _NODE_VERSION_PATTERN = /node-version:\s*\[?([^\]]+)\]?/g;
-const _PACKAGE_JSON_NODE = /"node"\s*:\s*">?=?\s*(\d+)"/;
-
 export class CIScanner {
   private config: Required<CIScannerConfig>;
 
@@ -521,26 +518,6 @@ export class CIScanner {
     }
 
     return findings;
-  }
-
-  private collectFiles(dir: string): string[] {
-    const files: string[] = [];
-    const workflowsDir = path.join(dir, ".github", "workflows");
-
-    if (!fs.existsSync(workflowsDir)) return files;
-
-    try {
-      const entries = fs.readdirSync(workflowsDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isFile() && (entry.name.endsWith(".yml") || entry.name.endsWith(".yaml"))) {
-          files.push(path.join(workflowsDir, entry.name));
-        }
-      }
-    } catch {
-      /* intentional empty: skip if no workflows dir */
-    }
-
-    return files;
   }
 }
 

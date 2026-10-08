@@ -1,0 +1,606 @@
+openapi: 3.0.3
+info:
+  title: Librerías Isabella API (Ampliada)
+  version: "1.0.0"
+  description: >
+    API para ingestión, verificación, revisión, certificación y auditoría de contenidos científicos.
+    Contrato mínimo viable ampliado con endpoints de administración, auditoría y gestión de evidencias.
+servers:
+  - url: https://api.isabella.example
+    description: API principal (producción)
+  - url: https://staging-api.isabella.example
+    description: API staging
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.isabella.example/authorize
+          tokenUrl: https://auth.isabella.example/token
+          scopes:
+            ingest:write: "Permite subir contenidos"
+            ingest:read: "Permite consultar ingestiones"
+            review:write: "Permite firmar revisiones"
+            admin:all: "Permisos administrativos"
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        orcid:
+          type: string
+        name:
+          type: string
+        email_hash:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        affiliation:
+          type: string
+    Metadata:
+      type: object
+      required:
+        - "@type"
+        - "headline"
+        - "author"
+        - "license"
+      properties:
+        "@context":
+          type: string
+          example: "https://schema.org"
+        "@type":
+          type: string
+          example: "ScholarlyArticle"
+        identifier:
+          type: object
+          properties:
+            propertyID:
+              type: string
+            value:
+              type: string
+        doi:
+          type: string
+        headline:
+          type: string
+        author:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              identifier:
+                type: string
+              affiliation:
+                type: string
+        datePublished:
+          type: string
+          format: date
+        dateSubmitted:
+          type: string
+          format: date
+        abstract:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        funding:
+          type: array
+          items:
+            type: object
+            properties:
+              funder:
+                type: string
+              grant:
+                type: string
+        conflictsOfInterest:
+          type: string
+        dataAvailability:
+          type: string
+        codeAvailability:
+          type: string
+        license:
+          type: string
+        version:
+          type: string
+        environment_spec:
+          type: object
+          properties:
+            dockerfile:
+              type: string
+            conda_env:
+              type: string
+            run_command:
+              type: string
+        assertions:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              metric:
+                type: string
+              tolerance:
+                type: number
+    IngestResponse:
+      type: object
+      properties:
+        ingest_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        merkle_root:
+          type: string
+        message:
+          type: string
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+        doi:
+          type: string
+        title:
+          type: string
+        ingest_date:
+          type: string
+          format: date-time
+        current_status:
+          type: string
+        version:
+          type: string
+        merkle_root:
+          type: string
+        visibility:
+          type: string
+          enum: [public, restricted, private]
+        certifications:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              level:
+                type: string
+              issued_at:
+                type: string
+                format: date-time
+              issuer:
+                type: string
+              vc_hash:
+                type: string
+    PipelineRun:
+      type: object
+      properties:
+        id:
+          type: string
+        document_id:
+          type: string
+        pipeline_id:
+          type: string
+        version:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+        aggregate_score:
+          type: number
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+    VerificationReport:
+      type: object
+      properties:
+        id:
+          type: string
+        pipeline_run_id:
+          type: string
+        type:
+          type: string
+        score:
+          type: number
+        result:
+          type: string
+          enum: [pass, warn, fail]
+        report_s3_key:
+          type: string
+        evidence_hashes:
+          type: array
+          items:
+            type: string
+        service_signature:
+          type: string
+    CertVerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        evidence_hash:
+          type: string
+        ledger_tx:
+          type: string
+    EvidencePackage:
+      type: object
+      properties:
+        package_url:
+          type: string
+        signature:
+          type: string
+        manifest:
+          type: object
+  parameters:
+    docIdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    ingestIdParam:
+      name: ingest_id
+      in: path
+      required: true
+      schema:
+        type: string
+    certIdParam:
+      name: cert_id
+      in: path
+      required: true
+      schema:
+        type: string
+security:
+  - bearerAuth: []
+paths:
+  /api/v2/health:
+    get:
+      summary: Estado del servicio
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+  /api/v2/auth/me:
+    get:
+      summary: Obtener información del usuario autenticado
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Usuario autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/v2/users:
+    get:
+      summary: Listar usuarios (admin)
+      security:
+        - oauth2: [admin:all]
+      responses:
+        "200":
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  /api/v2/ingest:
+    post:
+      summary: Subir metadatos y artefactos para ingestión
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: string
+                  description: JSON-LD metadata string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "202":
+          description: Ingesta aceptada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v2/ingest/{ingest_id}/status:
+    get:
+      summary: Estado de una ingestión
+      parameters:
+        - $ref: '#/components/parameters/ingestIdParam'
+      responses:
+        "200":
+          description: Estado de ingestión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+  /api/v2/doc/{id}:
+    get:
+      summary: Obtener metadatos y estado de un documento
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/docIdParam'
+      responses:
+        "200":
+          description: Documento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        "404":
+          description: Documento no encontrado
+  /api/v2/doc/{id}/evidence:
+    get:
+      summary: Obtener paquete de evidencia firmado (acceso restringido)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/docIdParam'
+      responses:
+        "200":
+          description: Paquete de evidencia (signed JSON)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidencePackage'
+        "403":
+          description: Acceso denegado
+  /api/v2/search:
+    get:
+      summary: Búsqueda avanzada
+      security: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: filter[sello]
+          in: query
+          schema:
+            type: string
+        - name: filter[status]
+          in: query
+          schema:
+            type: string
+        - name: author_orcid
+          in: query
+          schema:
+            type: string
+        - name: doi
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Resultados de búsqueda
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  hits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+  /api/v2/pipeline/{ingest_id}/rerun:
+    post:
+      summary: Re-ejecutar pipeline de verificación para una ingestión
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ingestIdParam'
+      responses:
+        "202":
+          description: Re-ejecución encolada
+        "403":
+          description: No autorizado
+  /api/v2/pipeline/runs/{run_id}:
+    get:
+      summary: Obtener estado de ejecución de pipeline
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Estado del pipeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineRun'
+  /api/v2/verifications/{id}:
+    get:
+      summary: Obtener reporte de verificación individual
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reporte de verificación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationReport'
+  /api/v2/cert/{cert_id}/verify:
+    get:
+      summary: Verificar validez de un certificado
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/certIdParam'
+      responses:
+        "200":
+          description: Resultado de verificación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertVerifyResponse'
+        "404":
+          description: Certificado no encontrado
+  /api/v2/audit/logs:
+    get:
+      summary: Consultar logs de auditoría (acceso restringido)
+      security:
+        - oauth2: [admin:all]
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: actor_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Logs de auditoría
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    actor_id:
+                      type: string
+                    action:
+                      type: string
+                    target_id:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: date-time
+  /api/v2/admin/revoke/{cert_id}:
+    post:
+      summary: Revocar certificado (admin)
+      security:
+        - oauth2: [admin:all]
+      parameters:
+        - $ref: '#/components/parameters/certIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                  description: Motivo de la revocación (se registra en el ledger)
+      responses:
+        "200":
+          description: Certificado revocado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cert_id:
+                    type: string
+                  status:
+                    type: string
+                    example: revoked
+                  ledger_tx:
+                    type: string
+        "400":
+          description: Certificado no activo o motivo vacío
+        "403":
+          description: No autorizado
+tags:
+  - name: health
+    description: Estado del servicio
+  - name: auth
+    description: Autenticación y usuarios
+  - name: ingest
+    description: Endpoints de ingestión
+  - name: documents
+    description: Endpoints de consulta de documentos
+  - name: pipeline
+    description: Endpoints de ejecución de pipelines
+  - name: verification
+    description: Reportes de verificación
+  - name: certification
+    description: Endpoints de certificación y verificación
+  - name: audit
+    description: Endpoints de auditoría y administración

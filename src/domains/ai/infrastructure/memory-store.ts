@@ -35,15 +35,12 @@ const SEED_ITEMS: Omit<IsabellaMemoryItem, "checksum" | "createdAt" | "updatedAt
 ];
 
 let seeded = false;
-let useSqlite = false;
 
 function tryGetDb(): ReturnType<typeof getDatabase> | null {
   try {
     const db = getDatabase();
-    useSqlite = true;
     return db;
   } catch {
-    useSqlite = false;
     return null;
   }
 }
@@ -54,7 +51,7 @@ function ensureSeed(): void {
 
   const db = tryGetDb();
   if (!db) {
-    const now = new Date(Date.now() - 3600000 * 24 * 7).toISOString();
+    new Date(Date.now() - 3600000 * 24 * 7).toISOString();
     fallbackStore.push(
       ...SEED_ITEMS.map((s, i) => ({
         ...s,
@@ -71,7 +68,7 @@ function ensureSeed(): void {
     const insert = db.prepare(
       "INSERT INTO memory_items (memoryId, tenantId, sessionId, scope, content, contentJson, sourceType, relevance, expiresAt, checksum, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     );
-    const now = new Date().toISOString();
+    new Date().toISOString();
     const tx = db.transaction(() => {
       for (const [i, item] of SEED_ITEMS.entries()) {
         const created = new Date(Date.now() - 3600000 * 24 * (7 - i)).toISOString();

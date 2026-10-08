@@ -72,19 +72,16 @@ export async function signHSM(params: {
 
   let signatureHex: string;
   let status: HSMOperation["status"];
-  let endpoint: string;
 
   try {
     if (usePrimary && primaryFailures < config.circuitBreakerThreshold) {
       signatureHex = simulateHSMOperation(params.type, payloadHash);
       primaryFailures = 0;
       status = "success";
-      endpoint = config.primaryEndpoint;
     } else if (backupFailures < config.circuitBreakerThreshold) {
       signatureHex = simulateHSMOperation(params.type, payloadHash);
       backupFailures = 0;
       status = "success";
-      endpoint = config.backupEndpoint;
     } else {
       throw new Error("HSM_UNAVAILABLE");
     }
@@ -95,7 +92,6 @@ export async function signHSM(params: {
     }
     signatureHex = simulateHSMOperation(params.type, payloadHash); // fallback
     status = "fallback";
-    endpoint = "software-emergency";
   }
 
   const operation: HSMOperation = {

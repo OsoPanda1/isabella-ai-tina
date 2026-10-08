@@ -45,7 +45,7 @@ export interface CodeLocation {
   context: string;
 }
 
-const _ENV_SCHEMA = z.object({
+z.object({
   $schema: z.string().optional(),
   env: z.record(
     z.object({

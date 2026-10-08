@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { LedgerSnapshot, LedgerBlock, DataOrigin } from "./contracts";
+import type { LedgerSnapshot, LedgerBlock } from "./contracts";
 import { authFetch } from "../auth-client";
 
 // Bloques de respaldo etiquetados `origin: "demo"` / `integrity: "unverified"`:

@@ -1048,7 +1048,7 @@ export const Route = createFileRoute("/api/db")({
 
           // 2. Enforce verified centralized Authorization Wrapper for ledger & tool execution actions
           if (action === "ledger-add") {
-            return withSovereignAuth("ledger", "write", async (context, req, body) => {
+            return withSovereignAuth("ledger", "write", async (context, _req, body) => {
               const val = addLedgerSchema.safeParse(body);
               if (!val.success) {
                 return new Response(
@@ -1068,7 +1068,7 @@ export const Route = createFileRoute("/api/db")({
                 cost: val.data.cost,
                 tokens: val.data.tokens,
               });
-              const block = blockRes.success ? blockRes.block : { index: -1 };
+              const block = blockRes.block ?? { index: -1 };
 
               await sovereignStateRepository.appendAuditLog(
                 `trc_tx_${block.index}`,
@@ -1087,7 +1087,7 @@ export const Route = createFileRoute("/api/db")({
           }
 
           if (action === "ledger-refund") {
-            return withSovereignAuth("ledger", "admin", async (context, req, body) => {
+            return withSovereignAuth("ledger", "admin", async (context, _req, body) => {
               const { index } = (body ?? {}) as { index?: unknown };
               if (typeof index !== "number") {
                 return new Response(JSON.stringify({ error: "Índice del bloque requerido." }), {
@@ -1097,11 +1097,7 @@ export const Route = createFileRoute("/api/db")({
               }
 
               const bookpi = createBookpiPostgresRepository();
-              const res = await bookpi.refund(
-                String(index),
-                { tenantId: context.tenantId, userId: context.userId },
-                "Refund requested",
-              );
+              const res = await bookpi.refund(context.tenantId, index, "Refund requested");
               if (!res.success) {
                 return new Response(JSON.stringify({ error: res.error }), {
                   status: 400,
@@ -1126,7 +1122,7 @@ export const Route = createFileRoute("/api/db")({
           }
 
           if (action === "execute-tool") {
-            return withSovereignAuth("sandbox", "execute", async (context, req, body) => {
+            return withSovereignAuth("sandbox", "execute", async (context, _req, body) => {
               const val = executeToolSchema.safeParse(body);
               if (!val.success) {
                 return new Response(
@@ -1172,7 +1168,7 @@ export const Route = createFileRoute("/api/db")({
           }
 
           if (action === "create-api-key") {
-            return withSovereignAuth("system", "write", async (context, req, body: unknown) => {
+            return withSovereignAuth("system", "write", async (context, _req, body: unknown) => {
               const { name, role, scopes, expiresInSeconds } = (body || {}) as {
                 name?: string;
                 role?: string;
@@ -1237,7 +1233,7 @@ export const Route = createFileRoute("/api/db")({
           }
 
           if (action === "revoke-api-key") {
-            return withSovereignAuth("system", "write", async (context, req, body: unknown) => {
+            return withSovereignAuth("system", "write", async (context, _req, body: unknown) => {
               const { id } = (body || {}) as { id?: string };
               if (!id) {
                 return new Response(JSON.stringify({ error: "ID de llave requerido." }), {
@@ -1252,7 +1248,7 @@ export const Route = createFileRoute("/api/db")({
           }
 
           if (action === "rotate-api-key") {
-            return withSovereignAuth("system", "write", async (context, req, body: unknown) => {
+            return withSovereignAuth("system", "write", async (context, _req, body: unknown) => {
               const { id } = (body || {}) as { id?: string };
               if (!id) {
                 return new Response(JSON.stringify({ error: "ID de llave requerido." }), {
@@ -1277,7 +1273,7 @@ export const Route = createFileRoute("/api/db")({
           // HITL: solicitar approval durable para ejecutar una herramienta.
           // Requiere DATABASE_URL (multi-instancia); sin ella, 503 honesto.
           if (action === "approval-request") {
-            return withSovereignAuth("system", "write", async (context, req, body: unknown) => {
+            return withSovereignAuth("system", "write", async (context, _req, body: unknown) => {
               const { traceId, tool } = (body || {}) as {
                 traceId?: string;
                 tool?: string;
@@ -1316,7 +1312,7 @@ export const Route = createFileRoute("/api/db")({
 
           // HITL: estado de approval (vigente/consumido/ausente).
           if (action === "approval-status") {
-            return withSovereignAuth("system", "read", async (context, req, body: unknown) => {
+            return withSovereignAuth("system", "read", async (context, _req, body: unknown) => {
               const { traceId, tool } = (body || {}) as {
                 traceId?: string;
                 tool?: string;
@@ -1356,7 +1352,7 @@ export const Route = createFileRoute("/api/db")({
             action === "emergency-release" ||
             action === "emergency-status"
           ) {
-            return withSovereignAuth("system", "admin", async (context, req, body: unknown) => {
+            return withSovereignAuth("system", "admin", async (context, _req, body: unknown) => {
               if (context.role !== "SovereignOwner") {
                 return new Response(
                   JSON.stringify({
@@ -1496,7 +1492,7 @@ export const Route = createFileRoute("/api/db")({
                 // no deduction for credits earned
                 tokens: 0,
               });
-              const block = blockRes.success ? blockRes.block : { index: -1 };
+              const block = blockRes.block ?? { index: -1 };
 
               await sovereignStateRepository.appendAuditLog(
                 `trc_mon_task_${block.index}`,

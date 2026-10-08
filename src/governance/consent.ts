@@ -101,12 +101,12 @@ const SCOPE_REQUIRED_FOR_RISK: Record<string, ConsentScope | null> = {
   high: "all",
 };
 
-const CHANNEL_AUTOMATIC_CONSENT: Set<string> = new Set(["cli"]);
+new Set(["cli"]);
 
 export function checkConsent(
-  input: string,
+  _input: string,
   classification: { level: string; scopes: ConsentScope[] },
-  capabilities: string[],
+  _capabilities: string[],
 ): ConsentDecision {
   const requiredScope = SCOPE_REQUIRED_FOR_RISK[classification.level];
 

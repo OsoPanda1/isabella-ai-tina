@@ -3,7 +3,6 @@ import {
   Activity,
   Bot,
   ChevronRight,
-  Crown,
   FileCheck,
   Image,
   LayoutDashboard,
@@ -11,7 +10,6 @@ import {
   MessageSquareText,
   Mic2,
   Network,
-  Play,
   Settings2,
   Shield,
   Trash2,
@@ -26,9 +24,6 @@ import { TerminalCommandLine } from "./TerminalCommandLine";
 import { soundManager } from "../../utils/soundEffects";
 import { ISABELLA_AVATAR_PRIMARY } from "../../data/isabellaAvatar";
 import { SubscriptionPlans } from "../Billing/SubscriptionPlans";
-
-type ActiveView =
-  "presence" | "voice_studio" | "image_studio" | "architecture" | "traceability" | "hub";
 
 type NavigationItem = {
   label: string;

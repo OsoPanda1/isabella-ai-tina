@@ -31,7 +31,6 @@ export interface EvidenceStorageConfig {
 export class EvidenceStorage {
   private baseDir: string;
   private signingKey: KeyObject | null;
-  private currentManifest: Manifest | null = null;
 
   constructor(config: EvidenceStorageConfig = {}) {
     this.baseDir = config.baseDir ?? path.join(process.cwd(), "genesis");
@@ -125,7 +124,6 @@ export class EvidenceStorage {
       fs.writeFileSync(pubKeyPath, publicKeyToPem(this.signingKey), "utf8");
     }
 
-    this.currentManifest = manifest;
     return manifestPath;
   }
 

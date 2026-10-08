@@ -185,7 +185,7 @@ function BlockRow({
 }
 
 export const IsabellaLedgerConsole: React.FC = () => {
-  const { snapshot, loading, error, refresh } = useLedger();
+  const { snapshot, loading, error } = useLedger();
   const [selectedSeq, setSelectedSeq] = useState<number | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [result, setResult] = useState<IntegrityResult | null>(null);

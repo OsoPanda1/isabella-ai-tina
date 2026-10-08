@@ -18,12 +18,8 @@ import {
   buildAuditEvents,
   buildSystemPrompt,
   DEFAULT_IDENTITY,
-  type RequestContext,
   type RoutingDecision,
   type CrownAuditEvent,
-  type IntentAssessment,
-  type PolicyAssessment,
-  type MemoryScope,
 } from "../crown";
 import { memory, type MemoryRecord } from "./memory";
 import { skillRegistry, type SkillWithStatus } from "./skills";
@@ -60,7 +56,7 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function trackStage<T>(stage: PipelineStage, fn: () => T): { result: T; ms: number } {
+function trackStage<T>(_stage: PipelineStage, fn: () => T): { result: T; ms: number } {
   const start = performance.now();
   const result = fn();
   const ms = performance.now() - start;

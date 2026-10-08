@@ -6,22 +6,15 @@
  * El humano dice: "la encriptación no funciona" → la malla reconecta PQC + BookPI + HSM + TEE.
  * El humano dice: "nadie puede entrar" → la malla reconecta Identity + Auth + CORS.
  */
-import {
-  AUTOMATION_ATLAS,
-  getAutomationNode,
-  getAffectedChain,
-  getDependencyChain,
-  getAtlasStats,
-} from "./registry";
+import { getAutomationNode, getAffectedChain, getAtlasStats } from "./registry";
 import {
   createRepairChain,
   checkNodeHealth,
   getMeshStatus,
-  resolveFailureManually,
   getActiveFailures,
   getActiveRepairChains,
 } from "./mesh";
-import type { AutomationNode, HumanDescription, FailureEvent, RepairChain } from "./contracts";
+import type { AutomationNode, HumanDescription, RepairChain } from "./contracts";
 
 // ============================================================================
 // NATURAL LANGUAGE PARSER

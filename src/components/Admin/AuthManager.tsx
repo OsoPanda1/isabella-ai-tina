@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Key, ShieldAlert, Check, Copy, RefreshCw } from "lucide-react";
+import { Key, ShieldAlert, Copy, RefreshCw } from "lucide-react";
 
 export const AuthManager: React.FC = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);

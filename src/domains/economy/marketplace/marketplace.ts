@@ -1,5 +1,5 @@
 import { randomBytes, createHash } from "node:crypto";
-import type { MarketplaceListing, AssetType, ProvenanceRecord, ListingStatus } from "../types";
+import type { MarketplaceListing, AssetType, ListingStatus } from "../types";
 
 /* ========================================================================== *
  * Isabella Marketplace

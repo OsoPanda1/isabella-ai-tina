@@ -39,4 +39,5 @@ export * from "./moe/expert-registry";
 export * from "./moe/aggregator";
 export * from "./moe/telemetry";
 export * from "./moe/policy-gate";
+export * from "./transports/registry";
 export * from "../ikes";

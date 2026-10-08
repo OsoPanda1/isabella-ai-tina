@@ -1,5 +1,5 @@
 import { FEATURE_FLAGS, type FeatureFlagKey } from "./src/config/feature-flags/catalog";
-import { getSafeDefault } from "./src/lib/flags/safe-defaults";
+import "./src/lib/flags/safe-defaults";
 
 export interface UserIdentification {
   userID: string;

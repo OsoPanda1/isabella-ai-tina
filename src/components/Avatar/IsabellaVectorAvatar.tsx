@@ -1,4 +1,4 @@
-import * as React from "react";
+import "react";
 
 export interface IsabellaVectorAvatarProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | number;

@@ -4,7 +4,6 @@ import {
   Shield,
   Cpu,
   Zap,
-  Database,
   Lock,
   Network,
   AlertTriangle,

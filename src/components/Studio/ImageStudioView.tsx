@@ -9,10 +9,7 @@ import {
   Check,
   Maximize2,
   RefreshCw,
-  Layers,
   Palette,
-  Eye,
-  Sliders,
   X,
 } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";

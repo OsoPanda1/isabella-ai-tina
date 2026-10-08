@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";
 import { VoiceSettings } from "../../types";
-import { getAvailableFemaleVoices, isStrictlyFemaleVoice } from "../../utils/voiceUtils";
+import { getAvailableFemaleVoices } from "../../utils/voiceUtils";
 import { VoiceSpectrumVisualizer } from "../AudioVisualizer/VoiceSpectrumVisualizer";
 import { RealtimeWaveformVisualizer } from "../AudioVisualizer/RealtimeWaveformVisualizer";
 

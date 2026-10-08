@@ -8,8 +8,6 @@ import {
   MicOff,
   Palette,
   Shield,
-  Layers,
-  Wand2,
   Keyboard,
 } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";
@@ -23,7 +21,6 @@ export const TerminalCommandLine: React.FC = () => {
   const {
     sendMessage,
     executeCommand,
-    generateImage,
     startListening,
     stopListening,
     state,

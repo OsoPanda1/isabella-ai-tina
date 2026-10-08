@@ -6,12 +6,12 @@
  * ================================================================
  */
 import { randomUUID } from "node:crypto";
-import { buildSystemPrompt, type PromptLayer } from "./prompt-builder";
+import { buildSystemPrompt } from "./prompt-builder";
 import { resolveRuntimeProvider, type RuntimeProvider } from "../runtime/provider-registry";
 import { classifyRisk, type RiskClassification } from "../../governance/safety";
 import { checkConsent, type ConsentDecision } from "../../governance/consent";
 import { resolveToolCall, type ToolDispatchResult } from "../runtime/tool-dispatch";
-import { compressContext, type CompressedContext } from "../context/context-compressor";
+import { compressContext } from "../context/context-compressor";
 import { auditReceipt, type AuditReceipt } from "../../governance/audit-receipt";
 
 /* =========================================================================

@@ -82,7 +82,7 @@ export function createMoERoute(
     topK,
     capacityFactor,
     experts: [...experts],
-    route(input: number[], logits: number[]): MoeGateDecision[] {
+    route(_input: number[], logits: number[]): MoeGateDecision[] {
       if (logits.length !== experts.length) throw new Error("moe_logit_count_mismatch");
       const weights = softmax(logits);
       return experts

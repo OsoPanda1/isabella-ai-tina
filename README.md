@@ -3,8 +3,8 @@
 **Trusted Intelligence, Native & Adaptive** — arquitectura de inteligencia artificial gobernada, federada y auditable del ecosistema **TAMV Online Network** (RDM Digital Hub · Nodo Cero · Real del Monte + LATAM community partners).
 
 - Versión del proyecto (`package.json`): **4.3.3**
-- Versión de este documento: **5.0.0** — fecha **2026-10-06** (auditoría y hardening)
-- Medición de gates y métricas: **2026-10-06**, en local (ver [Estado y avance a producción](#estado-y-avance-a-producción))
+- Versión de este documento: **5.1.0** — fecha **2026-10-07** (blindaMax · pilar de Integridad Científica + gates limpios)
+- Medición de gates y métricas: **2026-10-07**, en local (ver [Estado y avance a producción](#estado-y-avance-a-producción))
 
 > **Regla de honestidad** (heredada de `AGENTS.md`): _código existente ≠ capacidad verificada; un test local ≠ producción; build verde ≠ certificación_. Ninguna sección de este documento afirma que Isabella esté lista para producción ni que sea un producto comercial certificado.
 
@@ -94,27 +94,29 @@ Pipeline real de una petición de chat (ruta de archivo verificada):
 
 ---
 
-## Estado de producción (2026-10-06)
+## Estado de producción (2026-10-07)
 
-### ✅ Verificado
-- Typecheck: `pnpm typecheck` (`tsc --noEmit`) **NO pasa en su totalidad** — medición local 2026-10-06: **247 errores preexistentes** (deuda heredada). Los módulos nuevos de Hypercore sí compilan limpios (verificado con `tsc` dirigido a sus archivos).
-- Lint: `eslint` sin errores en los módulos de Hypercore; el repositorio arrastra deuda de lint heredada.
-- Tests: 545+ tests en suite completa
-- Build: `vite build` SUCCESS
-- Production gates: todos los scripts npm listados en `package.json` están implementados
-- Documentación: 60+ archivos, estado vigente
+### ✅ Verificado (local, misma máquina)
+- Typecheck: `pnpm typecheck` (`tsc --noEmit`) — **0 errores** (deuda preexistente 247 resuelta en esta ronda).
+- Tests: `pnpm test` (vitest) — **165 archivos, 1225 tests passed, 9 skipped, 0 failed**.
+- Hypercore: `pnpm hypercore:test` — **10/10 pass** (más 10 vitest del motor).
+- Build: `pnpm build` (Vite + Nitro + client-shell) — **SUCCESS**.
+- Lockfile: `pnpm install --frozen-lockfile` (`verify:lock`) — **OK**; `package.json` alineado al lockfile.
+- Recipes: `pnpm audit:recipes` — **PASS** (manifest regenerado con el SHA actual de `package.json`).
+- Rutas: `pnpm audit:routes` — **0 findings** (nueva ruta `api/isabella-voice` endurecida: auth soberana, rate-limit, Zod, sanitización, headers seguros).
+- `pnpm production:gate` — **PASS** (`scripts/production-integrity-gate.mjs`).
+- `pnpm security:scan` — **0 errores ESLint + 0 secretos hardcodeados** (14 warnings de regex preexistentes, no bloqueantes).
+- Phantoms de scripts eliminados (`release:verify`, `schema:check`, `seed:db`, `version:sync`); `security:scan` y `production:gate` ahora apuntan a gates reales.
+- `selectRemoteProviders` implementado en `src/lib/intelligence/transports/registry.ts`.
 
-### 🔴 Bloqueantes
-- **6 PRs de dependabot** abiertos sin mergear (Node 24 + ESM breaking changes)
-- **2 PRs críticos** (#455, #449) en reparación de arquitectura, sin gates verdes completados
-- **README.md y SECURITY.md** truncados (2026-10-05) — **FIJO 2026-10-06**
-- **Script `production:gate` incompleto** — **FIJO 2026-10-06**
-- **7 branches de reparación** proliferadas, requieren limpieza post-merge
+### 🔴 Pendiente / no verificable desde local
+- CI en GitHub (billing) y estado **remoto** de 6 PRs de dependabot + 2 PRs críticos (#455, #449): requieren verificación remota.
+- 7 branches `repair/*` a limpiar tras merge (remoto).
+- `pnpm lint` (repo completo) excede 15 min en este entorno; el conjunto de código cambiado fue lint-verificado con **0 errores**.
 
-### 🟡 Pendiente
-- CI en GitHub (billing account bloqueados)
-- Ejecución de gates automatizados en CI
-- Pruebas de carga en producción
+### 🟡 En cola (hoja de ruta)
+- Fase B: librerías nativas de Verificación/Certificación interconectadas con **Hypercore** (`src/lib/acceleration`) y **ML nativo** (`native-ml`, `intelligence`, `claim-radar`, `ncua`) — especificación lista en `docs/science-integrity/10-integracion-hypercore-ml-nativo.md`.
+- Módulos documentales pendientes de recibir: cronograma/costos CSV, scripts/Dockerfile reproducibles y archivos exportables.
 
 ---
 
@@ -207,24 +209,45 @@ Detalle completo en [`docs/acceleration/README.md`](docs/acceleration/README.md)
 
 ---
 
+## Verificación y Certificación de Integridad Científica (pilar nuevo)
+
+Isabella filtra, verifica, certifica y blinda la veracidad, viabilidad y respaldo de la información científica y
+técnica con trazabilidad criptográfica, gobernanza de datos, revisión humana y auditoría externa.
+
+> **Honestidad:** pilar **PLAN/DOC**. No existe certificación ni sello en producción. Los contratos OpenAPI, plantillas
+> legales y playbooks son documentación integrada (`docs/08-…`), no capacidad verificada (escala de `AGENTS.md` §0.1).
+
+| Artefacto | Ruta |
+| --- | --- |
+| Índice y registro de entregas del paquete | `docs/science-integrity/00-INDICE.md` |
+| Contrato OpenAPI v2 ampliado (corregido C1–C4) | `docs/science-integrity/artifacts/openapi.yaml` |
+| Plantillas legales (TOS, DPA, DUA, Contrato Revisor, Anexos) | `docs/science-integrity/artifacts/legal/` |
+| Puente de integración Hypercore + ML nativo (Fase B) | `docs/science-integrity/10-integracion-hypercore-ml-nativo.md` |
+
+---
+
 ## Roadmap verificable
 
 ### Corto plazo (próximas 2 semanas)
-- [ ] Mergear PRs dependabot en orden (#473 → #474 → #475 → #476 → #477 → #472)
-- [ ] Verificar gates verdes en #455 y #449
+- [x] Ejecutar `pnpm production:gate` full locally — **PASS** (2026-10-07)
+- [ ] Mergear PRs dependabot en orden (#473 → #474 → #475 → #476 → #477 → #472) — verificación remota
+- [ ] Verificar gates verdes en #455 y #449 — verificación remota
 - [ ] Limpiar branches `repair/*` post-merge
-- [ ] Ejecutar `pnpm production:gate` full locally
+- [ ] Integrar módulos de documentación restantes (cronograma/costos CSV, scripts Dockerfile reproducibles, exportables) → `docs/science-integrity/00-INDICE.md` §8
+- [ ] **Fase B:** librerías nativas de Verificación/Certificación interconectadas con Hypercore y ML nativo (B0–B2 de `docs/science-integrity/10-…`)
 
 ### Mediano plazo (próximo mes)
 - [ ] Activar CI en GitHub Actions (resolver billing)
 - [ ] SBOM verificado en cada release
 - [ ] Attestations SLSA L3 en todos los artefactos
 - [ ] ADR para branch protection policy
+- [ ] Primer piloto de sellos de verificación (beta cerrada, 100–200 contenidos)
 
 ### Largo plazo
 - [ ] Auditoría externa de seguridad
 - [ ] Certificación de gobernanza de IA
 - [ ] Despliegue multi-región con replicación de ledger
+- [ ] Acreditación Nivel 4 (auditoría externa del pilar de Integridad Científica)
 
 ---
 
@@ -245,4 +268,4 @@ Detalle completo en [`docs/acceleration/README.md`](docs/acceleration/README.md)
 
 ---
 
-**Última auditoría:** 2026-10-06 | **Estado:** En reparación (post-cleanup wave) | **Certificación:** NO (es código en evolución, no producto certificado)
+**Última auditoría:** 2026-10-07 | **Estado:** Gates locales verdes (blindaMax) | **Certificación:** NO (es código en evolución, no producto certificado)

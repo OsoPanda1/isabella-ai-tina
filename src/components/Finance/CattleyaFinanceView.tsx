@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   DollarSign,
-  Wallet,
   ShieldCheck,
   FileKey,
   BarChart4,

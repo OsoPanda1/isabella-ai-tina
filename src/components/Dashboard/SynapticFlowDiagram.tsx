@@ -1,22 +1,11 @@
 import React, { useState } from "react";
 import { useCrown } from "../../context/CrownContext";
-import {
-  Brain,
-  Heart,
-  Zap,
-  Shield,
-  Layers,
-  ArrowRight,
-  Sparkles,
-  Activity,
-  Play,
-  CheckCircle2,
-} from "lucide-react";
+import { Brain, Heart, Zap, Shield, Layers, Sparkles } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";
 
 export const SynapticFlowDiagram: React.FC = () => {
   const { state, activeModuleId, sendMessage } = useCrown();
-  const [activeSimulation, setActiveSimulation] = useState<string | null>(null);
+  const [, setActiveSimulation] = useState<string | null>(null);
 
   const isProcessing = state.isProcessing;
 

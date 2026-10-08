@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { getNativeSecret, verifyNativeJwt, type NativePrincipal } from "./native-auth";
-import { validateApiKey, type ApiKeyScope } from "./api-keys";
+import { verifyNativeJwt } from "./native-auth";
+import { validateApiKey } from "./api-keys";
 import { config } from "./config";
 
 export type IsabellaRole = "viewer" | "citizen" | "operator" | "admin" | "system";

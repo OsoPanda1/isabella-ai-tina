@@ -1,19 +1,5 @@
 import React from "react";
-import {
-  Shield,
-  CheckCircle2,
-  Lock,
-  Server,
-  Globe,
-  Radio,
-  X,
-  FileCheck,
-  Cpu,
-  Layers,
-  Key,
-  Database,
-  ExternalLink,
-} from "lucide-react";
+import { Shield, CheckCircle2, Lock, Radio, X, Cpu } from "lucide-react";
 import { useCrown } from "../../context/CrownContext";
 import { soundManager } from "../../utils/soundEffects";
 import { territoryContextService } from "../../services/territoryContextService";

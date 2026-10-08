@@ -29,10 +29,6 @@ import {
 } from "../runners/test-runner";
 import { createStatusDeterminator, StatusDeterminator } from "../verification/status-determinator";
 import {
-  createEvidenceQualityChecker,
-  EvidenceQualityChecker,
-} from "../verification/status-determinator";
-import {
   createContradictionDetector,
   ContradictionDetector,
 } from "../verification/status-determinator";
@@ -94,7 +90,6 @@ export class AuditOrchestrator {
 
   // Verification
   private statusDeterminator: StatusDeterminator;
-  private evidenceQualityChecker: EvidenceQualityChecker;
   private contradictionDetector: ContradictionDetector;
   private findingGenerator: FindingGenerator;
 
@@ -154,7 +149,6 @@ export class AuditOrchestrator {
       policyEngine: this.policyEngine,
       evidenceGraph,
     });
-    this.evidenceQualityChecker = createEvidenceQualityChecker();
     this.contradictionDetector = createContradictionDetector(evidenceGraph);
     this.findingGenerator = createFindingGenerator();
 

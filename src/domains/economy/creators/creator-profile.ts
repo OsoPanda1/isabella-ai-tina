@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import type { CreatorProfile, CreatorReputation, WalletSummary } from "../types";
 
 /* ========================================================================== *

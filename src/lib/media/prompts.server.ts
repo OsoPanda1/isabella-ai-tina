@@ -136,7 +136,7 @@ export function buildBasePrompt(
 export function buildRowPrompt(
   state: string,
   frameCount: number,
-  concept: string,
+  _concept: string,
   options: { readonly style?: string } = {},
 ): string {
   const action = STATE_ACTIONS[state] ?? "a simple idle pose";

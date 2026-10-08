@@ -36,7 +36,6 @@ const LitleIndexSchema = z.object({
 });
 
 type LitleIndex = z.infer<typeof LitleIndexSchema>;
-type LitleNode = z.infer<typeof LitleNodeSchema>;
 
 // ============================================================================
 // HELPERS
@@ -55,11 +54,6 @@ function normalize(v: number[]): number[] {
 function cosine(a: number[], b: number[]): number {
   if (a.length !== b.length) return -1;
   return a.reduce((sum, val, i) => sum + val * b[i], 0);
-}
-
-function isNormalized(v: number[], tolerance = 0.01): boolean {
-  const norm = Math.sqrt(v.reduce((sum, x) => sum + x * x, 0));
-  return Math.abs(norm - 1) < tolerance;
 }
 
 // ============================================================================

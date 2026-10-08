@@ -7,6 +7,7 @@
 import { createHash } from "node:crypto";
 import { canonicalize } from "../igds/canonical";
 import { getPgPool } from "../persistence/postgres";
+import { sovereignStateRepository } from "../sovereign-state-repository";
 
 export interface BookPiBlock {
   index: number;
@@ -222,11 +223,29 @@ export interface DurableBookPiRepository {
     tenantId: string,
     filter: { category?: string; userId?: string; fromDate?: Date; toDate?: Date },
   ): Promise<Array<NonNullable<Awaited<ReturnType<DurableBookPiRepository["append"]>>["block"]>>>;
-  refund?(
+  refund(
     tenantId: string,
     index: number,
     reason?: string,
   ): Promise<{ success: boolean; error?: string }>;
+  executeMarketplacePurchase(input: {
+    tenantId: string;
+    buyerUserId: string;
+    sellerUserId: string;
+    skillId: string;
+    title: string;
+    costCents: number;
+    platformFeeCents: number;
+    correlationId?: string;
+  }): Promise<{
+    success: boolean;
+    error?: string;
+    duplicate?: boolean;
+    block?: { index: number; blockHash?: string };
+    sellerEarnedBalanceCents?: number;
+    buyerRemainingCredits?: number;
+    economicEventId?: string;
+  }>;
 }
 
 const DURABLE_GENESIS_HASH = "GENESIS_BLOCK_HASH";
@@ -573,6 +592,101 @@ class PostgresBookPiRepository implements DurableBookPiRepository {
       status: "refunded",
     });
     return result.success ? { success: true } : { success: false, error: result.error };
+  }
+
+  async executeMarketplacePurchase(input: {
+    tenantId: string;
+    buyerUserId: string;
+    sellerUserId: string;
+    skillId: string;
+    title: string;
+    costCents: number;
+    platformFeeCents: number;
+    correlationId?: string;
+  }) {
+    const costCents = Math.max(0, Math.trunc(input.costCents));
+    const platformFeeCents = Math.max(0, Math.min(costCents, Math.trunc(input.platformFeeCents)));
+    const netToSellerCents = costCents - platformFeeCents;
+    const costUsd = costCents / 100;
+    const purchaseOp = `MARKETPLACE_PURCHASE:${input.skillId}`;
+
+    const existing = await this.pool.query(
+      "SELECT 1 FROM bookpi_ledger WHERE tenant_id = $1 AND operation = $2 LIMIT 1",
+      [input.tenantId, purchaseOp],
+    );
+    if (existing.rows[0]) {
+      return { success: false, duplicate: true, error: "MARKETPLACE_PURCHASE_DUPLICATE" };
+    }
+
+    const buyer = await sovereignStateRepository.getTenant(input.tenantId);
+    const balanceUsd = buyer?.quotaBalance ?? 0;
+    if (balanceUsd < costUsd) {
+      return { success: false, error: "INSUFFICIENT_BALANCE" };
+    }
+
+    const debit = await this.append({
+      tenantId: input.tenantId,
+      userId: input.buyerUserId,
+      operation: purchaseOp,
+      category: "other",
+      cost: costUsd,
+      tokens: 0,
+      status: "settled",
+      metadata: {
+        title: input.title,
+        skillId: input.skillId,
+        sellerUserId: input.sellerUserId,
+        netToSellerCents,
+        platformFeeCents,
+        correlationId: input.correlationId ?? null,
+      },
+    });
+    if (!debit.success || !debit.block) {
+      return { success: false, error: debit.error ?? "BOOKPI_APPEND_FAILED" };
+    }
+
+    if (netToSellerCents > 0) {
+      const payout = await this.append({
+        tenantId: input.tenantId,
+        userId: input.sellerUserId,
+        operation: `MARKETPLACE_PAYOUT:${input.skillId}`,
+        category: "skills",
+        cost: netToSellerCents / 100,
+        tokens: 0,
+        status: "settled",
+      });
+      if (payout.success && payout.block) {
+        const account = await sovereignStateRepository.getMonetizationAccount(input.sellerUserId);
+        await sovereignStateRepository.updateMonetizationAccount(input.sellerUserId, {
+          earnedBalanceCents: (account.earnedBalanceCents ?? 0) + netToSellerCents,
+        });
+      }
+    }
+
+    if (platformFeeCents > 0) {
+      await this.append({
+        tenantId: input.tenantId,
+        userId: "system",
+        operation: `MARKETPLACE_PLATFORM_FEE:${input.skillId}`,
+        category: "other",
+        cost: platformFeeCents / 100,
+        tokens: 0,
+        status: "settled",
+      });
+    }
+
+    const buyerRemainingUsd = Math.max(0, Math.round((balanceUsd - costUsd) * 1e9) / 1e9);
+    if (buyer) {
+      await sovereignStateRepository.upsertTenant({ ...buyer, quotaBalance: buyerRemainingUsd });
+    }
+
+    return {
+      success: true,
+      block: { index: debit.block.index, blockHash: debit.block.blockHash },
+      sellerEarnedBalanceCents: netToSellerCents,
+      buyerRemainingCredits: Math.round(buyerRemainingUsd * 100),
+      economicEventId: `eco_${debit.block.blockHash}`.slice(0, 72),
+    };
   }
 
   async prune(_tenantId: string, _maxAgeMs: number) {

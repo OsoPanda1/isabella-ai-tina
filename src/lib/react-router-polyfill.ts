@@ -1,13 +1,13 @@
 import { createElement } from "react";
 import { navigate } from "./navigation";
 
-export function createFileRoute(path: string) {
+export function createFileRoute(_path: string) {
   return (opts: any) => {
     return opts.component;
   };
 }
 
-export function Link({ to, children, className, activeProps }: any) {
+export function Link({ to, children, className }: any) {
   return createElement(
     "a",
     {

@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
   LayoutGrid,
   Zap,
   MessageSquare,
-  Coins,
   Settings,
   Terminal,
   Image as ImageIcon,
@@ -15,7 +11,6 @@ import {
   Activity,
   Sparkles,
   Monitor,
-  CreditCard,
   BookOpen,
   Network,
   Database,
@@ -23,11 +18,7 @@ import {
   Layers,
   Shield,
   X,
-  ExternalLink,
   Bot,
-  Flame,
-  HelpCircle,
-  FileCode,
 } from "lucide-react";
 import { useCrown } from "../../context/CrownContext";
 import { soundManager } from "../../utils/soundEffects";
@@ -72,7 +63,6 @@ export const EnterpriseRetractableDock: React.FC<EnterpriseRetractableDockProps>
     toggleSound,
     toggleSpeechSynthesis,
     clearMessages,
-    setPreset,
   } = useCrown();
 
   const [activeCategory, setActiveCategory] = useState<string>("modules");

@@ -73,6 +73,7 @@ No hay duplicación entre ambos: `INDEX.md` describe el *contenido y su lectura*
 | `docs/05-ISABELLA-INTELIGENCIA-ML.md` | 05 — ISABELLA INTELIGENCIA Y ML | Vigente | Arquitectura | 2026-09-23 |
 | `docs/06-ISABELLA-DESARROLLO-CONTRIBUCION.md` | 06 — ISABELLA DESARROLLO Y CONTRIBUCIÓN | Vigente | Arquitectura | 2026-09-23 |
 | `docs/07-TINA-CATEGORIA.md` | 07 — Categoría TINA (Trusted Intelligence, Native & Adaptive) | Vigente | Arquitectura | 2026-09-24 |
+| `docs/08-ISABELLA-VERIFICACION-CERTIFICACION-INTEGRIDAD.md` | 08 — Verificación y Certificación de Integridad Científica (cabecera del pilar) | Vigente | Gobernanza | 2026-10-07 |
 | `docs/evidence/300-COMPLETADO-2026-09-23.md` | 300/300 Completado — 2026-09-23 | Evidencia | Gobernanza | 2026-09-24 |
 | `docs/evidence/FINAL-EVOLUCION-2026-09-23.md` | Final Evolución Funcional — Isabella Villaseñor AI™ — 2026-09-23 | Evidencia | Gobernanza | 2026-09-24 |
 | `docs/evidence/FINAL-PRODUCCION-2026-09-23.md` | Evidencia Final — Producción Lista para Pruebas — 2026-09-23 | Evidencia | Gobernanza | 2026-09-23 |
@@ -112,6 +113,33 @@ No hay duplicación entre ambos: `INDEX.md` describe el *contenido y su lectura*
 | `docs/status/CRITICAL-AUDIT-2026-09-28.md` | Auditoría crítica TINA / Isabella — 2026-09-28 | Evidencia | Gobernanza | 2026-09-28 |
 | `docs/status/ISA-500-STATUS-2026-09-26.md` | Estado de la auditoría ISA-500 — 2026-09-26 | Evidencia | Gobernanza | 2026-09-26 |
 | `docs/status/ISABELLA-GENESIS-500-CHECKLIST.md` | Isabella Villaseñor AI Genesis — Checklist de remediación de 500 puntos | Evidencia | Gobernanza | 2026-09-26 |
+
+### docs/science-integrity
+
+| Documento | Propósito | Estado | Propietario | Revisión |
+| --- | --- | --- | --- | --- |
+| `docs/science-integrity/00-INDICE.md` | Paquete Verificación y Certificación — visión, mapeo e integración de entregas | Vigente | Gobernanza | 2026-10-07 |
+| `docs/science-integrity/01-blueprint-arquitectonico.md` | Blueprint arquitectónico (capas, flujos, PlantUML canónico) | Vigente | Arquitectura | 2026-10-07 |
+| `docs/science-integrity/02-manual-tecnico-operativo.md` | Manual técnico-operativo (contrato, datos, pipelines, SRE, KPIs) | Vigente | Operaciones | 2026-10-07 |
+| `docs/science-integrity/03-reglamentos-y-politicas.md` | Reglamentos y políticas (COI, retractación, apelaciones, privacidad) | Vigente | Gobernanza | 2026-10-07 |
+| `docs/science-integrity/04-licenciamiento-y-modelos-legales.md` | Licencias, TOS/DPA/DUA estructurales y riesgos legales | Vigente | Legal | 2026-10-07 |
+| `docs/science-integrity/05-alineamiento-regulatorio-global.md` | GDPR, COPE, FAIR, DataCite, W3C VC, ISO/IEC 27001 | Vigente | Legal | 2026-10-07 |
+| `docs/science-integrity/06-plan-certificacion-y-auditoria.md` | Niveles 0–4 de certificación, evidencia y auditoría externa | Vigente | Gobernanza | 2026-10-07 |
+| `docs/science-integrity/07-playbooks-operativos.md` | Playbooks por rol + bitácora de correcciones de revisión | Vigente | Operaciones | 2026-10-07 |
+| `docs/science-integrity/08-hoja-de-ruta-cronograma-y-piloto.md` | Fases, plan piloto, matriz de riesgos y KPIs | Vigente | Gobernanza | 2026-10-07 |
+| `docs/science-integrity/09-plantillas-y-artefactos.md` | Índice de plantillas y artefactos (JSON-LD, VC, checklist) | Vigente | Arquitectura | 2026-10-07 |
+| `docs/science-integrity/10-integracion-hypercore-ml-nativo.md` | Contrato del puente Hypercore + ML nativo (Fase B) | Vigente | Arquitectura | 2026-10-07 |
+| `docs/science-integrity/artifacts/openapi.yaml` | Contrato OpenAPI v2 ampliado (correcciones C1–C4) | Plantilla | Arquitectura | 2026-10-07 |
+
+### docs/science-integrity/artifacts/legal
+
+| Documento | Propósito | Estado | Propietario | Revisión |
+| --- | --- | --- | --- | --- |
+| `docs/science-integrity/artifacts/legal/01-TOS.md` | Plantilla Términos de Servicio | Plantilla | Legal | 2026-10-07 |
+| `docs/science-integrity/artifacts/legal/02-DPA.md` | Plantilla Data Processing Agreement | Plantilla | Legal | 2026-10-07 |
+| `docs/science-integrity/artifacts/legal/03-DUA.md` | Plantilla Data Use Agreement (datasets sensibles) | Plantilla | Legal | 2026-10-07 |
+| `docs/science-integrity/artifacts/legal/04-CONTRATO-REVISOR.md` | Plantilla Contrato de Revisor y NDA | Plantilla | Legal | 2026-10-07 |
+| `docs/science-integrity/artifacts/legal/05-ANEXOS-TECNICOS.md` | Anexos técnicos y cláusulas operativas comunes | Plantilla | Legal | 2026-10-07 |
 
 ### governance/
 

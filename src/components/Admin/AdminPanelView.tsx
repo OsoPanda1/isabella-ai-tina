@@ -1,7 +1,7 @@
 import React from "react";
 import { IsabellaLedgerConsole } from "../Ledger/IsabellaLedgerConsole";
 import { AuthManager } from "./AuthManager";
-import { Shield, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export const AdminPanelView: React.FC = () => {
   return (
