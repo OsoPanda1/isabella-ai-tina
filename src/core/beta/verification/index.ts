@@ -75,7 +75,7 @@ export class VerificationEngine {
 
   private checkSecurity(response: string): VerificationCheck {
     const hasSensitiveData = /\b(password|secret|token|key)\b/i.test(response);
-    const hasExternalUrls = /\bhttps?:\/\/(?!localhost)\b/i.test(response);
+    /\bhttps?:\/\/(?!localhost)\b/i.test(response);
 
     return {
       name: "Security",

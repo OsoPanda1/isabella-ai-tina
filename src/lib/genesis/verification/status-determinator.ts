@@ -90,7 +90,7 @@ export class StatusDeterminator {
 
   private calculateConfidence(
     claim: Claim,
-    evidences: Evidence[],
+    _evidences: Evidence[],
     analysis: GraphAnalysisView,
   ): number {
     const coverage = analysis.coverageAnalysis?.coveragePercentage ?? 0;

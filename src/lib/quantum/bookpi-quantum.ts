@@ -4,7 +4,7 @@
  * Async batch writer to avoid blocking event loop.
  * O(1) incremental integrity: only verifies new blocks since last checkpoint.
  */
-import { randomUUID, createHash } from "node:crypto";
+import { createHash } from "node:crypto";
 import type { BookPIBlock, QuantumStatus } from "./contracts";
 import { getDatabase } from "../persistence/sqlite";
 

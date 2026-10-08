@@ -5,8 +5,8 @@
 > Cifras y versiones: `package.json` (SSOT) + `production-capabilities.json` + `AGENTS.md`.
 >
 > **Custodia y estado:** [`docs/README.md`](README.md) registra propósito, propietario,
-> estado y última revisión de los 93 documentos vivos. Este archivo describe *qué leer*;
-> aquél describe *quién lo mantiene y si sigue vigente*.
+> estado y última revisión de los documentos vivos (110+, ver registro). Este archivo describe
+> *qué leer*; aquél describe *quién lo mantiene y si sigue vigente*.
 
 ## Canon vivo (leer en este orden)
 
@@ -20,6 +20,7 @@
 | 5 | `docs/05-ISABELLA-INTELIGENCIA-ML.md` | ML gobernado, HDC, NCUA, quantum, skills |
 | 6 | `docs/06-ISABELLA-DESARROLLO-CONTRIBUCION.md` | Stack, comandos, contribución, licencias |
 | 7 | `docs/07-TINA-CATEGORIA.md` | Categoría TINA — Isabella primera AI declarada |
+| 8 | `docs/08-ISABELLA-VERIFICACION-CERTIFICACION-INTEGRIDAD.md` | Pilar de Verificación, Certificación y Blindaje de Integridad Científica (plan) → `docs/science-integrity/00-INDICE.md` |
 
 ## Raíz del repo
 
@@ -41,6 +42,9 @@
 - `docs/evidence/` — manifiestos de evidencia same-commit
 - `docs/ml/DRIFT.md` — drift y fairness ML
 - `docs/governance/01-FGAIS-Governance-Constitution.md` — charter FGAIS
+- `docs/science-integrity/00-INDICE.md` — paquete de Verificación y Certificación de Integridad Científica (índice/registro de entregas)
+- `docs/science-integrity/10-integracion-hypercore-ml-nativo.md` — contrato de integración Hypercore + ML nativo (Fase B)
+- `docs/science-integrity/artifacts/openapi.yaml` — contrato OpenAPI v2 ampliado (ingestión/verificación/certificación/auditoría)
 
 ## Registros de decisión de arquitectura (ADR)
 

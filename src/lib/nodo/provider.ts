@@ -342,7 +342,7 @@ export class NODORouter {
 
       try {
         const start = Date.now();
-        const kwargs = transport.buildRequest(request);
+        transport.buildRequest(request);
         const latencyMs = Date.now() - start;
 
         this.health.set(providerId, {

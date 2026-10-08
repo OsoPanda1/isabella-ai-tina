@@ -194,7 +194,7 @@ function createNumericRoute(
     capacityFactor,
     experts: [...experts],
     registry,
-    route(input: readonly number[], logits: readonly number[]): MoeGateDecision[] {
+    route(_input: readonly number[], logits: readonly number[]): MoeGateDecision[] {
       if (logits.length !== experts.length) {
         throw new Error("moe_logit_count_mismatch");
       }

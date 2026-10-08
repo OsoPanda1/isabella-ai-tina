@@ -269,7 +269,6 @@ const FEDERATION_NAMES = [
 ] as const;
 
 export class FederatedAttentionBridge {
-  private readonly latentDim: number;
   private readonly fedDim: number;
   private readonly heads: number;
   private readonly headDim: number;
@@ -289,7 +288,6 @@ export class FederatedAttentionBridge {
     if (fedDim % heads !== 0) {
       throw new Error("federationDim debe ser divisible por numHeads");
     }
-    this.latentDim = latentDim;
     this.fedDim = fedDim;
     this.heads = heads;
     this.headDim = fedDim / heads;

@@ -5,7 +5,7 @@
  * Every audit record is chained to the previous log hash and sealed with HMAC-SHA3-512.
  */
 import { createHash } from "node:crypto";
-import { createAuditSeal } from "../sovereign-audit";
+import "../sovereign-audit";
 import { canonicalize } from "../igds/canonical";
 
 import type { AuditSeverity } from "../domains/audit-event";

@@ -68,7 +68,7 @@ export class DualKernel {
 
       // ─── ALPHA: Context Building ───────────────────────────
       state = "context_ready";
-      const _context = contextBuilder.build({
+      contextBuilder.build({
         session: {
           sessionId: request.sessionId ?? crypto.randomUUID(),
           startedAt: new Date().toISOString(),

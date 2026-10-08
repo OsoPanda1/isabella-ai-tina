@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Activity,
   Brain,
   Cpu,
   Heart,
@@ -8,13 +7,9 @@ import {
   Radio,
   RefreshCw,
   Shield,
-  Sparkles,
   Terminal,
-  Volume2,
   Zap,
   CheckCircle2,
-  Clock,
-  Flame,
   Maximize2,
   Minimize2,
 } from "lucide-react";
@@ -23,17 +18,8 @@ import { OscilloscopeWaveform } from "../AudioVisualizer/OscilloscopeWaveform";
 import { soundManager } from "../../utils/soundEffects";
 
 export const CognitiveTelemetryPage: React.FC = () => {
-  const { state, triggerManualDiagnostic, setActiveView, toggleSpeechSynthesis, toggleSound } =
-    useCrown();
-  const {
-    isProcessing,
-    isSpeaking,
-    isListening,
-    speechSynthesisEnabled,
-    soundEnabled,
-    modules,
-    lastRoutingEvent,
-  } = state;
+  const { state, triggerManualDiagnostic, setActiveView, toggleSpeechSynthesis } = useCrown();
+  const { speechSynthesisEnabled, modules, lastRoutingEvent } = state;
 
   const activeModuleId = lastRoutingEvent?.primaryModule || "CROWN";
 

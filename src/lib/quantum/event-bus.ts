@@ -152,7 +152,6 @@ export function emitQuantumEvent<T = unknown>(
 }
 
 export function getEventBusHealth() {
-  const allCounters: Record<string, number> = {};
   let totalEvents = 0;
   if (isSqlite()) {
     try {

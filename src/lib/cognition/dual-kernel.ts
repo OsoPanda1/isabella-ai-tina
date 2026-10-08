@@ -10,7 +10,6 @@
 import { randomUUID } from "node:crypto";
 
 import type {
-  CrownDecision,
   EvidenceRecord,
   IsabellaDualRequest,
   IsabellaDualResponse,
@@ -49,8 +48,6 @@ const CLASSIFICATION_LEVELS = [
   "restricted",
   "critical",
 ] as const;
-
-const SENSITIVITY_LEVELS = ["public", "internal", "confidential", "secret"] as const;
 
 function toSensitivityMax(classification: string): SensitivityLevel {
   const classIndex = CLASSIFICATION_LEVELS.indexOf(
@@ -96,7 +93,7 @@ export class DualKernel {
 
       /* ─── ALPHA: Context Building ─────────────────────────── */
       state = "context_ready";
-      const context = contextBuilder.build({
+      contextBuilder.build({
         session: {
           sessionId: request.sessionId ?? randomUUID(),
           startedAt: new Date().toISOString(),
@@ -358,7 +355,7 @@ export class DualKernel {
     }
   }
 
-  private generateAnswer(proposal: Proposal, intent: string): string {
+  private generateAnswer(proposal: Proposal, _intent: string): string {
     return (
       `Based on analysis, here is a structured response regarding: ${proposal.problem}\n\n` +
       `Value: ${proposal.valueProposition}\n\n` +

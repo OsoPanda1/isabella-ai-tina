@@ -69,7 +69,7 @@ export const CryptographyTab: React.FC = () => {
     "Nodo Cero :: Real del Monte :: C.R.O.W.N. Payload",
   );
   const [keyPair, setKeyPair] = useState(() => generateMLKEMKeyPair("rdm-nodo-cero"));
-  const [encapsulation, setEncapsulation] = useState(() => encapsulateMLKEM(keyPair.publicKey));
+  const [, setEncapsulation] = useState(() => encapsulateMLKEM(keyPair.publicKey));
   const [mldsaSig, setMldsaSig] = useState(() =>
     signMLDSA87("Nodo Cero :: Real del Monte :: C.R.O.W.N. Payload"),
   );

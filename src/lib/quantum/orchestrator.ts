@@ -7,14 +7,13 @@
  *
  * Simetria: identificar -> validar -> autorizar -> ejecutar -> medir -> firmar -> persistir -> replicar -> reconciliar
  */
-import { randomUUID, createHash } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import {
   QuantumRequestSchema,
   type QuantumRequest,
-  type QuantumExecutionResult,
   type Principal,
   type JobPriority,
 } from "./contracts";
@@ -45,12 +44,7 @@ import {
   endSpan,
   getTelemetrySnapshot,
 } from "./telemetry";
-import {
-  handlePennyLaneAbsent,
-  handleWorkerHung,
-  handleRemoteProviderDown,
-  getRecoveryMetrics,
-} from "./recovery";
+import { handleRemoteProviderDown, getRecoveryMetrics } from "./recovery";
 
 interface OrchestratorResult {
   ok: boolean;
@@ -527,7 +521,7 @@ async function executeProviderLocal(
       "python3",
       [BRIDGE_PATH, "--stdio"],
       { timeout: BRIDGE_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024 },
-      (err, stdout, stderr) => {
+      (err, stdout, _stderr) => {
         if (err && !stdout) {
           reject(new Error(`BRIDGE_EXEC_FAILED: ${err.message}`));
           return;

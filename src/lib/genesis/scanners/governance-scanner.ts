@@ -244,7 +244,7 @@ export class GovernanceScanner {
   }
 
   private determineStatus(
-    claim: Claim,
+    _claim: Claim,
     evidenceFound: boolean,
     codeImplemented: boolean,
     testsPassing: boolean,
@@ -257,7 +257,7 @@ export class GovernanceScanner {
   }
 
   private identifyGaps(
-    claim: Claim,
+    _claim: Claim,
     evidenceFound: boolean,
     codeImplemented: boolean,
     testsPassing: boolean,

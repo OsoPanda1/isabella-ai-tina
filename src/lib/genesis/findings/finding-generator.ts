@@ -11,11 +11,7 @@ import { Claim, Evidence } from "../schemas";
 export type FindingGeneratorConfig = Record<string, never>;
 
 export class FindingGenerator {
-  private config: FindingGeneratorConfig;
-
-  constructor(config: FindingGeneratorConfig = {}) {
-    this.config = config;
-  }
+  constructor(_config: FindingGeneratorConfig = {}) {}
 
   generateFromClaimEvaluation(
     claim: Claim,

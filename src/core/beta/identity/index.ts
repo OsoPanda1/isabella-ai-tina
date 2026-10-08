@@ -94,7 +94,7 @@ export class IdentityResolver {
     };
   }
 
-  private inferRoles(actorId: string, tenantId: string): string[] {
+  private inferRoles(actorId: string, _tenantId: string): string[] {
     // In production, this would query an identity store
     if (actorId.startsWith("admin")) return ["admin"];
     if (actorId.startsWith("operator")) return ["operator"];

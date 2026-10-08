@@ -1,19 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useId } from "react";
-import {
-  Activity,
-  Waves,
-  Sparkles,
-  Volume2,
-  VolumeX,
-  Gauge,
-  Sliders,
-  Play,
-  Square,
-  Maximize2,
-  Minimize2,
-  Radio,
-  Zap,
-} from "lucide-react";
+import { Activity, Waves, Gauge, Play, Square, Maximize2, Minimize2, Zap } from "lucide-react";
 import { useCrown } from "../../context/CrownContext";
 import { getAudioContextConstructor } from "../../utils/audioContext";
 
@@ -87,7 +73,7 @@ export const RealtimeWaveformVisualizer: React.FC<RealtimeWaveformVisualizerProp
   const [mode, setMode] = useState<WaveformMode>("oscilloscope");
   const [theme, setTheme] = useState<WaveformTheme>("electric_cyan");
   const [gain, setGain] = useState<number>(1.25);
-  const [lineWidth, setLineWidth] = useState<number>(2.0);
+  const [lineWidth] = useState<number>(2.0);
   const [expanded, setExpanded] = useState<boolean>(false);
   const [isPlayingTestTone, setIsPlayingTestTone] = useState<boolean>(false);
 

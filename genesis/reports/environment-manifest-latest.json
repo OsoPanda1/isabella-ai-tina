@@ -56,8 +56,8 @@
     }
   },
   "integrity": {
-    "packageJsonSha256": "332af8e089634ca51801bd5667a1259bcdd042c361091b8858733f2bbc82c855",
+    "packageJsonSha256": "0dd710003f71fcdc5c5aada86852f3ad94f095f59bea3ae2d766daf18c83a0ea",
     "lockfileSha256": "ff14ef3c1470fb63c0af35f865e0261268a3a6be307af170bb0201a4781a6b4d",
-    "contentHash": "0bb5f102de7ad8f21b4fc6a53d28c7618f9d6d1fe4ba28019ff35767252cdba7"
+    "contentHash": "c94a87835caf9e56e0f53c4c3557d3d03991565996c358b657a096ddccc69f8d"
   }
 }

@@ -15,7 +15,7 @@ import { evaluate } from "./opa.server";
 import { anchorDocument } from "./federation-anchor.server";
 import { recordAudit, metrics } from "./atlas-kernel.server";
 import { randomBytes } from "node:crypto";
-import type { JsonObject, JsonValue } from "./atlas-json";
+import type { JsonObject } from "./atlas-json";
 import { toJson } from "./atlas-json";
 
 export type DocumentState = "draft" | "validated" | "published" | "archived";

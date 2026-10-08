@@ -76,8 +76,6 @@ const allModules: Array<IngressRoute | "bookpi-legacy"> = [
 const moduleHealth = new Map<string, ModuleHealth>();
 const alertLog: AlertEvent[] = [];
 const MAX_ALERT_LOG = 1_000;
-const MAX_FAILURES_BEFORE_RECOVERY = 3;
-const HEARTBEAT_TIMEOUT_MS = 60_000;
 const RECOVERY_COOLDOWN_MS = 300_000;
 
 /* =========================================================================

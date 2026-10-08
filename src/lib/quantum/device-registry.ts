@@ -4,7 +4,7 @@
  * No se habilita un backend por estar instalado; se habilita solo si pasa todo el pipeline.
  */
 import { createHash } from "node:crypto";
-import type { DeviceCapability, DeviceTrust } from "./contracts";
+import type { DeviceCapability } from "./contracts";
 
 export interface SmokeTestResult {
   provider: string;

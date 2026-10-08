@@ -34,12 +34,7 @@ const MEDIUM_RISK_PATTERNS = [
   /\b(webhook|cron|schedule|programar|automatiz)\b/i,
 ];
 
-const LOW_RISK_PATTERNS = [
-  /\b(query|consultar|search|buscar|list|listar|read|leer|show|mostrar|get|obtener)\b/i,
-  /\b(help|ayuda|info|información|status|estado)\b/i,
-];
-
-export function classifyRisk(input: string, channel: string): RiskClassification {
+export function classifyRisk(input: string, _channel: string): RiskClassification {
   for (const pattern of HIGH_RISK_PATTERNS) {
     if (pattern.test(input)) {
       return {

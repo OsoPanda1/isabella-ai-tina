@@ -58,7 +58,7 @@ export const start = protectedHandler(async (context, request, provider) => {
   }
 });
 
-export const status = protectedHandler(async (context, request, provider) => {
+export const status = protectedHandler(async (context, _request, provider) => {
   try {
     const { response, token } = await providerRequest(provider, context);
     const data = await response.json().catch(() => null);

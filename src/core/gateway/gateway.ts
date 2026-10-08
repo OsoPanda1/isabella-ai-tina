@@ -49,7 +49,7 @@ class ApiAdapter implements GatewayAdapter {
     };
   }
 
-  async deliver(result: AgentRunResult): Promise<void> {
+  async deliver(_result: AgentRunResult): Promise<void> {
     /* API responses are returned directly by the HTTP layer */
   }
 }
@@ -75,7 +75,7 @@ class WebhookAdapter implements GatewayAdapter {
     };
   }
 
-  async deliver(result: AgentRunResult): Promise<void> {
+  async deliver(_result: AgentRunResult): Promise<void> {
     /* Webhook responses are fire-and-forget or queued */
   }
 }
@@ -98,7 +98,7 @@ class VoiceAdapter implements GatewayAdapter {
     };
   }
 
-  async deliver(result: AgentRunResult): Promise<void> {
+  async deliver(_result: AgentRunResult): Promise<void> {
     /* Voice responses are handled by TTS pipeline */
   }
 }

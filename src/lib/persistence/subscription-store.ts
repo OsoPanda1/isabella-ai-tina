@@ -145,7 +145,7 @@ class PostgresSubscriptionStore implements SubscriptionStore {
     `);
   }
 
-  getBucket(userId: string, dayKey: string): UsageBucket {
+  getBucket(_userId: string, _dayKey: string): UsageBucket {
     throw new Error(
       "getBucket on postgres requires async access; use subscription server async path",
     );
@@ -155,7 +155,7 @@ class PostgresSubscriptionStore implements SubscriptionStore {
     throw new Error("saveBucket on postgres is async-only; use tryConsume");
   }
 
-  getPlan(userId: string): IsabellaPlanId | null {
+  getPlan(_userId: string): IsabellaPlanId | null {
     throw new Error(
       "getPlan on postgres requires async access; use subscription server async path",
     );

@@ -9,7 +9,7 @@ import {
   Lock,
   FileCode2,
 } from "lucide-react";
-import { motion } from "motion/react";
+import "motion/react";
 
 export const QuantumMeshView: React.FC = () => {
   const [labMode] = useState<boolean>(true); // Forced true for simulation visibility

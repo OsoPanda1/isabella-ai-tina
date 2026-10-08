@@ -11,7 +11,7 @@ import {
   Shield,
   FileText,
 } from "lucide-react";
-import { motion } from "motion/react";
+import "motion/react";
 
 const HERMES_MODULES = [
   { id: 1, name: "Orchestrator", icon: <Cpu />, status: "active", tier: 1 },

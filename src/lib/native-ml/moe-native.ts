@@ -536,7 +536,7 @@ export class MoeNativeModel {
         } else {
           ds = sigmoid(combined) - target;
         }
-        const dp = selected.map((expertIndex, i) => (ds * (expertOutputs[i] - combined)) / mass);
+        const dp = selected.map((_expertIndex, i) => (ds * (expertOutputs[i] - combined)) / mass);
         let dpDotP = 0;
         for (let i = 0; i < selected.length; i++) dpDotP += dp[i] * probabilities[selected[i]];
         for (let expertIndex = 0; expertIndex < expertCount; expertIndex++) {

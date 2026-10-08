@@ -12,12 +12,11 @@ import {
   Activity,
   Maximize2,
   Minimize2,
-  Radio,
 } from "lucide-react";
 
 export const GlobalFooter: React.FC = () => {
-  const { state, toggleSpeechSynthesis, toggleSound, activeModuleId } = useCrown();
-  const { isProcessing, isSpeaking, isListening, speechSynthesisEnabled, soundEnabled } = state;
+  const { state, toggleSpeechSynthesis, activeModuleId } = useCrown();
+  const { isProcessing, isSpeaking, isListening, speechSynthesisEnabled } = state;
   const [expandedOscilloscope, setExpandedOscilloscope] = useState(false);
 
   const isAudioOrProcessingActive = isProcessing || isSpeaking || isListening;

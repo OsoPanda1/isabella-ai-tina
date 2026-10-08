@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldCheck, Lock, Activity, CheckCircle } from "lucide-react";
+import { ShieldCheck, Lock, CheckCircle } from "lucide-react";
 import { useCrown } from "../../context/CrownContext";
 
 export const CrownGovernanceCard: React.FC = () => {

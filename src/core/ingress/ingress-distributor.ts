@@ -11,7 +11,7 @@ import { randomUUID } from "node:crypto";
 import { emitQuantumEvent } from "../../lib/quantum/event-bus";
 import { commitQuantumBlock } from "../../lib/quantum/bookpi-quantum";
 import { auditTrace } from "../../domains/ai/infrastructure/audit-tracer";
-import { addMemoryItem } from "../../domains/ai/infrastructure/memory-store";
+import "../../domains/ai/infrastructure/memory-store";
 
 /* =========================================================================
    TYPES
@@ -104,7 +104,6 @@ interface QueuedWrite {
 }
 
 const writeQueue: QueuedWrite[] = [];
-const MAX_QUEUE_DEPTH = 10_000;
 const BATCH_SIZE = 50;
 const FLUSH_INTERVAL_MS = 100;
 let flushTimer: ReturnType<typeof setInterval> | null = null;

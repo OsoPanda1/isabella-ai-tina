@@ -13,10 +13,7 @@ import crypto from "crypto";
 import {
   generateSecureRandom,
   generate512ByteKey,
-  create512ByteKeyFromEntropy,
   createHMAC512,
-  sha512,
-  sha256,
   generateSecureUUID,
 } from "./crypto";
 
@@ -87,7 +84,7 @@ const VERSION = "v1";
  * Generate a new API key pair (raw key + hash).
  * The raw key is shown once; only the hash is stored.
  */
-export function generateAPIKey(options?: {
+export function generateAPIKey(_options?: {
   name?: string;
   scopes?: APIKeyScope[];
   expiresInDays?: number;

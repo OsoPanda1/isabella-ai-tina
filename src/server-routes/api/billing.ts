@@ -832,6 +832,12 @@ export const Route = createFileRoute("/api/billing")({
                 });
               }
               const block = blockResult.block;
+              if (!block) {
+                return new Response(JSON.stringify({ error: "LEDGER_BLOCK_MISSING" }), {
+                  status: 500,
+                  headers,
+                });
+              }
 
               // P0: debitar el saldo operativo de forma coherente con el ledger.
               // Re-leer para evitar sobreescribir cambios concurrentes del snapshot.
@@ -1203,8 +1209,8 @@ export const Route = createFileRoute("/api/billing")({
               const bookpiRepo = createBookpiPostgresRepository();
 
               const result = await bookpiRepo.refund(
-                String(parsed.data.ledgerIndex),
-                { tenantId: context.tenantId, userId: context.userId },
+                context.tenantId,
+                Number(parsed.data.ledgerIndex),
                 "Reembolso de sistema",
               );
 
@@ -1410,6 +1416,13 @@ export const Route = createFileRoute("/api/billing")({
                   }),
                   { status: 500, headers },
                 );
+              }
+
+              if (!purchase.block) {
+                return new Response(JSON.stringify({ error: "MARKETPLACE_BLOCK_MISSING" }), {
+                  status: 500,
+                  headers,
+                });
               }
 
               return new Response(

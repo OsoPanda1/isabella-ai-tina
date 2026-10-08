@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Activity, Server, Wifi, WifiOff } from "lucide-react";
-import { isabellaFetch } from "../../lib/apiInterceptor";
+import "../../lib/apiInterceptor";
 
 export const APIHealthMonitor: React.FC = () => {
   const [latency, setLatency] = useState<number | null>(null);

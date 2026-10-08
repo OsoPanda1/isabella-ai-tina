@@ -60,10 +60,8 @@ async function requireSupabase(tenantId?: string): Promise<SupabaseClient> {
 
 export class SupabaseRepository<T extends { id: string }> implements IRepository<T> {
   private readonly table: string;
-  private readonly type: string;
 
   constructor(type: string) {
-    this.type = type;
     this.table = TABLE_MAP[type] ?? type;
   }
 
