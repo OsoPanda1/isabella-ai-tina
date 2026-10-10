@@ -39,7 +39,6 @@ env:
 defaults:
   run:
     shell: bash
-    timeout-minutes: 45
 
 jobs:
   # =========================================================================
@@ -48,6 +47,7 @@ jobs:
   secret-scan:
     name: Secret Scan & Baseline
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     outputs:
       secret_scan_status: ${{ steps.gitleaks.outcome }}
     steps:
@@ -83,6 +83,7 @@ jobs:
   node-app:
     name: Node 24 TS Build, Audit & SBOM
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [secret-scan]
     env:
       NODE_OPTIONS: --enable-source-maps
@@ -154,7 +155,7 @@ jobs:
           echo "SBOM signing placeholder - integrate cosign/sigstore for production"
 
       - name: Upload build artifacts & SBOM
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: node-production-artifacts
           path: |
@@ -170,6 +171,7 @@ jobs:
     if: github.event_name != 'pull_request'
     name: Container Build, Trivy & Sign
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [node-app]
     permissions:
       contents: read
@@ -248,6 +250,7 @@ jobs:
   iac-scan:
     name: IaC & SAST Scans
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [node-app]
     steps:
       - name: Checkout repository
@@ -267,7 +270,7 @@ jobs:
           args: ./k8s || true
 
       - name: Upload IaC scan results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: iac-scan-results
           path: |
@@ -283,6 +286,7 @@ jobs:
     needs: [secret-scan, node-app, container-build, iac-scan]
     if: ${{ always() && needs.secret-scan.result == 'success' && needs.node-app.result == 'success' && needs.iac-scan.result == 'success' && (github.event_name == 'pull_request' || needs.container-build.result == 'success') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: production
       url: https://isabella-mexa.vercel.app
@@ -301,7 +305,7 @@ jobs:
           echo "readiness: approved" > readiness.txt
 
       - name: Upload readiness artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: readiness-summary
           path: readiness.txt
@@ -321,6 +325,7 @@ jobs:
     needs: [production-gate]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/'))
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: production
       url: https://isabella-mexa.vercel.app
@@ -331,7 +336,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: node-production-artifacts
           path: ./artifacts
@@ -393,7 +398,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload deployment provenance
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: deployment-provenance
           path: deployment-provenance.txt
@@ -422,6 +427,7 @@ jobs:
     name: Post-Deploy Observability & SLO Check
     needs: [deploy-node-zero]
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Query metrics backend (placeholder)
         run: |
@@ -442,6 +448,7 @@ jobs:
   cleanup:
     name: Cleanup & Retention Enforcement
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: [post-deploy-observability]
     steps:
       - name: Prune ephemeral artifacts older than 7 days (placeholder)

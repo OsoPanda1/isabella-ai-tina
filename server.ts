@@ -11,12 +11,14 @@ import { queryMemory, getAllMemories, addMemoryItem } from "./src/domains/ai/inf
 import { REGISTERED_TOOLS, executeTool } from "./src/domains/ai/infrastructure/tools-catalog";
 import { ISABELLA_SQL_MIGRATION, SCHEMA_TABLES } from "./src/data/isabellaMigrations";
 import { ISABELLA_BLUEPRINT } from "./src/data/isabellaBlueprint";
-import { IsabellaPerception } from "./src/contracts/isabella";
+import { IsabellaPerception, type IsabellaInputType } from "./src/contracts/isabella";
 import { atlasRouter } from "./src/lib/express-routes";
 import { creatorEconomyRouter } from "./src/lib/creator-economy/routes";
 import { QuantumBridgeRequestSchema, quantumGuard, runQuantumBridge } from "./src/lib/quantum-bridge.server";
 import { summarizeIsabellaV5Fusion } from "./src/lib/isabella-v5";
 import { tamvPlatformRouter } from "./src/lib/tamv-platform.server";
+import { hypercoreRouter } from "./src/lib/acceleration/hypercore-routes";
+import { scienceIntegrityRouter } from "./src/lib/science-integrity/routes";
 import { resolveIntroConfig } from "./src/lib/media/intro-config";
 import { loadConfig } from "./src/lib/config";
 import {
@@ -25,7 +27,7 @@ import {
   MuxApiError,
   MuxUnavailableError,
 } from "./src/lib/mux/mux.server";
-import { signLedgerBlockPQC, generateMLKEMKeyPair, encapsulateMLKEM } from "./src/lib/postQuantumCrypto";
+import { signLedgerBlockPQC, signMLDSA87, signSLHDSA128s, evaluateLitle32Gates, generateMLKEMKeyPair, encapsulateMLKEM } from "./src/lib/postQuantumCrypto";
 import { authenticate, requireRole, requireScope, currentPrincipal } from "./src/middleware/auth";
 import { rateLimit, quotaGate, getBillingIdentity } from "./src/middleware/rateLimit";
 import { csrfProtection, issueCsrfToken, promptInjectionGuard } from "./src/middleware/security";
@@ -67,6 +69,8 @@ import { createLogger } from "./src/lib/logger";
 import { jobStore } from "./src/platform/jobs/job-store";
 import { featureFlagService } from "./src/platform/flags/feature-flags";
 import { getPgPool, runPostgresMigration, pgHealthCheck } from "./src/lib/persistence/postgres";
+import { evaluateProductionAuthorities } from "./src/lib/production-authority";
+import { checkRuntimeIntegrity } from "./src/lib/runtime-integrity";
 import {
   activateKillSwitch,
   executeNextStep,
@@ -77,6 +81,8 @@ import {
   activateCanonicalKillSwitch,
   canonicalKillSwitchStatus,
   resolveKillCapabilityFromTrigger,
+  isKnownCapability,
+  type KillCapability,
 } from "./src/lib/kill-switch";
 import { evaluateClaim, toEpistemicFormat, getClaimRadarMetrics } from "./src/lib/claim-radar";
 import { classifyEpistemicStatus, getEpistemicRules } from "./src/lib/epistemic";
@@ -133,6 +139,38 @@ assertStrictEnv();
 function toErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
+}
+
+// Express 5 (ParamsDictionary) tipa `req.params.x` como `string | string[]`.
+// En runtime un segmento de ruta es un escalar: se normaliza al primer valor.
+function routeParam(value: string | string[]): string {
+  return Array.isArray(value) ? (value[0] ?? "") : value;
+}
+
+const ISABELLA_INPUT_TYPES = ["chat", "event", "signal", "api", "ui"] as const;
+
+function isIsabellaInputType(value: string): value is IsabellaInputType {
+  return (ISABELLA_INPUT_TYPES as readonly string[]).includes(value);
+}
+
+// PerceptionInputSchema acepta cualquier string (≤64); el contrato exige la unión.
+// Lo que no pertenezca a la unión degrada al tipo por defecto "chat".
+function resolveInputType(value: string | undefined): IsabellaInputType {
+  return value !== undefined && isIsabellaInputType(value) ? value : "chat";
+}
+
+// QuantumRequestSchema exige metadata `Record<string, string>`; el schema de
+// entrada permite valores unknown, así que se serializan antes de armar el request.
+function toMetadataStrings(metadata: Record<string, unknown> | undefined): Record<string, string> {
+  const safe: Record<string, string> = {};
+  for (const [key, value] of Object.entries(metadata ?? {})) {
+    if (typeof value === "string") {
+      safe[key] = value;
+    } else if (value !== undefined) {
+      safe[key] = JSON.stringify(value) ?? String(value);
+    }
+  }
+  return safe;
 }
 
 const log = createLogger("server");
@@ -209,6 +247,8 @@ app.use(promptInjectionGuard);
 app.use(atlasRouter);
 app.use("/api/v1", creatorEconomyRouter);
 app.use(tamvPlatformRouter);
+app.use(hypercoreRouter);
+app.use(scienceIntegrityRouter);
 
 // ─── NATIVE AUTH BOOTSTRAP ──────────────────────────────────────────
 // P0 FIX: Bootstrap is ONLY available in non-production environments.
@@ -344,21 +384,21 @@ app.get("/api/v1/apikeys", authenticate, requireScope("keys:manage"), async (req
 
 app.post("/api/v1/apikeys/:keyId/revoke", authenticate, requireScope("keys:manage"), async (req, res) => {
   const principal = currentPrincipal(req);
-  const ok = await ApiKeyService.revokeApiKey(req.params.keyId, principal.tenantId || "nodo-cero-rdm", principal.sub);
+  const ok = await ApiKeyService.revokeApiKey(routeParam(req.params.keyId), principal.tenantId || "nodo-cero-rdm", principal.sub);
   if (!ok) return res.status(404).json({ ok: false, error: "Key not found or already revoked" });
   res.json({ ok: true });
 });
 
 app.post("/api/v1/apikeys/:keyId/rotate", authenticate, requireScope("keys:manage"), async (req, res) => {
   const principal = currentPrincipal(req);
-  const result = await ApiKeyService.rotateApiKey(req.params.keyId, principal.tenantId || "nodo-cero-rdm", principal.sub);
+  const result = await ApiKeyService.rotateApiKey(routeParam(req.params.keyId), principal.tenantId || "nodo-cero-rdm", principal.sub);
   if (!result.success) return res.status(404).json({ ok: false, error: result.error || "Key not found" });
   res.json({ ok: true, data: result });
 });
 
 app.delete("/api/v1/apikeys/:keyId", authenticate, requireScope("keys:manage"), async (req, res) => {
   const principal = currentPrincipal(req);
-  const ok = await ApiKeyService.deleteApiKey(req.params.keyId, principal.tenantId || "nodo-cero-rdm", principal.sub);
+  const ok = await ApiKeyService.deleteApiKey(routeParam(req.params.keyId), principal.tenantId || "nodo-cero-rdm", principal.sub);
   if (!ok) return res.status(404).json({ ok: false, error: "Key not found" });
   res.json({ ok: true });
 });
@@ -490,6 +530,53 @@ app.get("/api/ledger", authenticate, requireScope("ledger:read"), rateLimit, asy
   res.status(200).set("Cache-Control", "no-store").json(buildDemoLedgerSnapshot());
 });
 
+// Liveness: el proceso responde; nunca depende de autoridades ni de la base.
+app.get("/api/health/live", (_req, res) => {
+  res.status(200).set("Cache-Control", "no-store").json({
+    status: "alive",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Readiness: fail-closed. Si runtime, autoridades o base fallan → 503.
+app.get("/api/health/ready", async (_req, res) => {
+  try {
+    const authorities = evaluateProductionAuthorities();
+    const integrity = checkRuntimeIntegrity();
+    const database = await pgHealthCheck();
+    const ready = authorities.ready && integrity.ok && database.ok;
+
+    res.status(ready ? 200 : 503).set("Cache-Control", "no-store").json({
+      status: ready ? "ready" : "not_ready",
+      timestamp: new Date().toISOString(),
+      checks: {
+        runtime: integrity.ok,
+        authorities: authorities.ready,
+        database: database.ok,
+      },
+      runtime: {
+        nodeVersion: integrity.nodeVersion,
+        memoryUsageMb: integrity.memoryUsageMb,
+        uptimeSeconds: integrity.uptimeSeconds,
+      },
+      authorities: authorities.authorities.map((authority) => ({
+        name: authority.name,
+        status: authority.status,
+        requiredInProduction: authority.requiredInProduction,
+      })),
+      database: database.ok
+        ? { ok: true, latencyMs: database.latencyMs }
+        : { ok: false },
+    });
+  } catch {
+    res.status(503).set("Cache-Control", "no-store").json({
+      status: "not_ready",
+      timestamp: new Date().toISOString(),
+      checks: { runtime: false, authorities: false, database: false },
+    });
+  }
+});
+
 app.get("/api/health", (req, res) => {
   res.json({
     status: "online",
@@ -574,21 +661,21 @@ app.get("/api/mux/assets/:assetId", authenticate, async (req, res) => {
   }
 });
 
-app.get("/api/v1/billing/plans", authenticate, (req, res) => {
+app.get("/api/v1/billing/plans", authenticate, async (req, res) => {
   const { userId, plan } = getBillingIdentity(req);
-  const current = evaluateUsage(userId, "chat", 1, plan);
+  const current = await evaluateUsage(userId, "chat", 1, plan);
   res.json({
     ok: true,
     currency: "USD",
     positioning: "Precios introductorios por debajo del promedio comercial para adopción temprana.",
     plans: ISABELLA_PLANS.map((p) => ({ ...p, checkoutUrl: p.id === "free" || p.id === "custom" ? null : buildCheckoutUrl(p.id, userId) })),
-    current: { plan: current.plan, usage: getUsage(userId), remaining: current.remaining, resetAt: current.resetAt },
+    current: { plan: current.plan, usage: await getUsage(userId), remaining: current.remaining, resetAt: current.resetAt },
   });
 });
 
-app.get("/api/v1/billing/usage", authenticate, (req, res) => {
+app.get("/api/v1/billing/usage", authenticate, async (req, res) => {
   const { userId, plan } = getBillingIdentity(req);
-  const decision = evaluateUsage(userId, "chat", 1, plan);
+  const decision = await evaluateUsage(userId, "chat", 1, plan);
   res.json({ ok: true, userId, plan: decision.plan, usage: decision.usage, remaining: decision.remaining, resetAt: decision.resetAt });
 });
 
@@ -767,7 +854,7 @@ app.post("/api/v1/isabella", rateLimit, authenticate, quotaGate("chat"), async (
       sessionId: parsed.sessionId || `sess-${Date.now()}`,
       actorId: currentPrincipal(req).sub,
       territoryId: parsed.territoryId || "rdm-nodo-cero",
-      inputType: parsed.inputType || "chat",
+      inputType: resolveInputType(parsed.inputType),
       payload: parsed.payload || (parsed.text ? { text: parsed.text } : {}),
       timestamp: parsed.timestamp || new Date().toISOString(),
       metadata: parsed.metadata || {},
@@ -973,14 +1060,21 @@ setInterval(() => {
 // presentarse como garantía de producción. Solo es válida bajo
 // FEATURE_LAB_MODE=true; en producción (o ante cualquier error) se omite el
 // bloque de atestación en lugar de crashear el endpoint o falsificar pruebas.
-function safePqcAttestation(context: string, message: string): Record<string, unknown> | null {
+// Contrato real de signLedgerBlockPQC: (data, keyId) -> { signature, algorithm, keyId, timestamp }.
+// Los bloques de atestación exponen además las firmas prototipo ML-DSA / SLH-DSA y el
+// estado de los 32 gates, derivados con las mismas funciones que usa bookpi.server.ts.
+// Todo es PROTOTYPE (nunca una firma certificada); el error de laboratorio degrada a null.
+async function safePqcAttestation(context: string, message: string): Promise<Record<string, unknown> | null> {
   if (process.env.FEATURE_LAB_MODE !== "true") return null;
   try {
-    const proof = signLedgerBlockPQC(context, message);
+    const proof = await signLedgerBlockPQC(context, message);
+    const payload = `${context}:${message}`;
     return {
-      mlDsaSignature: proof.mlDsaSignature.slice(0, 48) + "...",
-      slhDsaSignature: proof.slhDsaSignature.slice(0, 48) + "...",
-      litleGatesStatus: proof.litleGatesStatus,
+      mlDsaSignature: signMLDSA87(payload).signatureHex.slice(0, 48) + "...",
+      slhDsaSignature: signSLHDSA128s(payload).signatureHex.slice(0, 48) + "...",
+      litleGatesStatus: `${evaluateLitle32Gates(message).length}/32_LATTICE_AND_HASH_PROTOTYPE`,
+      ledgerSignature: proof.signature.slice(0, 48) + "...",
+      ledgerSignatureAlgorithm: proof.algorithm,
       pqcCompliant: false,
       implementationStatus: "PROTOTYPE_NOT_PRODUCTION",
     };
@@ -989,18 +1083,22 @@ function safePqcAttestation(context: string, message: string): Record<string, un
   }
 }
 
-function buildPqcLeaseAttestation(sessionId: string): Record<string, unknown> | null {
+async function buildPqcLeaseAttestation(sessionId: string): Promise<Record<string, unknown> | null> {
   if (process.env.FEATURE_LAB_MODE !== "true") return null;
   try {
     const kemPair = generateMLKEMKeyPair(sessionId);
     const kemCipher = encapsulateMLKEM(kemPair.publicKey);
-    const pqcProof = signLedgerBlockPQC(`lease-${sessionId}`, kemCipher.sharedSecretHash);
+    // PQCEncapsulation expone `sharedSecret` (no `sharedSecretHash`): el hash se
+    // calcula aquí con SHA-256 antes de usarlo como mensaje de firma del ledger.
+    const sharedSecretHash = createHash("sha256").update(kemCipher.sharedSecret).digest("hex");
+    const pqcProof = await signLedgerBlockPQC(`lease-${sessionId}`, sharedSecretHash);
     return {
       kemAlgorithm: "ML-KEM-768",
       signatureAlgorithm: "ML-DSA-87 + SLH-DSA-128s",
-      litleGatesStatus: pqcProof.litleGatesStatus,
-      sharedSecretHash: kemCipher.sharedSecretHash.slice(0, 32) + "...",
-      mlDsaSignature: pqcProof.mlDsaSignature.slice(0, 48) + "...",
+      litleGatesStatus: `${evaluateLitle32Gates(sharedSecretHash).length}/32_LATTICE_AND_HASH_PROTOTYPE`,
+      sharedSecretHash: sharedSecretHash.slice(0, 32) + "...",
+      mlDsaSignature: signMLDSA87(`${sessionId}:${sharedSecretHash}`).signatureHex.slice(0, 48) + "...",
+      ledgerSignature: pqcProof.signature.slice(0, 48) + "...",
       pqcCompliant: false,
       implementationStatus: "PROTOTYPE_NOT_PRODUCTION",
     };
@@ -1012,7 +1110,7 @@ function buildPqcLeaseAttestation(sessionId: string): Record<string, unknown> | 
 const PQC_DISABLED_ATTESTATION = { status: "unavailable", reason: "pqc_prototype_disabled" } as const;
 
 // 11. POST /api/v1/isabella/agent/lease - Lease an autonomous Isabella Agent
-app.post("/api/v1/isabella/agent/lease", rateLimit, authenticate, requireScope("agent:lease"), pdpAuthorize("agent:lease"), quotaGate("agent"), (req, res) => {
+app.post("/api/v1/isabella/agent/lease", rateLimit, authenticate, requireScope("agent:lease"), pdpAuthorize("agent:lease"), quotaGate("agent"), async (req, res) => {
   const parsed = validateBody(AgentLeaseSchema, req, res);
   if (!parsed) return;
   const sessionId = `isabella-agent-${crypto.randomUUID()}`;
@@ -1045,7 +1143,7 @@ app.post("/api/v1/isabella/agent/lease", rateLimit, authenticate, requireScope("
     ok: true,
     message: "Agente Isabella arrendado y registrado en C.R.O.W.N. Gateway.",
     session,
-    pqcAttestation: buildPqcLeaseAttestation(sessionId) ?? PQC_DISABLED_ATTESTATION,
+    pqcAttestation: (await buildPqcLeaseAttestation(sessionId)) ?? PQC_DISABLED_ATTESTATION,
   });
 });
 
@@ -1098,7 +1196,7 @@ app.post("/api/v1/isabella/agent/chat", rateLimit, authenticate, requireScope("a
     }));
 
     // PQC attestation for chat response (PROTOTYPE — never a production guarantee)
-    const chatPqcAttestation = safePqcAttestation(`chat-${session.sessionId}-${Date.now()}`, prompt || "empty");
+    const chatPqcAttestation = await safePqcAttestation(`chat-${session.sessionId}-${Date.now()}`, prompt || "empty");
 
     const responseObj = {
       text: decision.summary || "Inferencia procesada bajo la arquitectura de Isabella Villaseñor AI.",
@@ -1143,7 +1241,7 @@ app.post("/api/v1/isabella/agent/stream", authenticate, requireScope("agent:chat
   await new Promise((r) => setTimeout(r, 150));
 
   // PQC attestation event (PROTOTYPE — only emitted under FEATURE_LAB_MODE)
-  const streamPqcAttestation = safePqcAttestation(`stream-${Date.now()}`, prompt);
+  const streamPqcAttestation = await safePqcAttestation(`stream-${Date.now()}`, prompt);
   sendEvent("pqc_attestation", streamPqcAttestation ?? PQC_DISABLED_ATTESTATION);
   await new Promise((r) => setTimeout(r, 100));
 
@@ -1385,17 +1483,16 @@ app.post("/api/isabella/process", rateLimit, authenticate, quotaGate("chat"), as
   const startTime = Date.now();
   const parsed = validateBody(CognitiveProcessSchema, req, res);
   if (!parsed) return;
+  // CognitiveProcessSchema no declara `sessionId` (zod lo descarta), así que la
+  // sesión se genera siempre en el servidor y nunca depende del cliente.
   const {
     input,
     history = [],
     crownConfig = {},
     activePreset: clientPreset = "prime",
-    sessionId: clientSessionId,
   } = parsed;
 
-  const sessionId = (typeof clientSessionId === "string" && clientSessionId.length > 0)
-    ? clientSessionId
-    : `session-${Date.now()}`;
+  const sessionId = `session-${Date.now()}`;
 
   /*
    * LANGUAGE CORE: classify the utterance before routing. The classifier
@@ -1554,7 +1651,7 @@ import {
   QUANTUM_SQL_INDEXES,
   QUANTUM_SCHEMA_TABLES,
 } from "./src/lib/quantum";
-import { PrincipalSchema } from "./src/lib/quantum/contracts";
+import { ExecutionModeSchema, PrincipalSchema } from "./src/lib/quantum/contracts";
 import { randomUUID } from "crypto";
 import { getIsabellaAd, trackIdlenClick, maybeAppendAd, getIdlenStatus } from "./src/lib/idlen-ads.server";
 
@@ -1570,6 +1667,13 @@ app.post("/api/v1/quantum/execute", rateLimit, authenticate, requireScope("quant
     const principal = currentPrincipal(req);
     const traceId = req.headers["x-trace-id"] as string || `trace-${randomUUID()}`;
 
+    // QuantumRequestSchema exige "analytic" | "sampled"; se valida antes de
+    // construir el request para no enviar un mode fuera de la unión.
+    const modeParsed = ExecutionModeSchema.safeParse(parsed.mode || "analytic");
+    if (!modeParsed.success) {
+      return res.status(400).json({ ok: false, error: "Invalid mode", issues: modeParsed.error.issues });
+    }
+
     const request = {
       schema: "isabella-quantum-v1" as const,
       requestId: randomUUID(),
@@ -1578,14 +1682,14 @@ app.post("/api/v1/quantum/execute", rateLimit, authenticate, requireScope("quant
       subjectId: principal.sub,
       provider: parsed.provider || "default.qubit",
       repository: parsed.repository || "PennyLaneAI/pennylane",
-      mode: parsed.mode || "analytic",
+      mode: modeParsed.data,
       wires: parsed.wires || 4,
       shots: parsed.shots || null,
       features: parsed.features || [],
       weights: parsed.weights || [],
       scopes: principal.scopes,
       policyVersion: "quantum-policy-v1",
-      metadata: parsed.metadata || {},
+      metadata: toMetadataStrings(parsed.metadata),
     };
 
     const principalParsed = PrincipalSchema.safeParse({
@@ -1803,6 +1907,12 @@ app.post("/api/v1/idlen/click", rateLimit, authenticate, async (req, res) => {
   const parsed = validateBody(IdlenClickSchema, req, res);
   if (!parsed) return;
   const { adId, publisherId, requestId } = parsed;
+  // IdlenClickSchema solo declara `placement`; los identificadores llegan como
+  // campos extra con typing `unknown` y deben validarse antes de trackear.
+  if (typeof adId !== "string" || typeof publisherId !== "string" || typeof requestId !== "string") {
+    res.status(400).json({ ok: false, error: "adId, publisherId and requestId are required strings" });
+    return;
+  }
   const result = await trackIdlenClick({ adId, publisherId, requestId });
   res.json({ ok: result.tracked, error: result.error });
 });
@@ -1833,7 +1943,7 @@ app.post("/api/v1/automation/describe", authenticate, (req, res) => {
 });
 
 app.get("/api/v1/automation/developer-guide/:nodeId", authenticate, (req, res) => {
-  const guide = explainToDeveloper(req.params.nodeId);
+  const guide = explainToDeveloper(routeParam(req.params.nodeId));
   res.json({ ok: true, data: guide });
 });
 
@@ -1842,7 +1952,7 @@ app.get("/api/v1/automation/repair-chains", authenticate, (_req, res) => {
 });
 
 app.post("/api/v1/automation/repair/:chainId/next", authenticate, (req, res) => {
-  const chain = executeRepairStep(req.params.chainId);
+  const chain = executeRepairStep(routeParam(req.params.chainId));
   if (!chain) {
     res.status(404).json({ ok: false, error: "Repair chain not found or already completed" });
     return;
@@ -1852,7 +1962,7 @@ app.post("/api/v1/automation/repair/:chainId/next", authenticate, (req, res) => 
 
 app.post("/api/v1/automation/resolve/:nodeId", authenticate, (req, res) => {
   const { resolution } = req.body;
-  const resolved = resolveFailureManually(req.params.nodeId, resolution || "Manual resolution");
+  const resolved = resolveFailureManually(routeParam(req.params.nodeId), resolution || "Manual resolution");
   res.json({ ok: resolved, message: resolved ? "Failure resolved" : "No active failure for this node" });
 });
 
@@ -1878,10 +1988,18 @@ app.post("/api/v1/kill-switch/activate", authenticate, requireRole("admin"), asy
     res.status(400).json({ ok: false, error: "severity must be a string of at most 32 characters" });
     return;
   }
-  const selectedCapability =
-    typeof capability === "string" && capability.trim()
-      ? capability
-      : resolveKillCapabilityFromTrigger(trigger);
+  // La capacidad pedida por el cliente debe pertenecer a la unión oficial;
+  // una capacidad desconocida sigue dejando el kill-switch fail-closed.
+  let selectedCapability: KillCapability;
+  if (typeof capability === "string" && capability.trim()) {
+    if (!isKnownCapability(capability)) {
+      res.status(503).json({ ok: false, error: "Kill-switch activation failed; capability remains fail-closed." });
+      return;
+    }
+    selectedCapability = capability;
+  } else {
+    selectedCapability = resolveKillCapabilityFromTrigger(trigger);
+  }
   try {
     const event = activateKillSwitch(trigger, severity || "SEV-2", selectedCapability);
     await activateCanonicalKillSwitch({
@@ -1897,7 +2015,7 @@ app.post("/api/v1/kill-switch/activate", authenticate, requireRole("admin"), asy
 });
 
 app.post("/api/v1/kill-switch/:eventId/step", authenticate, requireRole("admin"), (req, res) => {
-  const event = executeNextStep(req.params.eventId);
+  const event = executeNextStep(routeParam(req.params.eventId));
   if (!event) {
     res.status(404).json({ ok: false, error: "Kill-switch event not found or all steps completed" });
     return;
@@ -1912,7 +2030,7 @@ app.post("/api/v1/kill-switch/:eventId/resolve", authenticate, requireRole("admi
     return;
   }
   try {
-    const state = await resolveCanonicalKillSwitchEvent(req.params.eventId, approvedBy);
+    const state = await resolveCanonicalKillSwitchEvent(routeParam(req.params.eventId), approvedBy);
     res.json({ ok: true, state, message: "Kill-switch resolved" });
   } catch {
     res.status(404).json({ ok: false, error: "Event not found or not active" });
@@ -2022,7 +2140,7 @@ app.get("/api/v1/core/sessions", authenticate, (req, res) => {
 });
 
 app.get("/api/v1/core/sessions/:sessionId/messages", authenticate, (req, res) => {
-  res.json({ ok: true, data: getSessionHistory(req.params.sessionId) });
+  res.json({ ok: true, data: getSessionHistory(routeParam(req.params.sessionId)) });
 });
 
 // --- Planner ---
@@ -2045,7 +2163,7 @@ app.get("/api/v1/core/plans", authenticate, (req, res) => {
 });
 
 app.post("/api/v1/core/plans/:planId/activate", authenticate, (req, res) => {
-  const plan = activatePlan(req.params.planId);
+  const plan = activatePlan(routeParam(req.params.planId));
   if (!plan) return res.status(404).json({ ok: false, error: "Plan not found." });
   res.json({ ok: true, data: plan });
 });
@@ -2062,7 +2180,7 @@ app.post("/api/v1/core/skills", rateLimit, authenticate, (req, res) => {
 });
 
 app.post("/api/v1/core/skills/:skillId/enable", authenticate, (req, res) => {
-  res.json({ ok: enableSkill(req.params.skillId) });
+  res.json({ ok: enableSkill(routeParam(req.params.skillId)) });
 });
 
 // --- Providers ---
@@ -2469,7 +2587,7 @@ app.post("/api/v1/economy/marketplace/listings/:listingId/usage", rateLimit, aut
   if (!Number.isFinite(revenue) || revenue < 0) {
     return res.status(400).json({ ok: false, error: "Valid executionRevenue is required" });
   }
-  const listing = recordUsage(req.params.listingId, revenue);
+  const listing = recordUsage(routeParam(req.params.listingId), revenue);
   if (!listing) return res.status(404).json({ ok: false, error: "Listing not found" });
   res.json({ ok: true, data: listing });
 });
@@ -2503,7 +2621,7 @@ app.post("/api/v1/economy/governance/disputes/:disputeId/resolve", rateLimit, au
   if (typeof resolution !== "string" || resolution.trim().length === 0) {
     return res.status(400).json({ ok: false, error: "resolution text is required" });
   }
-  const dispute = resolveDispute(req.params.disputeId, resolution.slice(0, 500), outcome);
+  const dispute = resolveDispute(routeParam(req.params.disputeId), resolution.slice(0, 500), outcome);
   if (!dispute) return res.status(404).json({ ok: false, error: "Dispute not found" });
   res.json({ ok: true, data: dispute });
 });
@@ -2583,7 +2701,7 @@ process.on("uncaughtException", (err: Error) => {
   const pg = getPgPool();
   if (pg) {
     try {
-      await runPostgresMigration();
+      await runPostgresMigration(ISABELLA_SQL_MIGRATION);
       const healthy = await pgHealthCheck();
       log.info("postgres_status", { healthy, host: process.env.POSTGRES_HOST || "unknown" });
     } catch (err: unknown) {

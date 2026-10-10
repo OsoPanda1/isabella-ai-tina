@@ -82,7 +82,7 @@ export function createMoERoute(
     topK,
     capacityFactor,
     experts: [...experts],
-    route(input: number[], logits: number[]): MoeGateDecision[] {
+    route(_input: number[], logits: number[]): MoeGateDecision[] {
       if (logits.length !== experts.length) throw new Error("moe_logit_count_mismatch");
       const weights = softmax(logits);
       return experts
@@ -175,7 +175,6 @@ export function recordIntelligenceMetric(trace: MoeTrace) {
   };
 }
 
-
 /**
  * Backward-compatible lexical MoE facade retained from the active UI contract.
  * The advanced governed MoE above remains the canonical execution engine.
@@ -185,7 +184,12 @@ export class MoeEngine {
     { expertId: "exp_crown", name: "CROWN Governance Expert", weight: 0.95, domain: "governance" },
     { expertId: "exp_sophia", name: "SOPHIA Epistemic Expert", weight: 0.92, domain: "academic" },
     { expertId: "exp_orion", name: "ORION Tool Execution Expert", weight: 0.88, domain: "tools" },
-    { expertId: "exp_isa", name: "ISA Presence & Persona Expert", weight: 0.96, domain: "presence" },
+    {
+      expertId: "exp_isa",
+      name: "ISA Presence & Persona Expert",
+      weight: 0.96,
+      domain: "presence",
+    },
     { expertId: "exp_argus", name: "ARGUS Security Sentinel", weight: 0.99, domain: "security" },
   ];
 
@@ -193,13 +197,25 @@ export class MoeEngine {
     const t0 = performance.now();
     const normalized = input.toLowerCase();
     const selected: import("./types").ExpertRoute[] = [];
-    if (normalized.includes("seguridad") || normalized.includes("auth") || normalized.includes("token")) {
+    if (
+      normalized.includes("seguridad") ||
+      normalized.includes("auth") ||
+      normalized.includes("token")
+    ) {
       selected.push(this.experts.find((e) => e.expertId === "exp_argus")!);
     }
-    if (normalized.includes("epistem") || normalized.includes("fuente") || normalized.includes("verdad")) {
+    if (
+      normalized.includes("epistem") ||
+      normalized.includes("fuente") ||
+      normalized.includes("verdad")
+    ) {
       selected.push(this.experts.find((e) => e.expertId === "exp_sophia")!);
     }
-    if (normalized.includes("ejecuta") || normalized.includes("herramienta") || normalized.includes("tool")) {
+    if (
+      normalized.includes("ejecuta") ||
+      normalized.includes("herramienta") ||
+      normalized.includes("tool")
+    ) {
       selected.push(this.experts.find((e) => e.expertId === "exp_orion")!);
     }
     if (selected.length === 0) {

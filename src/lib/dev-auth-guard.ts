@@ -31,7 +31,7 @@ export function isDevAuthAction(action: string): action is DevAuthAction {
  * staging), o null si puede continuar (desarrollo).
  */
 export function devSurfaceNotFound(): Response | null {
-  let productionLike = true;
+  let productionLike: boolean;
   try {
     productionLike = isProductionLike(resolveRuntimeMode(config().ISABELLA_RUNTIME_MODE));
   } catch {

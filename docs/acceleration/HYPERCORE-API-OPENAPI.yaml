@@ -1,0 +1,124 @@
+openapi: 3.1.0
+info:
+  title: Isabella Hypercore API
+  version: 1.0.0
+  description: >-
+    Contrato de referencia del plano de aceleración adaptativa. Integrar detrás de
+    autenticación y autorización server-side. Hypercore acelera, no autoriza.
+servers:
+  - url: https://isabella-mexa.vercel.app
+paths:
+  /api/v1/isabella/hypercore:
+    get:
+      operationId: hypercoreMetadata
+      summary: Metadatos de turbos, nitros e invariantes.
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Metadatos }
+        '401': { description: No autenticado }
+    post:
+      operationId: hypercoreRun
+      summary: Ejecuta el pipeline gobernado con adaptadores productivos.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, tenantId, prompt, risk]
+              properties:
+                requestId: { type: string, maxLength: 128 }
+                tenantId: { type: string, maxLength: 128 }
+                prompt: { type: string, minLength: 1, maxLength: 20000 }
+                risk: { enum: [low, medium, high, critical] }
+                deadlineMs: { type: integer, minimum: 100, maximum: 30000, default: 5000 }
+                maxOutputTokens: { type: integer, minimum: 1, maximum: 8192 }
+                allowSpeculativeDraft: { type: boolean, default: false }
+                op: { enum: [run, decide], default: run }
+      responses:
+        '200':
+          description: Respuesta aceptada tras superar los controles obligatorios.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HypercoreResult' }
+        '400': { description: Solicitud inválida }
+        '401': { description: No autenticado }
+        '403': { description: Política o permisos denegados }
+        '422': { description: Verificación fallida (fail-closed) }
+        '429': { description: Cuota excedida }
+        '503': { description: Adaptadores/verificador no disponibles; fallo cerrado }
+        '504': { description: Deadline agotado }
+  /api/v1/isabella/hypercore/decide:
+    post:
+      operationId: hypercoreDecide
+      summary: Devuelve la decisión del plano de aceleración (sin efectos secundarios).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                latencyBudgetMs: { type: integer, minimum: 0, maximum: 30000, default: 5000 }
+                complexityScore: { type: number, minimum: 0, maximum: 1 }
+                risk: { enum: [low, medium, high, critical] }
+                policyFingerprint: { type: string }
+      responses:
+        '200':
+          description: Decisión de modo y nitros.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HypercoreDecision' }
+        '400': { description: Señales inválidas }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    HypercoreDecision:
+      type: object
+      required: [ok, schema, decision]
+      properties:
+        ok: { type: boolean }
+        schema: { const: isabella.hypercore.decision.v1 }
+        decision:
+          type: object
+          required: [mode, turbos, activatedNitro, mandatoryGateRequired, governanceInvariant]
+          properties:
+            mode: { enum: [CRUISE, BOOST, HYPERBOOST] }
+            turbos:
+              type: array
+              items: { enum: [VECTOR, SPECULATIVE, VERITAS] }
+            activatedNitro:
+              type: array
+              items:
+                enum:
+                  - PREFIX_CACHE
+                  - SEMANTIC_CACHE
+                  - DRAFT_MODEL
+                  - PARALLEL_BRANCHES
+                  - VERIFIER_FANOUT
+                  - EARLY_EXIT
+            mandatoryGateRequired: { const: true }
+            earlyExitAllowed: { type: boolean }
+            governanceInvariant: { enum: [PRESERVED, VIOLATED] }
+    HypercoreResult:
+      type: object
+      required: [ok, mode, elapsedMs, checks, memoryHitCount, cache, traceId]
+      properties:
+        ok: { type: boolean }
+        answer: { type: string }
+        mode: { enum: [CRUISE, BOOST, HYPERBOOST] }
+        elapsedMs: { type: number, minimum: 0 }
+        checks: { type: object, additionalProperties: true }
+        memoryHitCount: { type: integer, minimum: 0 }
+        cache: { enum: [hit, miss, disabled] }
+        decision: { $ref: '#/components/schemas/HypercoreDecision' }
+        reason: { type: string }
+        traceId: { type: string }

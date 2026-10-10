@@ -4,7 +4,7 @@
  * Provides connection pooling, migration runner, and health checks
  * for PostgreSQL / Neon / Supabase database authorities.
  */
-import pg from "pg";
+import pg, { type QueryResultRow } from "pg";
 import { config } from "../config";
 
 let pool: pg.Pool | null = null;
@@ -34,6 +34,33 @@ export function getPgPool(): pg.Pool | null {
   }
 }
 
+/**
+ * Consulta parametrizada. Devuelve las filas; lanza si el pool no está
+ * disponible (fail-closed: nunca degrada a un fallback en memoria).
+ */
+export async function pgQuery<T extends QueryResultRow = Record<string, unknown>>(
+  text: string,
+  params?: unknown[],
+): Promise<T[]> {
+  const p = getPgPool();
+  if (!p) throw new Error("PostgreSQL unavailable");
+
+  const result = await p.query<T>(text, params);
+  return result.rows;
+}
+
+/**
+ * Ejecución parametrizada (INSERT/UPDATE/DELETE). Devuelve el número de
+ * filas afectadas; lanza si el pool no está disponible.
+ */
+export async function pgExecute(text: string, params?: unknown[]): Promise<{ rowCount: number }> {
+  const p = getPgPool();
+  if (!p) throw new Error("PostgreSQL unavailable");
+
+  const result = await p.query(text, params);
+  return { rowCount: result.rowCount ?? 0 };
+}
+
 export async function runPostgresMigration(sql: string): Promise<boolean> {
   const p = getPgPool();
   if (!p) return false;
@@ -56,7 +83,11 @@ export async function runPostgresMigration(sql: string): Promise<boolean> {
   }
 }
 
-export async function pgHealthCheck(): Promise<{ ok: boolean; latencyMs?: number; error?: string }> {
+export async function pgHealthCheck(): Promise<{
+  ok: boolean;
+  latencyMs?: number;
+  error?: string;
+}> {
   const p = getPgPool();
   if (!p) {
     return { ok: false, error: "DATABASE_URL_NOT_CONFIGURED" };

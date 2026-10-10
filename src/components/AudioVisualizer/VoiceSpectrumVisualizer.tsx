@@ -1,18 +1,14 @@
-import React, { useEffect, useRef, useState, useCallback, useId } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Activity,
   Radio,
   Waves,
   Sparkles,
-  Volume2,
-  VolumeX,
   Gauge,
-  Sliders,
   Play,
   Square,
   Maximize2,
   Minimize2,
-  Mic,
 } from "lucide-react";
 import { useCrown } from "../../context/CrownContext";
 import { getAudioContextConstructor } from "../../utils/audioContext";
@@ -79,7 +75,7 @@ export const VoiceSpectrumVisualizer: React.FC<VoiceSpectrumVisualizerProps> = (
   showControls = true,
 }) => {
   const { state } = useCrown();
-  const { isSpeaking, isListening, voiceSettings } = state;
+  const { isSpeaking, isListening } = state;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 

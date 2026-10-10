@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  Keyboard,
-  X,
-  Terminal,
-  Mic,
-  Volume2,
-  Sparkles,
-  Zap,
-  Layers,
-  Search,
-  Check,
-  Command,
-} from "lucide-react";
+import { Keyboard, X, Terminal, Mic, Sparkles, Zap, Layers, Search, Command } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";
-import { useCrown } from "../../context/CrownContext";
+import "../../context/CrownContext";
 
 interface ShortcutItem {
   keys: string[];

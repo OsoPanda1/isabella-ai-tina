@@ -5,10 +5,12 @@
  * Every audit record is chained to the previous log hash and sealed with HMAC-SHA3-512.
  */
 import { createHash } from "node:crypto";
-import { createAuditSeal } from "../sovereign-audit";
+import "../sovereign-audit";
 import { canonicalize } from "../igds/canonical";
 
-export type AuditSeverity = "info" | "warning" | "error" | "critical";
+import type { AuditSeverity } from "../domains/audit-event";
+
+export type { AuditSeverity };
 
 export interface AuditEventRecord {
   id: string;
@@ -29,8 +31,12 @@ export interface AuditEventRecord {
 }
 
 export interface AuditRepository {
-  append(event: Omit<AuditEventRecord, "id" | "verification_hash" | "previous_log_hash">): Promise<AuditEventRecord>;
-  verifyChain(tenantId: string): Promise<{ valid: boolean; recordCount: number; brokenAt?: string }>;
+  append(
+    event: Omit<AuditEventRecord, "id" | "verification_hash" | "previous_log_hash">,
+  ): Promise<AuditEventRecord>;
+  verifyChain(
+    tenantId: string,
+  ): Promise<{ valid: boolean; recordCount: number; brokenAt?: string }>;
   listRecent(tenantId: string, limit?: number): Promise<readonly AuditEventRecord[]>;
 }
 
@@ -75,7 +81,9 @@ class InMemoryAuditRepository implements AuditRepository {
     return record;
   }
 
-  async verifyChain(tenantId: string): Promise<{ valid: boolean; recordCount: number; brokenAt?: string }> {
+  async verifyChain(
+    tenantId: string,
+  ): Promise<{ valid: boolean; recordCount: number; brokenAt?: string }> {
     const tenantLogs = this.logs.filter((l) => l.tenant_id === tenantId);
     let previous = "GENESIS";
 

@@ -23,7 +23,7 @@ export function mapSupabaseRole(rawRole: unknown): Role {
   }
 
   if (normalized === "authenticated" || normalized === "user") {
-    return "member";
+    return "Guest";
   }
 
   return "Guest";

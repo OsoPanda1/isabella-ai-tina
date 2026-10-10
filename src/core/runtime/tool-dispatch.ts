@@ -53,8 +53,8 @@ export function authorizeToolCall(
 
 export async function resolveToolCall(
   tc: { name: string; arguments: Record<string, unknown> },
-  userId: string,
-  tenantId: string,
+  _userId: string,
+  _tenantId: string,
 ): Promise<ToolDispatchResult> {
   const auth = authorizeToolCall(tc.name, "low");
   if (!auth.allowed) {

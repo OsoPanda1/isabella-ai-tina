@@ -447,7 +447,7 @@ export class PrincipalContext {
 }
 
 export function withSovereignAuth(
-  resource: Resource,
+  resource: Resource | "chat",
   action: Action,
   handler: (context: PrincipalContext, request: Request, body?: unknown) => Promise<Response>,
 ) {

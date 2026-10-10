@@ -1,94 +1,158 @@
 /**
- * NCUA SOPHIA Epistemics (src/lib/ncua/sophia-epistemics.ts)
- * -------------------------------------------------------------
- * Canonical FGAIS NCUA v2.0 Epistemic Taxonomy:
- * E0 — Axiom / Definitional truth
- * E1 — Empirically verified fact with peer source
- * E2 — Contextual inference (logical deduction)
- * E3 — Synthetic hypothesis / conjecture
- * E4 — Unfounded or contradictory claim
+ * NCUA v2.0 — SOPHIA Epistemics (niveles E0–E4).
+ *
+ * Clasifica el texto por nivel epistemológico: E0 juicio personal, E1
+ * correlación, E2 evidencia secundaria, E3 experimento reproducible y E4
+ * prueba axiomática. Los niveles alimentan la bonificación de evidencia del
+ * Índice de Robustez Epistémica (ERI).
  */
 
-export type EpistemicLevel =
-  | "E0_AXIOM"
-  | "E1_VERIFIED"
-  | "E2_INFERRED"
-  | "E3_HYPOTHETICAL"
-  | "E4_UNFOUNDED";
+import { EVIDENCE_BONUS_PER_LEVEL } from "./eri";
 
-export interface EpistemicClassification {
-  level: EpistemicLevel;
-  confidence: number;
-  sourcesCount: number;
-  caveatRequired: boolean;
-  citationRequired: boolean;
-  notes?: string;
+export type SophiaTier = 0 | 1 | 2 | 3 | 4;
+
+export interface SophiaLevelDefinition {
+  tier: SophiaTier;
+  labelEs: string;
+  labelEn: string;
+  keywords: readonly string[];
 }
 
-export function classifySophiaEpistemic(claim: string, sourcesCount: number = 0): EpistemicClassification {
-  const normalized = claim.trim().toLowerCase();
+export const SOPHIA_LEVELS: readonly SophiaLevelDefinition[] = [
+  {
+    tier: 0,
+    labelEs: "E0 — Juicio personal",
+    labelEn: "E0 — Personal opinion",
+    keywords: [
+      "opino",
+      "creo que",
+      "me parece",
+      "a mi parecer",
+      "en mi opinión",
+      "siento que",
+      "prefiero",
+      "i think",
+      "in my opinion",
+      "i believe",
+    ],
+  },
+  {
+    tier: 1,
+    labelEs: "E1 — Correlación",
+    labelEn: "E1 — Correlation",
+    keywords: [
+      "correlación",
+      "correlaciona",
+      "asociación",
+      "tendencia",
+      "sugiere",
+      "indicaría",
+      "podría indicar",
+      "mayoría",
+      "suele",
+      "patrón",
+      "correlation",
+      "trend",
+      "suggests",
+      "usually",
+    ],
+  },
+  {
+    tier: 2,
+    labelEs: "E2 — Evidencia secundaria",
+    labelEn: "E2 — Secondary evidence",
+    keywords: [
+      "estudio",
+      "evidencia",
+      "datos estructurados",
+      "encuesta",
+      "muestra",
+      "medición",
+      "reporte",
+      "fuente",
+      "cita",
+      "bibliografía",
+      "investigación",
+      "study",
+      "survey",
+      "sample",
+      "source",
+      "findings",
+      "report",
+    ],
+  },
+  {
+    tier: 3,
+    labelEs: "E3 — Experimento reproducible",
+    labelEn: "E3 — Reproducible experiment",
+    keywords: [
+      "experimento",
+      "reproducible",
+      "algoritmo",
+      "método",
+      "métricas",
+      "benchmark",
+      "medible",
+      "protocolo",
+      "replicable",
+      "resultados publicados",
+      "experiment",
+      "reproducible",
+      "method",
+      "metrics",
+      "benchmark",
+      "protocol",
+    ],
+  },
+  {
+    tier: 4,
+    labelEs: "E4 — Prueba axiomática",
+    labelEn: "E4 — Axiomatic proof",
+    keywords: [
+      "teorema",
+      "axioma",
+      "ley física",
+      "demostración",
+      "ecuación",
+      "prueba matemática",
+      "invariante",
+      "theorem",
+      "axiom",
+      "proof",
+      "physical law",
+      "equation",
+    ],
+  },
+];
 
-  // E0: Axiomatic mathematical or definitional truths
-  if (
-    normalized.includes("por definición") ||
-    normalized.includes("axioma") ||
-    normalized.includes("identidad fundamental")
-  ) {
-    return {
-      level: "E0_AXIOM",
-      confidence: 1.0,
-      sourcesCount,
-      caveatRequired: false,
-      citationRequired: false,
-      notes: "Axiomatic baseline.",
-    };
+export interface SophiaObservation {
+  tier: SophiaTier;
+  label: string;
+  matches: string[];
+}
+
+export interface SophiaClassification {
+  level: SophiaTier;
+  label: string;
+  score: number;
+  observances: SophiaObservation[];
+}
+
+export function classifySophiaLevel(text: string): SophiaClassification {
+  const normalized = text.toLowerCase();
+  const observances: SophiaObservation[] = [];
+  let maxTier: SophiaTier = 0;
+  for (const definition of SOPHIA_LEVELS) {
+    const matches = definition.keywords.filter((keyword) => normalized.includes(keyword));
+    if (matches.length === 0) continue;
+    observances.push({ tier: definition.tier, label: definition.labelEs, matches });
+    if (definition.tier > maxTier) maxTier = definition.tier;
   }
-
-  // E1: Verified with citations
-  if (sourcesCount >= 2) {
-    return {
-      level: "E1_VERIFIED",
-      confidence: 0.98,
-      sourcesCount,
-      caveatRequired: false,
-      citationRequired: true,
-      notes: "Verified with empirical sources.",
-    };
-  }
-
-  // E2: Inferred with single source or structured deduction
-  if (sourcesCount === 1 || normalized.includes("por lo tanto") || normalized.includes("concluye")) {
-    return {
-      level: "E2_INFERRED",
-      confidence: 0.85,
-      sourcesCount,
-      caveatRequired: true,
-      citationRequired: true,
-      notes: "Contextual inference from available evidence.",
-    };
-  }
-
-  // E3: Hypothesis
-  if (normalized.includes("hipótesis") || normalized.includes("posiblemente") || normalized.includes("teoría")) {
-    return {
-      level: "E3_HYPOTHETICAL",
-      confidence: 0.65,
-      sourcesCount,
-      caveatRequired: true,
-      citationRequired: false,
-      notes: "Hypothetical synthesis.",
-    };
-  }
-
-  // E4: Unfounded / Conflict
+  const top = SOPHIA_LEVELS[maxTier] ?? SOPHIA_LEVELS[0];
   return {
-    level: "E4_UNFOUNDED",
-    confidence: 0.3,
-    sourcesCount: 0,
-    caveatRequired: true,
-    citationRequired: false,
-    notes: "Unverified claim without empirical support.",
+    level: maxTier,
+    label: top.labelEs,
+    score: maxTier * EVIDENCE_BONUS_PER_LEVEL,
+    observances,
   };
 }
-
-export default { classifySophiaEpistemic };

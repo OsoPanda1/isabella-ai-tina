@@ -1,0 +1,63 @@
+{
+  "schema": "isabella.verify.environment-manifest",
+  "schemaVersion": 1,
+  "project": {
+    "name": "tanamv-isabella-ai-genesis",
+    "version": "4.3.3"
+  },
+  "packageManager": {
+    "name": "pnpm",
+    "version": "10.34.5",
+    "lockfile": "pnpm-lock.yaml",
+    "lockfiles": [
+      "pnpm-lock.yaml"
+    ]
+  },
+  "runtime": {
+    "node": "24.x",
+    "nvmrc": "24.11.0"
+  },
+  "framework": {
+    "kind": "tanstack-start",
+    "label": "TanStack Start",
+    "markers": [
+      "react",
+      "react-dom",
+      "tanstack-react-query",
+      "tanstack-react-router",
+      "tanstack-react-start",
+      "vite"
+    ]
+  },
+  "scripts": {
+    "install": {
+      "script": null,
+      "command": "pnpm install --frozen-lockfile"
+    },
+    "typecheck": {
+      "script": "typecheck",
+      "command": "pnpm typecheck"
+    },
+    "lint": {
+      "script": "lint",
+      "command": "pnpm lint"
+    },
+    "test": {
+      "script": "test",
+      "command": "pnpm test"
+    },
+    "build": {
+      "script": "build",
+      "command": "pnpm build"
+    },
+    "verify": {
+      "script": "verify:lock",
+      "command": "pnpm verify:lock"
+    }
+  },
+  "integrity": {
+    "packageJsonSha256": "0dd710003f71fcdc5c5aada86852f3ad94f095f59bea3ae2d766daf18c83a0ea",
+    "lockfileSha256": "ff14ef3c1470fb63c0af35f865e0261268a3a6be307af170bb0201a4781a6b4d",
+    "contentHash": "c94a87835caf9e56e0f53c4c3557d3d03991565996c358b657a096ddccc69f8d"
+  }
+}

@@ -222,6 +222,18 @@ export function isStorageProviderExplicitlyDeclared(source: RawEnv = process.env
     source.ISABELLA_STORAGE_PROVIDER.trim() !== ""
   );
 }
+/**
+ * Señales de plataforma y de modo runtime (públicas, no sensibles).
+ * Existe para que `runtime-mode.ts` resuelva el modo sin tocar `process.env`
+ * fuera de este módulo: son señales de despliegue, no configuración validada
+ * por el esquema (por eso no se derivan de `config()` ni alteran el spawn).
+ */
+export function runtimeModeSignal(
+  key: "ISABELLA_RUNTIME_MODE" | "NODE_ENV" | "VERCEL" | "VITEST",
+): string | undefined {
+  return process.env[key];
+}
+
 export function isCiEnvironment(source: RawEnv = process.env): boolean {
   return source.GITHUB_ACTIONS === "true" || source.CI === "true";
 }

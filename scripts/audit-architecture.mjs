@@ -5,7 +5,7 @@ import { extname, join, resolve } from "node:path";
 
 const root = process.cwd();
 const codeExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".cjs"]);
-const ignored = new Set(["node_modules", ".git", "dist", ".output", "coverage"]);
+const ignored = new Set(["node_modules", ".git", "dist", ".output", ".vercel", "coverage"]);
 
 function walk(dir) {
   const files = [];

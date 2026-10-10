@@ -3,7 +3,7 @@
  * State machine events, ontology nodes/edges, civilizational graph.
  * Federation: F-01 Knowledge
  */
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { appendBlock } from "./bookpi.server";
 
 // ── Ontology ──────────────────────────────────────────────────────────────────

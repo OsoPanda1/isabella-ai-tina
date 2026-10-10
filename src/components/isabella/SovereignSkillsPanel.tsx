@@ -243,7 +243,7 @@ export function SovereignSkillsPanel() {
       };
     } else if (id === "SHIPPING_AND_LAUNCH" || id === "shipping-and-launch") {
       defaultInput = {
-        releaseVersion: "v4.2.0-sovereign",
+        releaseVersion: "v4.3.3-sovereign",
         targetEnv: "production",
       };
     } else if (id === "FIRECRAWL_LEAD_RESEARCH" || id === "firecrawl-lead-research") {

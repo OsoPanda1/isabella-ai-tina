@@ -40,6 +40,7 @@ export function evaluateProductionAuthorities(): ProductionAuditReport {
   const production = isProductionLike(cfg.ISABELLA_RUNTIME_MODE);
 
   const identityConfigured = present(cfg.AUTH_JWT_SECRET) || present(cfg.SUPABASE_URL);
+  const policyConfigured = present(cfg.CROWN_POLICY_SIGNING_KEY) && present(cfg.AEGIS_AUDIT_SECRET);
   const persistenceConfigured = present(cfg.DATABASE_URL);
 
   const evidenceConfigured =
@@ -65,10 +66,11 @@ export function evaluateProductionAuthorities(): ProductionAuditReport {
     },
     {
       name: "POLICY_AUTHORITY",
-      configured: true,
-      status: "ACTIVE",
+      configured: policyConfigured,
+      status: policyConfigured || !production ? "ACTIVE" : "MISSING",
       requiredInProduction: true,
-      details: "CROWN/ARGUS ejecuta evaluación determinista antes de la ejecución sensible.",
+      details:
+        "CROWN/ARGUS ejecuta evaluación determinista antes de la ejecución sensible; requiere CROWN_POLICY_SIGNING_KEY y AEGIS_AUDIT_SECRET.",
     },
     {
       name: "PERSISTENCE_AUTHORITY",

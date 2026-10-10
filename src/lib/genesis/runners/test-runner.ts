@@ -371,7 +371,7 @@ export class TestExecutor {
     }
   }
 
-  private parseTestOutput(stdout: string, stderr: string, testFile: TestFile): TestResult[] {
+  private parseTestOutput(stdout: string, _stderr: string, testFile: TestFile): TestResult[] {
     const results: TestResult[] = [];
 
     try {
@@ -405,15 +405,7 @@ export class TestExecutor {
 }
 
 export class ConcurrencyTestRunner {
-  private config: Required<TestRunnerConfig>;
-
-  constructor(config: TestRunnerConfig = {}) {
-    this.config = {
-      rootDir: config.rootDir ?? process.cwd(),
-      timeoutMs: config.timeoutMs ?? 300000,
-      maxConcurrency: config.maxConcurrency ?? 100,
-    };
-  }
+  constructor(_config: TestRunnerConfig = {}) {}
 
   async runConcurrencyTest(testConfig: ConcurrencyTestConfig): Promise<ConcurrencyTestResult> {
     await testConfig.setup();

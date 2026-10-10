@@ -9,7 +9,6 @@ import {
   Presentation,
   ShieldCheck,
   Volume2,
-  VolumeX,
   Play,
   Square,
   ChevronLeft,
@@ -19,17 +18,10 @@ import {
   Copy,
   Download,
   Sparkles,
-  Layers,
-  MapPin,
-  Cpu,
-  Shield,
   Fingerprint,
   FileCheck,
-  Terminal as TerminalIcon,
   Maximize2,
   Minimize2,
-  Brain,
-  Zap,
   Activity,
   Network,
 } from "lucide-react";
@@ -71,7 +63,7 @@ const slideTransitionVariants: Variants = {
 };
 
 export const PresentationView: React.FC = () => {
-  const { state, speakText, stopSpeech, setActiveView } = useCrown();
+  const { state, speakText, stopSpeech } = useCrown();
   const { speechSynthesisEnabled, isSpeaking } = state;
 
   const [mode, setMode] = useState<PresentationMode>("dossier");

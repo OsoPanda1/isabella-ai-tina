@@ -2,12 +2,11 @@ import { Router } from "express";
 import { authenticate, requireRole, requireScope, currentPrincipal } from "./auth.server";
 import { metrics, readAudit } from "./atlas-kernel.server";
 import { evaluatePolicy, anubisStats } from "./anubis.server";
-import { readLedger, ledgerStats, verifyLedger } from "./bookpi.server";
+import { readLedger, ledgerStats } from "./bookpi.server";
 import {
   isabellaStats,
   getRecommendations,
   moderateContent,
-  getEmotionalState,
   updateEmotionalState,
   searchEpisodes,
 } from "./isabella.server";
@@ -33,7 +32,7 @@ import { getQuantumReflection } from "./quantum-bridge.server";
 
 export const atlasRouter = Router();
 
-atlasRouter.get("/api/atlas/getCockpitSnapshot", async (req, res) => {
+atlasRouter.get("/api/atlas/getCockpitSnapshot", async (_req, res) => {
   res.json({
     now: new Date().toISOString(),
     metrics: metrics.snapshot(),
@@ -47,7 +46,7 @@ atlasRouter.get("/api/atlas/getCockpitSnapshot", async (req, res) => {
   });
 });
 
-atlasRouter.get("/api/atlas/getFederationGraph", async (req, res) => {
+atlasRouter.get("/api/atlas/getFederationGraph", async (_req, res) => {
   res.json(getGraph(200));
 });
 
@@ -71,7 +70,7 @@ atlasRouter.post(
   },
 );
 
-atlasRouter.post("/api/atlas/getLedger", authenticate, requireScope("ledger:read"), (req, res) => {
+atlasRouter.post("/api/atlas/getLedger", authenticate, requireScope("ledger:read"), (_req, res) => {
   res.json(readLedger(50));
 });
 
@@ -127,7 +126,7 @@ atlasRouter.post("/api/atlas/setEmotional", authenticate, requireRole("operator"
   res.json(updateEmotionalState(req.body));
 });
 
-atlasRouter.get("/api/atlas/getEconomySnapshot", (req, res) => {
+atlasRouter.get("/api/atlas/getEconomySnapshot", (_req, res) => {
   res.json({ products: listProducts(), orders: listOrders(), stats: economyStats() });
 });
 
@@ -150,7 +149,7 @@ atlasRouter.post("/api/atlas/mintUserCredits", authenticate, requireRole("admin"
   res.json(mintCredits(currentPrincipal(req).sub, req.body.amount));
 });
 
-atlasRouter.get("/api/atlas/getDaoSnapshot", (req, res) => {
+atlasRouter.get("/api/atlas/getDaoSnapshot", (_req, res) => {
   res.json({ namespaces: listNamespaces(), proposals: listProposals(), stats: daoStats() });
 });
 
@@ -201,12 +200,12 @@ atlasRouter.post(
   },
 );
 
-atlasRouter.get("/api/registry/rpcRegistrySnapshot", (req, res) => {
+atlasRouter.get("/api/registry/rpcRegistrySnapshot", (_req, res) => {
   res.json({ documents: listDocuments(), stats: registryStats() });
 });
 
 // Telemetry
-atlasRouter.get("/api/telemetry/getTelemetrySnapshot", (req, res) => {
+atlasRouter.get("/api/telemetry/getTelemetrySnapshot", (_req, res) => {
   res.json({ metrics: metrics.snapshot() });
 });
 
@@ -220,6 +219,6 @@ atlasRouter.post(
   },
 );
 
-atlasRouter.get("/api/atlas/quantumReflection", (req, res) => {
+atlasRouter.get("/api/atlas/quantumReflection", (_req, res) => {
   res.json(getQuantumReflection());
 });

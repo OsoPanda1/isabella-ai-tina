@@ -1,4 +1,4 @@
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import type { Opportunity, OpportunityCategory, Opportunity as OpportunityType } from "../types";
 
 /* ========================================================================== *

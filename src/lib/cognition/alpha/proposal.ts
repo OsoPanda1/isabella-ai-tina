@@ -107,7 +107,7 @@ export class ProposalEngine {
     return audiences[intent] ?? ["user"];
   }
 
-  private extractAssumptions(input: ProposalInput): string[] {
+  private extractAssumptions(_input: ProposalInput): string[] {
     return [
       "Available information is accurate and up-to-date",
       "User has necessary permissions for requested actions",
@@ -133,7 +133,7 @@ export class ProposalEngine {
     return `Initial response addressing: ${input.query.slice(0, 100)}`;
   }
 
-  private defineMetrics(input: ProposalInput): string[] {
+  private defineMetrics(_input: ProposalInput): string[] {
     return [
       "User satisfaction score",
       "Response accuracy",

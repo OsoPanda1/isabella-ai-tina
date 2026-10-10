@@ -1,153 +1,192 @@
 /**
- * OpenTelemetry Exporter & Telemetry Pipeline (src/lib/otel-exporter.ts)
- * -------------------------------------------------------------
- * Provides high-assurance, durable OTLP metric and span batching.
- * Formats telemetry according to OpenTelemetry v1 specifications.
+ * EXPORTADOR OTLP DURABLE (src/lib/otel-exporter.ts)
+ * -----------------------------------------------------------------
+ * Puente real: Telemetría → OTLP/HTTP → Collector → backend durable
+ * → SIEM/observabilidad. El buffer en memoria (500 registros) queda
+ * degradado a fallback local de último recurso, NUNCA como auditoría.
+ *
+ * Diseño:
+ *  - `enqueueOtelLog`: encola sin bloquear; jamás lanza (fail-open solo
+ *    para telemetría: un fallo de observabilidad nunca rompe requests).
+ *  - `flushOtelOutbox`: POST OTLP/HTTP JSON a
+ *    `${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/logs` con timeout de 3s.
+ *  - Auto-flush cada 5s (timer unref) + flush en `getLogs` si >50 pendientes.
+ *  - Sin endpoint configurado: no-op documentado (desarrollo local).
  */
-import { isProductionLike } from "./runtime-mode";
 
-export interface OtelSpan {
+import { config } from "./config";
+
+export interface OtelQueuedLog {
+  timestamp: string;
   traceId: string;
-  spanId: string;
-  parentSpanId?: string;
-  name: string;
-  startTimeUnixNano: string;
-  endTimeUnixNano: string;
-  attributes: Record<string, string | number | boolean>;
-  status: {
-    code: 0 | 1 | 2; // UNSET | OK | ERROR
-    message?: string;
-  };
+  correlationId: string;
+  moduleId: string;
+  coreId: string;
+  eventName: string;
+  level: string;
+  payload: Record<string, unknown>;
 }
 
-export interface OtelBatchResult {
-  success: boolean;
-  exportedCount: number;
-  statusCode: number;
+export interface OtelFlushResult {
+  attempted: boolean;
+  delivered: boolean;
+  count: number;
   error?: string;
 }
 
-export class OtelExporter {
-  private endpoint: string;
-  private buffer: OtelSpan[] = [];
-  private readonly maxBufferSize: number = 1000;
+const outbox: OtelQueuedLog[] = [];
+const FLUSH_INTERVAL_MS = 5000;
+const FETCH_TIMEOUT_MS = 3000;
+let timerStarted = false;
 
-  constructor(endpoint?: string) {
-    this.endpoint = endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318/v1/traces";
+function endpoint(): string | undefined {
+  try {
+    const url = config().OTEL_EXPORTER_OTLP_ENDPOINT;
+    return url && url.length > 0 ? url.replace(/\/$/, "") : undefined;
+  } catch {
+    return undefined;
   }
+}
 
-  public recordSpan(span: OtelSpan): void {
-    this.buffer.push(span);
-    if (this.buffer.length > this.maxBufferSize) {
-      this.buffer.shift();
+function serviceName(): string {
+  try {
+    return config().OTEL_SERVICE_NAME || "isabella-ai";
+  } catch {
+    return "isabella-ai";
+  }
+}
+
+function toUnixNano(iso: string): string {
+  const ms = Date.parse(iso);
+  const safe = Number.isFinite(ms) ? ms : Date.now();
+  return String(BigInt(safe) * 1_000_000n);
+}
+
+function attribute(key: string, value: unknown): { key: string; value: { stringValue: string } } {
+  let rendered: string;
+  if (typeof value === "string") rendered = value;
+  else {
+    try {
+      rendered = JSON.stringify(value) ?? "null";
+    } catch {
+      rendered = "[unserializable]";
     }
   }
+  return { key, value: { stringValue: rendered.slice(0, 4000) } };
+}
 
-  public getBufferedSpans(): readonly OtelSpan[] {
-    return [...this.buffer];
+/** Encola un log para exportación durable. Nunca lanza. */
+export function enqueueOtelLog(log: OtelQueuedLog): void {
+  try {
+    outbox.push(log);
+    startTimer();
+    if (outbox.length >= 50) void flushOtelOutbox();
+  } catch {
+    // Telemetría fail-open: nunca romper el request por observabilidad.
   }
+}
 
-  public clearBuffer(): void {
-    this.buffer = [];
+function startTimer(): void {
+  if (timerStarted) return;
+  timerStarted = true;
+  try {
+    const timer = setInterval(() => {
+      void flushOtelOutbox();
+    }, FLUSH_INTERVAL_MS);
+    // No retener el proceso por telemetría (tests, CLI, serverless).
+    (timer as unknown as { unref?: () => void }).unref?.();
+  } catch {
+    timerStarted = false;
   }
+}
 
-  public formatOtlpJson(spans: OtelSpan[]): Record<string, unknown> {
+/** Envía lo encolado al Collector OTLP/HTTP. Nunca lanza. */
+export async function flushOtelOutbox(): Promise<OtelFlushResult> {
+  const batch = outbox.splice(0, outbox.length);
+  if (batch.length === 0) return { attempted: false, delivered: false, count: 0 };
+
+  const url = endpoint();
+  if (!url) {
+    // Sin collector configurado: se descarta el lote (el buffer en memoria
+    // conserva los últimos 500 para depuración local). Documentado, no silente.
     return {
-      resourceSpans: [
+      attempted: false,
+      delivered: false,
+      count: batch.length,
+      error: "no-endpoint",
+    };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const body = {
+      resourceLogs: [
         {
           resource: {
             attributes: [
-              { key: "service.name", value: { stringValue: "isabella-ai-genesis" } },
-              { key: "service.version", value: { stringValue: "4.3.3" } },
-              { key: "deployment.environment", value: { stringValue: process.env.NODE_ENV || "production" } },
+              attribute("service.name", serviceName()),
+              attribute("service.version", "v4.2.0"),
             ],
           },
-          scopeSpans: [
+          scopeLogs: [
             {
-              scope: {
-                name: "isabella.runtime",
-                version: "4.3.3",
-              },
-              spans: spans.map((span) => ({
-                traceId: span.traceId,
-                spanId: span.spanId,
-                parentSpanId: span.parentSpanId || "",
-                name: span.name,
-                startTimeUnixNano: span.startTimeUnixNano,
-                endTimeUnixNano: span.endTimeUnixNano,
-                attributes: Object.entries(span.attributes).map(([k, v]) => ({
-                  key: k,
-                  value:
-                    typeof v === "string"
-                      ? { stringValue: v }
-                      : typeof v === "number"
-                        ? { intValue: v }
-                        : { boolValue: v },
-                })),
-                status: span.status,
+              scope: { name: "isabella-telemetry" },
+              logRecords: batch.map((log) => ({
+                timeUnixNano: toUnixNano(log.timestamp),
+                severityText: log.level.toUpperCase(),
+                body: {
+                  stringValue: `${log.moduleId}:${log.coreId}:${log.eventName}`,
+                },
+                attributes: [
+                  attribute("isabella.trace_id", log.traceId),
+                  attribute("isabella.correlation_id", log.correlationId),
+                  attribute("isabella.module", log.moduleId),
+                  attribute("isabella.core", log.coreId),
+                  attribute("isabella.event", log.eventName),
+                  attribute("isabella.payload", log.payload),
+                ],
               })),
             },
           ],
         },
       ],
     };
-  }
-
-  public async exportBatch(spans?: OtelSpan[]): Promise<OtelBatchResult> {
-    const toExport = spans ?? [...this.buffer];
-    if (toExport.length === 0) {
-      return { success: true, exportedCount: 0, statusCode: 200 };
-    }
-
-    const payload = this.formatOtlpJson(toExport);
-
-    // In testing or local environments without active collector:
-    if (!isProductionLike() || !process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
-      this.clearBuffer();
+    const response = await fetch(`${url}/v1/logs`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
       return {
-        success: true,
-        exportedCount: toExport.length,
-        statusCode: 200,
+        attempted: true,
+        delivered: false,
+        count: batch.length,
+        error: `http-${response.status}`,
       };
     }
-
-    try {
-      const response = await fetch(this.endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        this.clearBuffer();
-        return {
-          success: true,
-          exportedCount: toExport.length,
-          statusCode: response.status,
-        };
-      }
-
-      return {
-        success: false,
-        exportedCount: 0,
-        statusCode: response.status,
-        error: `HTTP ${response.status}: ${await response.text()}`,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        exportedCount: 0,
-        statusCode: 503,
-        error: err instanceof Error ? err.message : String(err),
-      };
-    }
+    return { attempted: true, delivered: true, count: batch.length };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown";
+    return {
+      attempted: true,
+      delivered: false,
+      count: batch.length,
+      error: message,
+    };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
-export const otelExporter = new OtelExporter();
-
-export async function exportOtlpBatch(spans?: OtelSpan[]): Promise<OtelBatchResult> {
-  return otelExporter.exportBatch(spans);
+/** Solo tests: drena la cola sin red. */
+export function drainOtelOutboxForTests(): OtelQueuedLog[] {
+  return outbox.splice(0, outbox.length);
 }
 
-export default otelExporter;
+export const OTEL_EXPORTER = {
+  enqueue: enqueueOtelLog,
+  flush: flushOtelOutbox,
+  drainForTests: drainOtelOutboxForTests,
+};

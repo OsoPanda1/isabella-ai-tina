@@ -76,8 +76,13 @@ export async function ensureSessionToken(): Promise<string> {
     url?: string;
     error?: string;
   };
-  if (!response.ok || !payload.url)
-    throw new Error(payload.error || "ARGUS requiere una sesión OIDC válida.");
+  if (!response.ok || !payload.url) {
+    const detail =
+      payload.error || `El servidor rechazó la autorización OIDC (HTTP ${response.status}).`;
+    throw new Error(
+      `${detail} Inicia sesión con el proveedor OIDC configurado o habilita el flujo de desarrollo únicamente en un entorno local.`,
+    );
+  }
 
   return new Promise((resolve, reject) => {
     const popup = window.open(payload.url, "isabella-oidc", "width=520,height=720,resizable=yes");

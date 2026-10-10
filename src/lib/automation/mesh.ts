@@ -14,13 +14,7 @@ import {
   getAffectedChain,
   getDependencyChain,
 } from "./registry";
-import type {
-  AutomationNode,
-  AutomationStatus,
-  AutomationSeverity,
-  FailureEvent,
-  RepairChain,
-} from "./contracts";
+import type { AutomationStatus, AutomationSeverity, FailureEvent, RepairChain } from "./contracts";
 
 const log = createLogger("automation-mesh");
 

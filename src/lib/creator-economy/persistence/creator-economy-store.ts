@@ -23,7 +23,7 @@ import type {
   SkillExecution,
   SocialChannel,
 } from "../types";
-import type { AccountType, Currency, TransactionKind } from "../types";
+import type { AccountType, Currency } from "../types";
 
 type SqliteDatabase = BetterSqlite3.Database;
 

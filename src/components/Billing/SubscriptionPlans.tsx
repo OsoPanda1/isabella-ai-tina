@@ -7,7 +7,6 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
-  Zap,
 } from "lucide-react";
 import { authFetch } from "../../lib/auth-client";
 

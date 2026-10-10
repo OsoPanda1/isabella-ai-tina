@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Shield,
-  Search,
-  Play,
-  Copy,
-  Printer,
-  RefreshCw,
-  Lock,
-  Activity,
-  Check,
-  Clock,
-  Server,
-  Zap,
-} from "lucide-react";
+import { Shield, Search, Play, Printer, RefreshCw, Lock, Check, Server } from "lucide-react";
 import { soundManager } from "../../utils/soundEffects";
 import {
   territoryContextService,

@@ -1,19 +1,36 @@
 /**
  * Trusted Client IP Extractor
+ * -----------------------------------------------------------------
+ * Los consumidores reales envían dos formas de request: `IncomingMessage`
+ * (Node/HTTP) y `Request` (Fetch API de las rutas). Ambas se leen con la
+ * misma precedencia: x-forwarded-for → x-real-ip → socket / 127.0.0.1.
  */
 import type { IncomingMessage } from "node:http";
 
-export function getTrustedClientIp(req: IncomingMessage): string {
-  const forwardedFor = req.headers["x-forwarded-for"];
-  if (typeof forwardedFor === "string") {
+type ClientIpRequest = IncomingMessage | Request;
+
+function readHeader(req: ClientIpRequest, name: string): string | undefined {
+  if ("socket" in req) {
+    const value = req.headers[name];
+    return typeof value === "string" ? value : undefined;
+  }
+  return req.headers.get(name) ?? undefined;
+}
+
+export function getTrustedClientIp(req: ClientIpRequest): string {
+  const forwardedFor = readHeader(req, "x-forwarded-for");
+  if (forwardedFor) {
     const first = forwardedFor.split(",")[0]?.trim();
     if (first) return first;
   }
-  const realIp = req.headers["x-real-ip"];
-  if (typeof realIp === "string" && realIp.trim().length > 0) {
+  const realIp = readHeader(req, "x-real-ip");
+  if (realIp && realIp.trim().length > 0) {
     return realIp.trim();
   }
-  return req.socket?.remoteAddress || "127.0.0.1";
+  if ("socket" in req) return req.socket?.remoteAddress || "127.0.0.1";
+  return "127.0.0.1";
 }
+
+export { getTrustedClientIp as resolveTrustedClientIp };
 
 export default getTrustedClientIp;

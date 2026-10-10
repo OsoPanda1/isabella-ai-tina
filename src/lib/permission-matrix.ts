@@ -20,6 +20,8 @@ export const RESOURCES = [
   "user",
   "system",
   "data:personal",
+  "ledger",
+  "sandbox",
 ] as const;
 
 export type Resource = (typeof RESOURCES)[number];
@@ -33,6 +35,8 @@ export const ACTIONS = [
   "publish",
   "synthesize",
   "inference",
+  "verify",
+  "admin",
 ] as const;
 
 export type Action = (typeof ACTIONS)[number];

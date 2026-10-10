@@ -6,7 +6,6 @@ import { BookPiRepository, bookpiPostgresRepository } from "./bookpi-postgres-re
 export const bookpiDevRepository: BookPiRepository = bookpiPostgresRepository;
 export default bookpiDevRepository;
 
-
 import type { BlockPIBlock, LedgerCategory, LedgerStatus } from "../bookpi/types";
 import { createHash, randomInt } from "node:crypto";
 
@@ -37,9 +36,12 @@ class InMemoryBookpiDevRepository implements BookpiDevRepository {
     tokens: number;
     status?: LedgerStatus;
   }) {
-    if (!input.tenantId || !input.userId || !input.operation) return { success: false, error: "bookpi_input_required" };
-    if (!Number.isFinite(input.cost) || input.cost < 0) return { success: false, error: "cost_invalid" };
-    if (!Number.isFinite(input.tokens) || input.tokens < 0) return { success: false, error: "tokens_invalid" };
+    if (!input.tenantId || !input.userId || !input.operation)
+      return { success: false, error: "bookpi_input_required" };
+    if (!Number.isFinite(input.cost) || input.cost < 0)
+      return { success: false, error: "cost_invalid" };
+    if (!Number.isFinite(input.tokens) || input.tokens < 0)
+      return { success: false, error: "tokens_invalid" };
     const ledger = this.blocks.get(input.tenantId) ?? [];
     const previousHash = ledger.at(-1)?.blockHash ?? "GENESIS_BLOCK_HASH";
     const payload = {
@@ -66,12 +68,16 @@ class InMemoryBookpiDevRepository implements BookpiDevRepository {
     return { success: true, block };
   }
 
-  list(tenantId: string): BlockPIBlock[] { return [...(this.blocks.get(tenantId) ?? [])]; }
+  list(tenantId: string): BlockPIBlock[] {
+    return [...(this.blocks.get(tenantId) ?? [])];
+  }
 
   refund(tenantId: string, index: number, reason = "refund") {
     const original = this.list(tenantId).find((block) => block.index === index);
     if (!original) return { success: false, error: "BOOKPI_BLOCK_NOT_FOUND" };
-    if (this.list(tenantId).some((block) => block.operation.startsWith("REFUND_OF:" + index + ":"))) {
+    if (
+      this.list(tenantId).some((block) => block.operation.startsWith("REFUND_OF:" + index + ":"))
+    ) {
       return { success: false, error: "BOOKPI_REFUND_DUPLICATE" };
     }
     return this.append({
@@ -88,10 +94,12 @@ class InMemoryBookpiDevRepository implements BookpiDevRepository {
   verifyIntegrity(tenantId: string) {
     let previous = "GENESIS_BLOCK_HASH";
     for (const block of this.list(tenantId)) {
-      if (block.previousHash !== previous) return { success: false, error: "BOOKPI_CHAIN_BROKEN", corruptedIndex: block.index };
+      if (block.previousHash !== previous)
+        return { success: false, error: "BOOKPI_CHAIN_BROKEN", corruptedIndex: block.index };
       const { blockHash, ...payload } = block;
       const expected = createHash("sha3-512").update(JSON.stringify(payload), "utf8").digest("hex");
-      if (expected !== blockHash) return { success: false, error: "BOOKPI_HASH_MISMATCH", corruptedIndex: block.index };
+      if (expected !== blockHash)
+        return { success: false, error: "BOOKPI_HASH_MISMATCH", corruptedIndex: block.index };
       previous = blockHash;
     }
     return { success: true };

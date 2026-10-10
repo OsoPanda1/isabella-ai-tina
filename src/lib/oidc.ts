@@ -14,7 +14,9 @@ export function jwkToPem(jwk: Record<string, unknown>): string {
     });
     return keyObject.export({ format: "pem", type: "spki" }) as string;
   } catch (error) {
-    throw new Error(`Failed to convert JWK to PEM: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to convert JWK to PEM: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

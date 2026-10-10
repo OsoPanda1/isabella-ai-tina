@@ -3,7 +3,6 @@ import {
   Server,
   Shield,
   Database,
-  Terminal as TerminalIcon,
   Play,
   FileCode,
   CheckCircle2,
@@ -19,7 +18,6 @@ import {
   Globe,
   Cpu,
   Lock,
-  ArrowRight,
   FileText,
   Clock,
   Key,
@@ -28,7 +26,6 @@ import { soundManager } from "../../utils/soundEffects";
 import { ISABELLA_SQL_MIGRATION, SCHEMA_TABLES } from "../../data/isabellaMigrations";
 import { ISABELLA_BLUEPRINT } from "../../data/isabellaBlueprint";
 import {
-  IsabellaPerception,
   IsabellaDecision,
   IsabellaAuditLog,
   IsabellaMemoryItem,
@@ -52,7 +49,7 @@ type HubSubTab =
 export const IsabellaHubView: React.FC = () => {
   const [subTab, setSubTab] = useState<HubSubTab>("perception_runner");
   const [copiedSql, setCopiedSql] = useState(false);
-  const [copiedTrace, setCopiedTrace] = useState<string | null>(null);
+  const [, setCopiedTrace] = useState<string | null>(null);
 
   // Perception Runner State
   const [inputType, setInputType] = useState<IsabellaInputType>("chat");
@@ -60,7 +57,7 @@ export const IsabellaHubView: React.FC = () => {
     "¿Qué lugares patrimoniales puedo visitar en Real del Monte?",
   );
   const [riskSimulation, setRiskSimulation] = useState<"low" | "medium" | "high">("low");
-  const [selectedToolToRequest, setSelectedToolToRequest] = useState<string>("none");
+  const [selectedToolToRequest] = useState<string>("none");
   const [isRunningPerception, setIsRunningPerception] = useState(false);
   const [lastDecision, setLastDecision] = useState<IsabellaDecision | null>(null);
 
@@ -78,7 +75,7 @@ export const IsabellaHubView: React.FC = () => {
   const [auditFilter, setAuditFilter] = useState("");
   const [memories, setMemories] = useState<IsabellaMemoryItem[]>([]);
   const [activeMemoryScope, setActiveMemoryScope] = useState<IsabellaMemoryScope | "all">("all");
-  const [memorySearch, setMemorySearch] = useState("");
+  const [memorySearch] = useState("");
   const [tools, setTools] = useState<IsabellaTool[]>([]);
   const [selectedToolForSandbox, setSelectedToolForSandbox] =
     useState<string>("rdm_territory_query");

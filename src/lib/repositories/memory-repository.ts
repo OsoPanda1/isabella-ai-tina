@@ -13,6 +13,7 @@ import * as path from "node:path";
 import * as crypto from "node:crypto";
 import { config } from "@/lib/config";
 import { isProductionLike, resolveRuntimeMode } from "@/lib/runtime-mode";
+import { canonicalize } from "@/lib/igds/canonical";
 
 export type MemoryScope = "turn" | "session" | "project" | "territorial" | "historical";
 export type MemorySource = "user" | "system" | "tool" | "document";
@@ -224,7 +225,6 @@ export function createMemoryRepository(storePath: string = STORE_PATH) {
 export type MemoryRepository = ReturnType<typeof createMemoryRepository>;
 export const MEMORY_REPOSITORY = { create: createMemoryRepository };
 
-
 /**
  * Legacy SHA3-512 compatibility plane.
  *
@@ -261,7 +261,11 @@ export interface LegacyMemoryRepositoryV1 {
     provenance?: string;
     source?: string;
   }): Promise<LegacyMemoryRecordV1>;
-  query(tenantId: string, scope?: MemoryScope, limit?: number): Promise<readonly LegacyMemoryRecordV1[]>;
+  query(
+    tenantId: string,
+    scope?: MemoryScope,
+    limit?: number,
+  ): Promise<readonly LegacyMemoryRecordV1[]>;
   verifyChain(tenantId: string): Promise<{ valid: boolean; count: number; brokenAt?: string }>;
 }
 
@@ -295,23 +299,13 @@ class LegacySha3MemoryRepository implements LegacyMemoryRepositoryV1 {
     const release = await this.acquire(input.tenant_id);
     try {
       const id = `mem_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
-      const previous_chain_hash =
-        this.lastHashByTenant.get(input.tenant_id) ||
-        "GENESIS";
+      const previous_chain_hash = this.lastHashByTenant.get(input.tenant_id) || "GENESIS";
       const contentStr =
-        typeof input.content === "string"
-          ? input.content
-          : canonicalize(input.content);
-      const content_hash = crypto
-        .createHash("sha3-512")
-        .update(contentStr, "utf8")
-        .digest("hex");
+        typeof input.content === "string" ? input.content : canonicalize(input.content);
+      const content_hash = crypto.createHash("sha3-512").update(contentStr, "utf8").digest("hex");
       const chain_hash = crypto
         .createHash("sha3-512")
-        .update(
-          `${previous_chain_hash}:${content_hash}:${input.tenant_id}`,
-          "utf8",
-        )
+        .update(`${previous_chain_hash}:${content_hash}:${input.tenant_id}`, "utf8")
         .digest("hex");
       const record: LegacyMemoryRecordV1 = {
         id,
@@ -357,10 +351,7 @@ class LegacySha3MemoryRepository implements LegacyMemoryRepositoryV1 {
         return { valid: false, count: records.length, brokenAt: record.id };
       const expected = crypto
         .createHash("sha3-512")
-        .update(
-          `${previous}:${record.content_hash}:${record.tenant_id}`,
-          "utf8",
-        )
+        .update(`${previous}:${record.content_hash}:${record.tenant_id}`, "utf8")
         .digest("hex");
       if (record.chain_hash !== expected)
         return { valid: false, count: records.length, brokenAt: record.id };

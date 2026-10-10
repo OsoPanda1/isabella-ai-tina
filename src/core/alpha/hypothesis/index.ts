@@ -72,7 +72,10 @@ export class HypothesisEngine {
     return hypotheses;
   }
 
-  private findAnalogies(query: string, entities: Array<{ type: string; value: string }>): string[] {
+  private findAnalogies(
+    _query: string,
+    entities: Array<{ type: string; value: string }>,
+  ): string[] {
     const analogies: string[] = [];
 
     if (entities.some((e) => e.type === "territory")) {
@@ -86,7 +89,7 @@ export class HypothesisEngine {
     return analogies;
   }
 
-  private identifyRisks(query: string, intentCategory: string): string[] {
+  private identifyRisks(_query: string, intentCategory: string): string[] {
     const risks: string[] = [];
 
     if (intentCategory === "command") {
@@ -102,7 +105,7 @@ export class HypothesisEngine {
     return risks;
   }
 
-  private suggestExperiments(query: string, intentCategory: string): string[] {
+  private suggestExperiments(_query: string, intentCategory: string): string[] {
     const experiments: string[] = [];
 
     if (intentCategory === "analysis") {

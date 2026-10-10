@@ -1,95 +1,185 @@
-/**
- * Observability Engine (src/lib/telemetry/observability.ts)
- * -------------------------------------------------------------
- * Real runtime telemetry, metric tracking, and latency distribution.
- * CRITICAL INTEGRITY RULE: Never fabricates metrics or uses Math.random.
- */
+import { IsabellaCoreId, ISABELLA_MODULE_CATALOG, IsabellaModuleId } from "../latam-aegis-x";
 
-export interface TelemetryEvent {
-  id: string;
-  traceId: string;
-  name: string;
-  durationMs: number;
-  success: boolean;
-  timestamp: string;
-  metadata?: Record<string, unknown>;
+export interface CoreTelemetryMetric {
+  id: IsabellaCoreId;
+  moduleId: IsabellaModuleId;
+  status: "active" | "warning" | "error" | "restarting";
+  memoryUsageBytes: number;
+  stackDepth: number;
+  temperatureCelsius: number;
+  loadPercentage: number;
+  errorCount: number;
 }
 
-export interface MetricSummary {
-  sampleCount: number;
+export interface ObservabilitySnapshot {
+  timestamp: string;
+  throughput: number;
+  avgLatencyMs: number;
+  anomalyScore: number;
+  totalEventsProcessed: number;
+  incidentsCount: number;
+  cores: Record<IsabellaCoreId, CoreTelemetryMetric>;
+}
+
+type TelemetryListener = (snapshot: ObservabilitySnapshot) => void;
+
+export interface LatencyBudget {
   p50Ms: number;
   p95Ms: number;
   p99Ms: number;
-  successCount: number;
-  failureCount: number;
-  errorRate: number;
+  sampleCount: number;
 }
 
-class ObservabilityManager {
-  private events: TelemetryEvent[] = [];
-  private readonly maxBufferSize = 5000;
+const LATENCY_SAMPLES = 512;
 
-  public recordEvent(event: TelemetryEvent): void {
-    this.events.push({ ...event });
-    if (this.events.length > this.maxBufferSize) {
-      this.events.shift();
-    }
-  }
+/**
+ * Runtime observability state.
+ *
+ * This service deliberately contains no synthetic telemetry generator. Values
+ * are zero/unknown until an actual runtime event records them. Infrastructure
+ * metrics such as host CPU, RAM, temperature and Kubernetes nodes belong to an
+ * external metrics provider and must not be fabricated in the application.
+ */
+class ObservabilityEngine {
+  private currentSnapshot: ObservabilitySnapshot;
+  private readonly listeners = new Set<TelemetryListener>();
+  private readonly latencySamples: number[] = [];
 
-  public getSummary(eventName?: string): MetricSummary {
-    const filtered = eventName
-      ? this.events.filter((e) => e.name === eventName)
-      : [...this.events];
-
-    if (filtered.length === 0) {
-      return {
-        sampleCount: 0,
-        p50Ms: 0,
-        p95Ms: 0,
-        p99Ms: 0,
-        successCount: 0,
-        failureCount: 0,
-        errorRate: 0,
-      };
-    }
-
-    const latencies = filtered.map((e) => e.durationMs).sort((a, b) => a - b);
-    const percentile = (p: number) => {
-      const idx = Math.min(latencies.length - 1, Math.floor((latencies.length - 1) * p));
-      return latencies[idx] ?? 0;
-    };
-
-    const successCount = filtered.filter((e) => e.success).length;
-    const failureCount = filtered.length - successCount;
-
+  public getLatencyBudget(): LatencyBudget {
+    const values = [...this.latencySamples].sort((a, b) => a - b);
+    const percentile = (p: number) =>
+      values.length === 0
+        ? 0
+        : values[Math.min(values.length - 1, Math.ceil(values.length * p) - 1)]!;
     return {
-      sampleCount: filtered.length,
       p50Ms: percentile(0.5),
       p95Ms: percentile(0.95),
       p99Ms: percentile(0.99),
-      successCount,
-      failureCount,
-      errorRate: failureCount / filtered.length,
+      sampleCount: values.length,
     };
   }
 
-  public getRecentEvents(limit: number = 50): readonly TelemetryEvent[] {
-    return this.events.slice(-limit);
+  constructor() {
+    this.currentSnapshot = this.createEmptySnapshot();
   }
 
-  public clear(): void {
-    this.events = [];
+  private createEmptySnapshot(): ObservabilitySnapshot {
+    const cores = {} as Record<IsabellaCoreId, CoreTelemetryMetric>;
+    for (const [moduleId, metadata] of Object.entries(ISABELLA_MODULE_CATALOG)) {
+      for (const coreId of metadata.cores) {
+        cores[coreId] = {
+          id: coreId,
+          moduleId: moduleId as IsabellaModuleId,
+          status: "warning",
+          memoryUsageBytes: 0,
+          stackDepth: 0,
+          temperatureCelsius: 0,
+          loadPercentage: 0,
+          errorCount: 0,
+        };
+      }
+    }
+    return {
+      timestamp: new Date().toISOString(),
+      throughput: 0,
+      avgLatencyMs: 0,
+      anomalyScore: 0,
+      totalEventsProcessed: 0,
+      incidentsCount: 0,
+      cores,
+    };
+  }
+
+  private notifyListeners() {
+    const snapshot = structuredClone(this.currentSnapshot);
+    for (const listener of this.listeners) {
+      try {
+        listener(snapshot);
+      } catch (error) {
+        console.error("Error invoking telemetry listener:", error);
+      }
+    }
+  }
+
+  public subscribe(listener: TelemetryListener): () => void {
+    this.listeners.add(listener);
+    listener(structuredClone(this.currentSnapshot));
+    return () => this.listeners.delete(listener);
+  }
+
+  public getSnapshot(): ObservabilitySnapshot {
+    return structuredClone(this.currentSnapshot);
+  }
+
+  /** Records a real observed application event; it does not generate events. */
+  public recordEvent(latencyMs: number, score: number) {
+    if (!Number.isFinite(latencyMs) || latencyMs < 0) throw new Error("invalid_latency");
+    if (!Number.isFinite(score)) throw new Error("invalid_anomaly_score");
+    const s = this.currentSnapshot;
+    this.latencySamples.push(latencyMs);
+    if (this.latencySamples.length > LATENCY_SAMPLES) this.latencySamples.shift();
+    const previousEvents = s.totalEventsProcessed;
+    s.totalEventsProcessed += 1;
+    s.avgLatencyMs =
+      previousEvents === 0
+        ? latencyMs
+        : (s.avgLatencyMs * previousEvents + latencyMs) / s.totalEventsProcessed;
+    s.anomalyScore =
+      previousEvents === 0
+        ? score
+        : (s.anomalyScore * previousEvents + score) / s.totalEventsProcessed;
+    s.timestamp = new Date().toISOString();
+    this.notifyListeners();
+  }
+
+  /** Explicit state updates are only accepted from real runtime instrumentation. */
+  public updateCoreTelemetry(
+    coreId: IsabellaCoreId,
+    telemetry: Partial<Omit<CoreTelemetryMetric, "id" | "moduleId">>,
+  ) {
+    const core = this.currentSnapshot.cores[coreId];
+    if (!core) throw new Error(`unknown_core:${coreId}`);
+    if (
+      telemetry.memoryUsageBytes !== undefined &&
+      (!Number.isFinite(telemetry.memoryUsageBytes) || telemetry.memoryUsageBytes < 0)
+    )
+      throw new Error("invalid_memory");
+    if (
+      telemetry.loadPercentage !== undefined &&
+      (!Number.isFinite(telemetry.loadPercentage) ||
+        telemetry.loadPercentage < 0 ||
+        telemetry.loadPercentage > 100)
+    )
+      throw new Error("invalid_load");
+    Object.assign(core, telemetry);
+    this.currentSnapshot.timestamp = new Date().toISOString();
+    this.notifyListeners();
+  }
+
+  public forceRestartCore(coreId: IsabellaCoreId) {
+    this.updateCoreTelemetry(coreId, { status: "restarting" });
+  }
+
+  public flagCoreWarning(coreId: IsabellaCoreId, load: number, stack: number) {
+    this.updateCoreTelemetry(coreId, {
+      status: "warning",
+      loadPercentage: load,
+      stackDepth: stack,
+    });
+  }
+
+  public flagCoreError(coreId: IsabellaCoreId, memory: number) {
+    const core = this.currentSnapshot.cores[coreId];
+    this.updateCoreTelemetry(coreId, {
+      status: "error",
+      memoryUsageBytes: memory,
+      errorCount: core.errorCount + 1,
+    });
+  }
+
+  public dispose() {
+    // No background simulation/interval exists; nothing to dispose.
   }
 }
 
-export const observability = new ObservabilityManager();
-
-export function recordTelemetry(event: TelemetryEvent): void {
-  observability.recordEvent(event);
-}
-
-export function getTelemetrySummary(name?: string): MetricSummary {
-  return observability.getSummary(name);
-}
-
-export default observability;
+export const ObservabilityService = new ObservabilityEngine();

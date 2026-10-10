@@ -80,37 +80,6 @@ export interface AuthFinding {
   remediation: string;
 }
 
-const _JWT_PATTERNS = {
-  algorithm: /algorithm\s*[:=]\s*['"]([^'"]+)['"]/g,
-  sign: /sign\s*\(/g,
-  verify: /verify\s*\(/g,
-  claims: /(?:iss|sub|aud|exp|jti|tenantId|role|scope)/g,
-  keyRotation: /key.*rotation|rotate.*key/gi,
-};
-
-const _RBAC_PATTERNS = {
-  matrix: /permission[_-]?matrix|rbac[_-]?matrix/gi,
-  abac: /abac|attribute[_-]?based/gi,
-  denyByDefault: /deny[_-]?by[_-]?default|default[_-]?deny/gi,
-  check: /hasPermission|checkPermission|authorize/gi,
-};
-
-const _SESSION_PATTERNS = {
-  refreshRotation: /refresh.*rotation|rotate.*refresh/gi,
-  revocation: /revoke|invalidate|blacklist|denylist/gi,
-  jti: /jti|jwt[_-]?id/gi,
-  deviceInventory: /device|fingerprint|session.*inventory/gi,
-  stepUp: /step[_-]?up|elevate|privilege.*escalation/gi,
-};
-
-const _MFA_PATTERNS = {
-  totp: /totp|authenticator|2fa|mfa/gi,
-  webauthn: /webauthn|passkey|fido/gi,
-  sms: /sms.*otp|otp.*sms/gi,
-  email: /email.*otp|otp.*email/gi,
-  enforced: /require.*mfa|mfa.*required|enforce.*mfa/gi,
-};
-
 export class AuthScanner {
   private config: Required<AuthScannerConfig>;
 

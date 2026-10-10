@@ -675,7 +675,6 @@ export function resolveNativeSkillFamily(skillId: string): NativeSkillSource {
   return inferSource(skillId);
 }
 
-
 /** Backward-compatible lightweight fusion facade retained for existing consumers. */
 export interface FusionOutcome {
   fused: boolean;
@@ -691,5 +690,11 @@ export function fuseSkills(skillIds: string[]): FusionOutcome {
   };
 }
 
-const nativeSkillFusionApi = { fuseSkills, executeNativeSkill, createNativeFusedSkill, nativeSkillSimilarity, resolveNativeSkillFamily };
+const nativeSkillFusionApi = {
+  fuseSkills,
+  executeNativeSkill,
+  createNativeFusedSkill,
+  nativeSkillSimilarity,
+  resolveNativeSkillFamily,
+};
 export default nativeSkillFusionApi;

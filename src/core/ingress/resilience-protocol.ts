@@ -8,7 +8,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { emitQuantumEvent } from "../../lib/quantum/event-bus";
-import { getHealthyModules, recordFailure, type AlertLevel } from "./health-monitor";
+import { getHealthyModules, recordFailure } from "./health-monitor";
 import type { IngressRoute } from "./ingress-distributor";
 
 /* =========================================================================

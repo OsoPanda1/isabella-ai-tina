@@ -86,7 +86,6 @@ function evaluateGovernance(request: IntelligenceRequest): GovernanceDecision {
   };
 }
 
-
 export async function assertIntelligenceRuntimeAuthority(params: {
   tenantId: string;
   modelId: string;
