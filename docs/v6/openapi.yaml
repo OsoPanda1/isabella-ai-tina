@@ -1,0 +1,1519 @@
+openapi: 3.1.0
+info:
+  title: Isabella Villaseñor AI — Genesis TINA Native API (Governed Cognitive Mesh)
+  description: |
+    API unificada y endurecida de la infraestructura cognitiva territorial Isabella Villaseñor AI
+    (Nodo Cero — Real del Monte / Mineral del Monte, Hidalgo, México · Ecosistema TAMV Online Network).
+    Implementa arquitectura de gobernanza constitucional estricta de siete capas:
+    Perceive → Remember → Policy Gate → Decide → Act → Audit → Verify.
+    
+    Invariante Operativo Fundamental:
+    CAPABILITY ≠ AUTHORITY ≠ EXECUTION ≠ EVIDENCE ≠ LEARNING ≠ PRODUCTION
+    
+    Autoría Técnica y Soberana: Edwin Oswaldo Castillo Trejo (Anubis Villaseñor)
+    ORCID: 0009-0008-5050-1539 · DOI Zenodo: 10.5281/zenodo.20606361 · OSF: 10.17605/OSF.IO/T3WMY
+  version: "60.0.0-Hardened"
+  contact:
+    name: TAMV Online Network / RDM Digital Hub — Sovereign Security Operations
+    url: https://tamv.network
+    email: ecastillotrejo1983@gmail.com
+  license:
+    name: Apache License 2.0 (Code) / CC BY 4.0 (Docs) / ISCL-1.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://ais-dev-55cyeky5ipqlihjrmfbpqw-223897458933.us-east1.run.app
+    description: Entorno de Desarrollo y Despliegue Soberano AI Studio
+  - url: http://localhost:3000
+    description: Nodo Local de Operación (0.0.0.0:3000)
+
+security:
+  - OAuth2Bearer: []
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    AdminBearer:
+      type: http
+      scheme: bearer
+      description: Token de servidor GENESIS_ADMIN_API_TOKEN (comparación en tiempo constante). 503 si no está configurado.
+    OAuth2Bearer:
+      type: oauth2
+      description: Protocolo OAuth2 / OIDC apoyado en WebAuthn, credenciales soberanas y HSM.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://tamv.network/oauth/authorize
+          tokenUrl: https://tamv.network/oauth/token
+          scopes:
+            cognitive:read: Lectura e inspección del estado cognitivo.
+            cognitive:execute: Invocación de inferencia y mediación gobernada.
+            cognitive:stream: Flujo en tiempo real mediante Server-Sent Events (SSE).
+            memory:read: Consulta de memoria semántica y epistémica (IKES).
+            memory:write: Propuesta e ingestión de memoria gobernada.
+            memory:delete: Petición de olvido y purga criptográfica.
+            tools:execute: Invocación de herramientas en sandbox aislado (ORION).
+            admin:killswitch: Control de emergencia y detención del runtime (SEV-1 a SEV-4).
+            epistemic:evaluate: Evaluación de afirmaciones y análisis de radar de claims.
+            quantum:execute: Envío de circuitos al puente híbrido PennyLane.
+            quantum:read: Consulta de estado y telemetría de la malla cuántica.
+            audit:read: Lectura y verificación de la cadena hash BookPI.
+            governance:admin: Gestión de políticas CROWN y arbitraje de capacidades.
+            hsf:invoke: Invocación del Hyper Skill Fabric (HSF) bajo balance de autoridad.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Clave de autenticación soberana con prefijo isa_live_v1_.
+    BearerToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token Bearer para autenticación de servicio o rol de operador.
+
+  headers:
+    X-Crown-Trace-ID:
+      schema:
+        type: string
+      description: Identificador de trazabilidad distribuida generado por CROWN.
+    X-Crown-Request-ID:
+      schema:
+        type: string
+        format: uuid
+      description: Identificador único de solicitud para correlación e idempotencia.
+    X-Crown-Status:
+      schema:
+        type: string
+        enum: [ALLOW, DENY, REVIEW, BLOCK]
+      description: Veredicto de la política constitucional CROWN evaluado en el servidor.
+    X-Crown-Risk:
+      schema:
+        type: string
+        enum: [LOW, MEDIUM, HIGH, CRITICAL]
+      description: Nivel de riesgo operativo determinado de forma determinista.
+    X-Crown-Module:
+      schema:
+        type: string
+      description: Módulo o nodo cognitivo principal seleccionado para la resolución.
+    X-Tenant-ID:
+      schema:
+        type: string
+        pattern: "^[a-z0-9-_]{3,64}$"
+      description: Identificador del tenant propietario de la consulta o sesión.
+
+  schemas:
+    StandardResponseMeta:
+      type: object
+      required:
+        - api_version
+        - server_time
+        - execution_mode
+        - degraded
+        - retryable
+      properties:
+        api_version:
+          type: string
+          example: "v1"
+        server_time:
+          type: string
+          format: date-time
+        execution_mode:
+          type: string
+          enum: [standard, degraded, fallback, sandbox]
+          example: "standard"
+        degraded:
+          type: boolean
+          example: false
+        retryable:
+          type: boolean
+          example: false
+
+    StandardSuccessEnvelope:
+      type: object
+      required:
+        - success
+        - request_id
+        - trace_id
+        - data
+        - error
+        - meta
+      properties:
+        success:
+          type: boolean
+          const: true
+        request_id:
+          type: string
+          example: "req-01JCX45"
+        trace_id:
+          type: string
+          example: "trace-91aa717f"
+        data:
+          type: object
+          description: Carga útil de respuesta del dominio específico.
+        error:
+          type: "null"
+        meta:
+          $ref: "#/components/schemas/StandardResponseMeta"
+
+    StandardErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+        - retryable
+        - failure_class
+      properties:
+        code:
+          type: string
+          example: "CROWN_POLICY_DENIED"
+        message:
+          type: string
+          example: "Operación denegada por la política constitucional activa."
+        retryable:
+          type: boolean
+          example: false
+        failure_class:
+          type: string
+          enum: [policy, validation, security, provider, system]
+          example: "policy"
+        details:
+          type: object
+          nullable: true
+          description: Metadatos adicionales sobre la causa del rechazo.
+
+    StandardErrorEnvelope:
+      type: object
+      required:
+        - success
+        - request_id
+        - trace_id
+        - data
+        - error
+        - meta
+      properties:
+        success:
+          type: boolean
+          const: false
+        request_id:
+          type: string
+          example: "req-01JCX45"
+        trace_id:
+          type: string
+          example: "trace-91aa717f"
+        data:
+          type: "null"
+        error:
+          $ref: "#/components/schemas/StandardErrorDetail"
+        meta:
+          type: object
+          required:
+            - api_version
+          properties:
+            api_version:
+              type: string
+              example: "v1"
+
+    CognitiveRequestInput:
+      type: object
+      required:
+        - input
+      properties:
+        input:
+          type: string
+          minLength: 1
+          maxLength: 20000
+          description: Intención o consulta textual del operador.
+        modelEngine:
+          type: string
+          enum: [sovereign, gemini]
+          default: sovereign
+          description: Motor de inferencia seleccionado (sovereign local o Gemini asistido).
+        focusLens:
+          type: string
+          enum: [general, territorial, epistemic, security, governance]
+          default: general
+          description: Lente analítico de enfoque cognitivo.
+        sessionId:
+          type: string
+          maxLength: 128
+          description: Identificador opcional de la sesión.
+
+    CognitiveDecisionRecord:
+      type: object
+      required:
+        - admitted
+        - crown
+        - invariants
+      properties:
+        admitted:
+          type: boolean
+          description: Indica si la política CROWN admitió la solicitud.
+        crown:
+          type: object
+          description: Desglose de pesos y arbitraje de los 12 nodos de la red CROWN.
+        invariants:
+          type: object
+          description: Comprobación de separación de capacidad vs autoridad.
+        generativeNarrative:
+          type: string
+          nullable: true
+          description: Síntesis narrativa generada si el motor asistido fue activado.
+
+    BookPiEventRecord:
+      type: object
+      required:
+        - id
+        - timestamp
+        - type
+        - methodId
+        - riskTier
+        - status
+        - previousHash
+        - hash
+      properties:
+        id:
+          type: string
+          example: "evt-91aa717f-001"
+        timestamp:
+          type: string
+          format: date-time
+        type:
+          type: string
+          example: "COGNITIVE_EVALUATION"
+        methodId:
+          type: string
+          example: "A.TWINS.E15_MEMORY.recall.synthesize.v1.0.0.LOW.AUTONOMOUS"
+        riskTier:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        status:
+          type: string
+          enum: [ADMITTED, BLOCKED_BY_POLICY, EXECUTED, COMMITTED]
+        previousHash:
+          type: string
+          description: Hash SHA-256 del bloque precedente en la cadena inmutable.
+        hash:
+          type: string
+          description: Hash SHA-256 del bloque actual calculado canónicamente.
+
+    QuantumExecutionPayload:
+      type: object
+      required:
+        - circuit
+      properties:
+        circuit:
+          type: object
+          required:
+            - wires
+          properties:
+            wires:
+              type: integer
+              minimum: 1
+              maximum: 32
+            operations:
+              type: array
+              items:
+                type: object
+                required:
+                  - name
+                  - wires
+                properties:
+                  name:
+                    type: string
+                  wires:
+                    type: array
+                    items:
+                      type: integer
+                  parameters:
+                    type: array
+                    items:
+                      type: number
+            measurements:
+              type: array
+              items:
+                type: string
+        backend:
+          type: string
+          enum: [pennylane, pennylane-lightning, catalyst, qiskit]
+          default: pennylane-lightning
+        shots:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 500000
+
+    TripleBlockadeScanInput:
+      type: object
+      required:
+        - input
+      properties:
+        input:
+          type: string
+          maxLength: 10000
+          description: Texto a evaluar contra las heurísticas del Triple Blockade.
+
+    TripleBlockadeResult:
+      type: object
+      required:
+        - input
+        - decision
+        - patternMatchDetected
+        - assessmentMode
+        - blockadeEvaluation
+        - aegisScore
+      properties:
+        input:
+          type: string
+        decision:
+          type: string
+          enum: [PATTERN_MATCH, NO_PATTERN_MATCH]
+        patternMatchDetected:
+          type: boolean
+        actionBlocked:
+          type: boolean
+        authorizationGranted:
+          type: boolean
+        assessmentMode:
+          type: string
+          example: "HEURISTIC_PATTERN_SCAN"
+        blockadeEvaluation:
+          type: object
+          properties:
+            nivel1_ontologico:
+              type: string
+            nivel2_semantico:
+              type: string
+            nivel3_comportamental:
+              type: string
+        aegisScore:
+          type: number
+          format: float
+
+paths:
+  /health:
+    get:
+      summary: Health check básico del proceso
+      description: Comprueba que el servidor HTTP está vivo y respondiendo.
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Proceso activo y saludable
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - runtime
+                  - version
+                  - invariant
+                  - timestamp
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  runtime:
+                    type: string
+                    example: "Isabella Genesis TINA V6"
+                  version:
+                    type: string
+                    example: "v40.0.0"
+                  invariant:
+                    type: string
+                    example: "CAPABILITY ≠ AUTHORITY ≠ EXECUTION ≠ EVIDENCE ≠ LEARNING ≠ PRODUCTION"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/v1/health:
+    get:
+      summary: Diagnóstico de salud canónico v1
+      description: Reporta el estado operacional del Nodo Cero y los motores activos.
+      operationId: getV1Health
+      security: []
+      responses:
+        "200":
+          description: Diagnóstico de subsistemas del nodo
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - app
+                  - version
+                  - node
+                  - invariants
+                  - inferenceMode
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  app:
+                    type: string
+                    example: "Isabella Villaseñor AI — Genesis TINA V6"
+                  version:
+                    type: string
+                    example: "v40.0.0"
+                  node:
+                    type: string
+                    example: "Nodo Cero (Real del Monte, Hidalgo, México)"
+                  invariants:
+                    type: object
+                  inferenceMode:
+                    type: string
+                    example: external-if-configured-otherwise-local-fallback
+
+  /api/v1/status:
+    get:
+      summary: Estado detallado de motores y federaciones
+      description: Expone metadatos de los motores CROWN, AEGIS, IKES, Veritas, BookPI y PennyLane.
+      operationId: getV1Status
+      security: []
+      responses:
+        "200":
+          description: Estado completo de la infraestructura cognitiva
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - runtime
+                  - version
+                  - founder
+                  - engines
+                  - experts
+                  - crownNodesCount
+                  - invariant
+                properties:
+                  runtime:
+                    type: string
+                  version:
+                    type: string
+                  founder:
+                    type: object
+                  engines:
+                    type: object
+                  experts:
+                    type: object
+                  crownNodesCount:
+                    type: integer
+                  toolsCount:
+                    type: integer
+                  skillsCount:
+                    type: integer
+                  invariant:
+                    type: string
+
+  /api/v1/cognitive/request:
+    post:
+      summary: Petición cognitiva canónica
+      description: Invocación protegida por el pipeline CROWN que separa intención de autoridad.
+      operationId: postCognitiveRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CognitiveRequestInput"
+      responses:
+        "200":
+          description: Decisión cognitiva admitida y sintetizada
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - requestId
+                  - traceId
+                  - decision
+                  - snapshot
+                  - publicAuthority
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  requestId:
+                    type: string
+                  traceId:
+                    type: string
+                  decision:
+                    $ref: "#/components/schemas/CognitiveDecisionRecord"
+                  snapshot:
+                    type: object
+                  systemPromptApplied:
+                    type: boolean
+                  generativeNarrative:
+                    type: string
+                    nullable: true
+                  publicAuthority:
+                    type: string
+                    example: "VIEWER_ONLY"
+        "400":
+          description: Payload inválido o faltante
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandardErrorEnvelope"
+        "403":
+          description: Solicitud denegada por política CROWN
+        "413":
+          description: Carga útil excede límite de tamaño
+        "429":
+          description: Límite de tasa alcanzado
+
+  /api/v1/cognition/route:
+    post:
+      summary: Enrutamiento cognitivo con lente especializado
+      description: Evalúa la intención contra los 12 nodos de la red CROWN y produce veredicto de política.
+      operationId: postCognitionRoute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CognitiveRequestInput"
+      responses:
+        "200":
+          description: Enrutamiento completado exitosamente
+        "400":
+          description: Error en entrada
+        "403":
+          description: Denegado por política
+        "429":
+          description: Límite de tasa alcanzado
+
+  /api/v1/cognition/multimodal:
+    get:
+      summary: Readiness de visión, síntesis de imagen y voz
+      description: Describe qué proveedores multimodales y de voz están realmente configurados en el proceso en ejecución. Sólo se listan capacidades con credencial explícita; lo ausente falla en cerrado.
+      operationId: getCognitionMultimodalReadiness
+      responses:
+        "200":
+          description: Readiness multimodal y de voz por capacidad
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - contractVersion
+                  - readiness
+                  - speech
+                properties:
+                  success:
+                    type: boolean
+                  contractVersion:
+                    type: string
+                  readiness:
+                    type: object
+                    properties:
+                      vision:
+                        type: array
+                        items:
+                          type: string
+                      image:
+                        type: array
+                        items:
+                          type: string
+                  speech:
+                    type: object
+                    properties:
+                      textToSpeech:
+                        type: boolean
+                      speechToText:
+                        type: boolean
+                      providers:
+                        type: array
+                        items:
+                          type: string
+
+  /api/v1/cognition/vision:
+    post:
+      summary: Comprensión de imagen (imagen → texto)
+      description: Analiza una imagen raster acotada (data URL base64). El cuerpo no puede aportar autoridad, roles ni selección de proveedor. Falla en cerrado (503) cuando no hay proveedor de visión configurado.
+      operationId: postCognitionVision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  description: Data URL raster (PNG/JPEG/WEBP/GIF) en base64.
+                prompt:
+                  type: string
+      responses:
+        "200":
+          description: Descripción generada
+        "400":
+          description: Data URL de imagen requerida o inválida
+        "413":
+          description: Imagen por encima del límite de tamaño
+        "429":
+          description: Límite de tasa alcanzado
+        "503":
+          description: Ningún proveedor de visión configurado (NO_VISION_PROVIDER_CONFIGURED)
+
+  /api/v1/cognition/image:
+    post:
+      summary: Síntesis de imagen (texto → imagen)
+      description: Genera una imagen a partir de un prompt acotado. El cuerpo no puede seleccionar proveedor. Falla en cerrado (503) sin proveedor de imagen configurado.
+      operationId: postCognitionImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+      responses:
+        "200":
+          description: Imagen sintetizada como data URL
+        "400":
+          description: Prompt requerido
+        "413":
+          description: Prompt por encima del límite de tamaño
+        "429":
+          description: Límite de tasa alcanzado
+        "503":
+          description: Ningún proveedor de imagen configurado (NO_IMAGE_PROVIDER_CONFIGURED)
+
+  /api/v1/cognition/speech:
+    post:
+      summary: Síntesis de voz (texto → audio)
+      description: Genera audio a partir de texto acotado. Falla en cerrado (503) sin proveedor de voz configurado; el cliente puede usar su propia Web Speech API como alternativa sin llamada al servidor.
+      operationId: postCognitionSpeech
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                voice:
+                  type: string
+                format:
+                  type: string
+                  enum: [wav, mp3]
+      responses:
+        "200":
+          description: Audio sintetizado como data URL base64
+        "400":
+          description: Texto requerido
+        "413":
+          description: Texto por encima del límite de tamaño
+        "429":
+          description: Límite de tasa alcanzado
+        "503":
+          description: Ningún proveedor de voz configurado (NO_SPEECH_PROVIDER_CONFIGURED)
+
+  /api/v1/cognition/transcribe:
+    post:
+      summary: Transcripción de voz (audio → texto)
+      description: Transcribe audio acotado (base64 con mimeType). Falla en cerrado (503) sin proveedor de voz configurado.
+      operationId: postCognitionTranscribe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - audio
+                - mimeType
+              properties:
+                audio:
+                  type: string
+                  description: Audio en base64.
+                mimeType:
+                  type: string
+                  description: Mime de audio permitido (wav/mp3/webm/ogg/…).
+                language:
+                  type: string
+      responses:
+        "200":
+          description: Texto transcrito
+        "400":
+          description: Audio base64 y mimeType requeridos
+        "413":
+          description: Audio por encima del límite de tamaño
+        "429":
+          description: Límite de tasa alcanzado
+        "503":
+          description: Ningún proveedor de voz configurado (NO_SPEECH_PROVIDER_CONFIGURED)
+
+  /api/v1/bookpi/events:
+    get:
+      summary: Eventos de auditoría de BookPI (vista pública redactada)
+      description: Retorna la cadena hash de eventos en memoria sin exponer identidades de principales.
+      operationId: getBookPiEvents
+      responses:
+        "200":
+          description: Lista de eventos verificables en la cadena hash
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - events
+                  - count
+                  - visibility
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BookPiEventRecord"
+                  count:
+                    type: integer
+                  visibility:
+                    type: string
+                    example: "PUBLIC_REDACTED_AUDIT"
+        "429":
+          description: Límite de tasa excedido
+
+  /api/v1/bookpi/events/admin:
+    get:
+      summary: Eventos de auditoría completos de BookPI (modo administrador)
+      description: Consulta no redactada de la cadena de eventos; requiere token administrativo.
+      operationId: getBookPiEventsAdmin
+      security:
+        - BearerToken: []
+      responses:
+        "200":
+          description: Cadena hash de auditoría completa con identidades
+        "401":
+          description: Token no provisto o inválido
+        "503":
+          description: Token administrativo no configurado en el entorno
+
+  /api/v1/tools/execute:
+    post:
+      summary: Ejecución de herramientas en sandbox gobernado
+      description: Invoca herramientas autorizadas bajo verificación de rol y registro de evento en BookPI.
+      operationId: executeTool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - toolId
+              properties:
+                toolId:
+                  type: string
+                  example: "rdm_territory_query"
+                input:
+                  type: object
+      responses:
+        "200":
+          description: Resultado de la ejecución de la herramienta
+        "403":
+          description: Herramienta no autorizada para el rol
+        "413":
+          description: Carga útil excede límites
+
+  /api/v1/triple-blockade/scan:
+    post:
+      summary: Escáner heurístico Triple Blockade (AEGIS)
+      description: Analiza el texto contra patrones ontológicos, semánticos y comportamentales de bypass.
+      operationId: scanTripleBlockade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripleBlockadeScanInput"
+      responses:
+        "200":
+          description: Evaluación de las tres barreras de escaneo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripleBlockadeResult"
+
+  /api/v1/quantum/pennylane/status:
+    get:
+      summary: Estado del puente cuántico PennyLane
+      description: Consulta el descriptor del puente y la disponibilidad de módulos cuánticos.
+      operationId: getQuantumPennyLaneStatus
+      responses:
+        "200":
+          description: Estado del puente y repositorios registrados
+
+  /api/v1/quantum/pennylane/execute:
+    post:
+      summary: Ejecución de circuito en puente cuántico
+      description: Despacho gobernado de circuitos cuánticos; requiere autorización de token de operador.
+      operationId: executeQuantumPennyLane
+      security:
+        - BearerToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuantumExecutionPayload"
+      responses:
+        "200":
+          description: Circuito ejecutado exitosamente
+        "400":
+          description: Circuito malformado o error de backend
+        "401":
+          description: No autorizado
+        "403":
+          description: Rechazado por gobernanza CROWN
+        "503":
+          description: Puente cuántico no configurado o no disponible
+
+  /api/v1/territory/rdm:
+    get:
+      summary: Gemelo Digital de Real del Monte (Nodo Cero)
+      description: Datos bioculturales, coordenadas y sitios patrimoniales de Mineral del Monte.
+      operationId: getTerritoryRdm
+      responses:
+        "200":
+          description: Datos territoriales del Nodo Cero
+
+  /api/v1/reina/status:
+    get:
+      summary: Estado honesto de REINA (state draft | engine-generated)
+      description: Declara capacidades y límites. REINA adjudica previo a la ejecución; no ejecuta, no es conciencia ni AGI.
+      operationId: getReinaStatus
+      security: []
+      responses:
+        "200":
+          description: Estado público
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, name, state, claims, disclaimers, logSize]
+                properties:
+                  success: { type: boolean }
+                  name: { type: string, example: REINA }
+                  state: { type: string, example: "draft | engine-generated" }
+                  claims: { type: array, items: { type: string } }
+                  disclaimers: { type: array, items: { type: string } }
+                  logSize: { type: integer, minimum: 0 }
+
+  /api/v1/reina/adjudicate:
+    post:
+      summary: Adjudica una acción propuesta (no la ejecuta)
+      description: >
+        Pipeline kill switch → riesgo → autonomía A0-A5 → quórum. `humanApprovalVerified` y `quorum`
+        no se aceptan desde el cuerpo HTTP. Con `idempotencyKey`, la misma clave y petición devuelve la misma decisión.
+      operationId: adjudicateReina
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, actor, action, scope, impact, autonomyLevel, risk]
+              properties:
+                requestId: { type: string, maxLength: 128 }
+                actor: { type: string }
+                action: { type: string, maxLength: 256 }
+                scope: { type: string, pattern: "^[A-Za-z0-9_:.\\-]{1,128}$" }
+                impact: { type: string, enum: [NEGLIGIBLE, LOW, MEDIUM, HIGH, CRITICAL] }
+                autonomyLevel: { type: string, enum: [A0, A1, A2, A3, A4, A5] }
+                irreversible: { type: boolean }
+                humanConfirmed: { type: boolean }
+                dualControl: { type: boolean }
+                rollbackPlan: { type: boolean }
+                timeLimitMs: { type: number }
+                idempotencyKey: { type: string }
+                risk:
+                  type: object
+                  description: Factores C,S,F,P,U en [0,1].
+      responses:
+        "200":
+          description: Decisión sellada en el log de transparencia
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  decision:
+                    type: object
+                    properties:
+                      verdict: { type: string, enum: [PERMIT, REQUIRE_CONFIRMATION, REQUIRE_QUORUM, REQUIRE_HUMAN_APPROVAL, DENY, HALTED] }
+                      reasons: { type: array, items: { type: string } }
+                      riskScore: { type: number, nullable: true }
+                      riskTier: { type: string, nullable: true }
+                      evidence:
+                        type: object
+                        properties:
+                          logIndex: { type: integer }
+                          leafHash: { type: string }
+                          treeSize: { type: integer }
+                          rootHash: { type: string }
+        "400":
+          description: Petición inválida
+        "401":
+          description: No autorizado
+        "409":
+          description: Idempotency-Key reutilizada con otra petición
+        "503":
+          description: Token de administración no configurado
+
+  /api/v1/reina/log/proof/{index}:
+    get:
+      summary: Prueba de inclusión RFC 6962 de una decisión
+      operationId: getReinaInclusionProof
+      security:
+        - AdminBearer: []
+      parameters:
+        - { name: index, in: path, required: true, schema: { type: integer, minimum: 0 } }
+      responses:
+        "200":
+          description: Prueba verificable con `verifyInclusion`
+        "400":
+          description: Índice fuera de rango
+        "401":
+          description: No autorizado
+        "503":
+          description: Token de administración no configurado
+
+  /api/v1/healthz:
+    get:
+      summary: Readiness profunda de dependencias (config + IO local)
+      operationId: getHealthz
+      security: []
+      responses:
+        "200":
+          description: Listo
+        "503":
+          description: Bloqueadores presentes; fail-closed
+
+  /api/v1/readyz:
+    get:
+      summary: Readiness con evidencia
+      operationId: getReadyz
+      security: []
+      responses:
+        "200":
+          description: Listo
+        "503":
+          description: Dependencias no verificadas
+
+  /api/v1/ops/snapshot:
+    get:
+      summary: Snapshot operativo (readiness, mantenimiento, correlación)
+      operationId: getOpsSnapshot
+      security: []
+      responses:
+        "200":
+          description: Listo
+        "503":
+          description: Degradado; el snapshot se devuelve igualmente
+
+  /api/v1/ops/latency:
+    get:
+      summary: Latencias en proceso (token OPS_API_TOKEN)
+      operationId: getOpsLatency
+      security:
+        - AdminBearer: []
+      responses:
+        "200":
+          description: Muestra local, no es un SLA
+        "401":
+          description: No autorizado
+        "503":
+          description: Token no configurado
+
+  /api/v1/osiris/status:
+    get:
+      summary: Snapshot del centinela OSIRIS
+      operationId: getOsirisStatus
+      security:
+        - AdminBearer: []
+      responses:
+        "200":
+          description: Snapshot
+        "401":
+          description: No autorizado
+        "503":
+          description: Token no configurado
+
+  /api/v1/osiris/inspect:
+    post:
+      summary: Inspecciona una señal con OSIRIS
+      operationId: inspectOsiris
+      security:
+        - AdminBearer: []
+      responses:
+        "200":
+          description: Resultado
+        "400":
+          description: Señal inválida
+        "401":
+          description: No autorizado
+        "503":
+          description: Token no configurado
+
+  /api/v1/billing/plans:
+    get:
+      summary: Catálogo de planes (el servidor no procesa pagos)
+      operationId: getBillingPlans
+      security: []
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/tts/status:
+    get:
+      summary: Estado veraz del motor de voz nativo (qué corre aquí y qué es solo especificación)
+      operationId: getTtsStatus
+      security: []
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/tts/plan:
+    post:
+      summary: Plan de prosodia es-MX (normalización, pistas culturales, emoción, ruta). No autoriza ni ejecuta.
+      operationId: planTts
+      security: []
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: text requerido
+        "413":
+          description: texto demasiado largo
+
+  /api/v1/tts/synthesize:
+    post:
+      summary: Síntesis con anti-replay y sello de evidencia; audio solo si un backend real lo entrega, si no un plan para la voz del navegador
+      description: En producción exige el token público de proveedores (GENESIS_PUBLIC_API_TOKEN); fuera de producción sin token configurado queda abierto. Límite de tasa aplicado.
+      operationId: synthesizeTts
+      responses:
+        "200":
+          description: OK
+        "409":
+          description: nonce repetido
+
+  /api/v1/tts/memory:
+    post:
+      summary: Memoria de pronunciación por sesión (solo instrucciones explícitas)
+      operationId: learnTtsPronunciation
+      security: []
+      responses:
+        "200":
+          description: OK
+    delete:
+      summary: Borra la memoria de pronunciación de la sesión
+      operationId: forgetTtsPronunciation
+      security: []
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/billing/entitlements:
+    get:
+      summary: Entitlements de un plan
+      operationId: getBillingEntitlements
+      security: []
+      parameters:
+        - { name: plan, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Features y cuotas
+        "400":
+          description: PLAN_UNKNOWN
+
+  /api/v1/billing/subscription:
+    get:
+      summary: Suscripción y entitlements efectivos
+      operationId: getBillingSubscription
+      security:
+        - AdminBearer: []
+      parameters:
+        - { name: workspaceId, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: workspaceId requerido
+        "401":
+          description: No autorizado
+
+  /api/v1/billing/subscribe:
+    post:
+      summary: Registra estado de suscripción verificado por un proveedor externo
+      operationId: subscribeBilling
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId, planCode, provider, externalRef]
+              properties:
+                workspaceId: { type: string }
+                planCode: { type: string }
+                provider: { type: string }
+                externalRef: { type: string }
+      responses:
+        "201":
+          description: Registrada
+        "400":
+          description: Entrada inválida
+        "401":
+          description: No autorizado
+
+  /api/v1/billing/cancel:
+    post:
+      summary: Cancela una suscripción
+      operationId: cancelBilling
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId]
+              properties:
+                workspaceId: { type: string }
+      responses:
+        "200":
+          description: Cancelada
+        "404":
+          description: No existe
+        "401":
+          description: No autorizado
+
+  /api/v1/billing/usage:
+    get:
+      summary: Uso medido y decisiones de cuota
+      operationId: getBillingUsage
+      security:
+        - AdminBearer: []
+      parameters:
+        - { name: workspaceId, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: workspaceId requerido
+        "401":
+          description: No autorizado
+
+  /api/v1/commerce/offers:
+    post:
+      summary: Abre una oferta sujeta a entitlement y cuota
+      operationId: openCommerceOffer
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workspaceId]
+              properties:
+                workspaceId: { type: string }
+      responses:
+        "201":
+          description: Oferta abierta
+        "402":
+          description: ENTITLEMENT_DENIED o QUOTA_DENIED
+        "400":
+          description: workspaceId requerido
+        "401":
+          description: No autorizado
+
+  /api/v1/hf/catalog:
+    get:
+      summary: Catálogo del Hugging Face Hub (modelos y datasets)
+      description: >
+        Lee el catálogo del Hub (información/datos, gratuito). No usa el router de inferencia
+        (de pago) y no genera texto; solo descubre y lee. CAPABILITY ≠ AUTHORITY.
+      operationId: getHfCatalog
+      security: []
+      parameters:
+        - { name: task, in: query, required: false, schema: { type: string }, description: pipeline_tag del Hub (p. ej. text-generation) }
+        - { name: search, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50 } }
+      responses:
+        "200":
+          description: Catálogo de modelos y datasets del Hub
+        "502":
+          description: El Hub no respondió 2xx (HF_HUB_FAILED)
+
+  /api/v1/hf/ingest:
+    post:
+      summary: Propone la model card de un dataset como conocimiento (PENDING_REVIEW)
+      description: >
+        Descarga acotada de README.md del dataset y lo propone como conocimiento PENDING_REVIEW.
+        Ingerir NO admite conocimiento verificado ni concede autoridad.
+      operationId: postHfIngest
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [datasetId]
+              properties:
+                datasetId: { type: string, example: "squad" }
+                revision: { type: string, example: "main" }
+      responses:
+        "200":
+          description: Documento propuesto (PENDING_REVIEW)
+        "400":
+          description: datasetId requerido o repo id inseguro
+        "401":
+          description: No autorizado
+        "502":
+          description: El Hub no respondió 2xx
+
+  /api/v1/customization/catalog:
+    get:
+      summary: Catálogo nativo de customización (reglas, skills, plugins, hooks, MCP)
+      description: >
+        Enumera los descriptores de customización de solo lectura derivados del modelo de
+        Antigravity. CAPABILITY ≠ AUTHORITY: catalogar no autoriza, no instala y no ejecuta.
+      operationId: getCustomizationCatalog
+      security: []
+      responses:
+        "200": { description: "Entidades de customización con conteos por tipo" }
+
+  /api/v1/customization/catalog/{id}:
+    get:
+      summary: Detalle de una entidad de customización
+      operationId: getCustomizationDetail
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Entidad de customización" }
+        "404": { description: CUSTOMIZATION_NOT_FOUND }
+
+  /api/v1/marketplace:
+    get:
+      summary: Instantánea del marketplace de capacidades
+      description: >
+        Agrega el catálogo nativo y el inventario vivo del runtime con un digest determinista.
+        Solo lectura; no autoriza ni ejecuta.
+      operationId: getMarketplace
+      security: []
+      responses:
+        "200": { description: "Conteos, inventario y digest" }
+
+  /api/v1/marketplace/{packId}:
+    get:
+      summary: Resuelve un pack de plugin contra el catálogo nativo
+      operationId: getMarketplacePack
+      security: []
+      parameters:
+        - { name: packId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Pack resuelto (enabled:false, missing[])" }
+        "404": { description: MARKETPLACE_PACK_NOT_FOUND }
+
+  /api/v1/marketplace/plan:
+    post:
+      summary: Plan de habilitación de un pack (no habilita ni ejecuta)
+      operationId: postMarketplacePlan
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [packId]
+              properties:
+                packId: { type: string, example: "isabella.plugin.antigravity-kit" }
+      responses:
+        "200": { description: "Plan PLANNED_NOT_ENABLED (authorizationPerformed:false)" }
+        "400": { description: MARKETPLACE_PACK_ID_REQUIRED }
+        "401": { description: No autorizado }
+        "404": { description: MARKETPLACE_PACK_NOT_FOUND }
+
+  /api/v1/emergency/status:
+    get:
+      summary: Estado global del Hyper Emergency Core (IHEC v3.1)
+      description: >
+        12 subsistemas de continuidad + 10 regalos de Perplexity. Clasifica, evidencia y
+        se recupera; NO autoriza ni ejecuta. Viewer.
+      operationId: getEmergencyStatus
+      security: []
+      responses:
+        "200": { description: Estado de IHEC (subsistemas, caché, crisis, guardas) }
+
+  /api/v1/emergency/snapshot:
+    post:
+      summary: Captura cognitiva sellada (SHA3-512)
+      operationId: postEmergencySnapshot
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state: { type: object }
+                memory: { type: array, items: {} }
+                embeddings: { type: array, items: {} }
+                graph: { type: object }
+                credentials: { type: object, additionalProperties: { type: string } }
+      responses:
+        "200": { description: Hash y tamaño del snapshot }
+        "401": { description: No autorizado }
+
+  /api/v1/emergency/recover:
+    post:
+      summary: Restaura desde un snapshot verificando integridad
+      operationId: postEmergencyRecover
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [snapshot]
+              properties:
+                snapshot: { type: object }
+      responses:
+        "200": { description: Recuperación verificada }
+        "400": { description: Snapshot requerido o integridad inválida }
+        "401": { description: No autorizado }
+
+  /api/v1/emergency/repair:
+    post:
+      summary: Plan de reparación/reconfiguración de topología
+      operationId: postEmergencyRepair
+      security:
+        - AdminBearer: []
+      responses:
+        "200": { description: Plan de reconfiguración }
+        "401": { description: No autorizado }
+
+  /api/v1/emergency/governance:
+    get:
+      summary: Historial de decisiones de continuidad
+      operationId: getEmergencyGovernance
+      security: []
+      responses:
+        "200": { description: Decisiones auditadas }
+
+  /api/v1/emergency/failover:
+    post:
+      summary: Conmutación por error
+      operationId: postEmergencyFailover
+      security:
+        - AdminBearer: []
+      responses:
+        "200": { description: Plan de failover + decisión de gobernanza }
+        "401": { description: No autorizado }
+
+  /api/v1/emergency/cache:
+    get:
+      summary: Métricas de caché multinivel (hot/warm/cold)
+      operationId: getEmergencyCache
+      security: []
+      responses:
+        "200": { description: Estadísticas de caché }
+
+  /api/v1/emergency/rag:
+    post:
+      summary: Búsqueda híbrida RAG++ (vector + grafo + memoria + contexto + herramientas)
+      operationId: postEmergencyRag
+      security:
+        - AdminBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+                candidates: { type: array, items: { type: object } }
+                limit: { type: integer }
+      responses:
+        "200": { description: Resultado híbrido }
+        "401": { description: No autorizado }
+
+  /api/v1/emergency/telemetry:
+    get:
+      summary: Métricas en tiempo real de IHEC
+      operationId: getEmergencyTelemetry
+      security: []
+      responses:
+        "200": { description: Telemetría (crisis, guardas, gobernanza, caché) }
+
+  /api/v1/emergency/crisis:
+    get:
+      summary: Memoria de crisis (Ω-14)
+      operationId: getEmergencyCrisis
+      security: []
+      responses:
+        "200": { description: Registros de crisis }
+
+  /api/v1/emergency/mutation:
+    get:
+      summary: Mutaciones inmunológicas (guardas PENDING_REVIEW)
+      operationId: getEmergencyMutation
+      security: []
+      responses:
+        "200": { description: Guardas generadas }
+
+  /api/v1/emergency/topology:
+    get:
+      summary: Plan de auto-reconfiguración de topología
+      operationId: getEmergencyTopology
+      security: []
+      parameters:
+        - { name: federation, in: query, required: false, schema: { type: string } }
+      responses:
+        "200": { description: Plan de reconfiguración }
+
+  /api/v1/ops/preflight:
+    get:
+      summary: Preflight de configuración de producción
+      description: Valida calidad de secretos (longitud, entropía, reutilización), URL pública, TRUST_PROXY, PORT, Stripe y kill switch. Nunca devuelve valores de secretos. 503 si hay errores bloqueantes.
+      operationId: getOpsPreflight
+      security:
+        - AdminBearer: []
+      responses:
+        "200":
+          description: PASS o WARN (con hallazgos)
+        "401":
+          description: No autorizado
+        "503":
+          description: FAIL (errores bloqueantes) o token de administración no configurado
