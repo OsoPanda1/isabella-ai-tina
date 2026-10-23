@@ -317,6 +317,12 @@ El proyecto combina **identificadores persistentes**, sellos criptográficos y p
 
 ---
 
+## Isabella V6 — fuente madre integrada
+
+La arquitectura Terminus V6 se integra como fuente madre documental y de evolución. Sus contratos promovidos viven en [`docs/v6/README.md`](docs/v6/README.md), con arquitectura Genesis V6, runtime V6.1, threat model, aislamiento multi-tenant, BookPI durable ledger, OpenAPI y diez migraciones IGE-Omega.
+
+**Importante:** estos artefactos no se presentan como migrados ni desplegados automáticamente. Las migraciones permanecen `PLANNED/REVIEW_REQUIRED` hasta reconciliarse con Prisma/Neon, BookPI/outbox y el esquema de producción. El runtime ejecutable vigente continúa siendo la versión 4.3.3 del proyecto.
+
 ## Licencia y gobernanza
 
 - **Código:** Apache License 2.0 (ver `LICENSE-CONTROL.md`)

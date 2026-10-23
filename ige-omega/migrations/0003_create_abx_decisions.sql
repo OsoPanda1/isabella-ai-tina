@@ -1,0 +1,2 @@
+CREATE TABLE IF NOT EXISTS abx_decisions(decision_id UUID PRIMARY KEY,trace_id UUID NOT NULL,tenant_id UUID NOT NULL,capability TEXT NOT NULL,risk TEXT NOT NULL CHECK(risk IN ('LOW','MEDIUM','HIGH','CRITICAL')),decision TEXT NOT NULL CHECK(decision IN ('ALLOW','REPAIR','DEGRADE','REJECT','ESCALATE')),reasoning TEXT NOT NULL,human_approval_required BOOLEAN NOT NULL DEFAULT FALSE,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE INDEX IF NOT EXISTS idx_abx_trace ON abx_decisions(trace_id,created_at DESC);

@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-10-04T17:01:07.437Z",
-  "trackedFiles": 1312,
-  "codeFiles": 871,
-  "documentationFiles": 189,
+  "generatedAt": "2026-10-08T08:06:47.012Z",
+  "trackedFiles": 1669,
+  "codeFiles": 1162,
+  "documentationFiles": 214,
   "riskSignals": {
-    "todo": 30,
-    "mocks": 192,
-    "consoleLogs": 155
+    "todo": 29,
+    "mocks": 264,
+    "consoleLogs": 170
   },
   "canonicalEntrypoints": {
     "nativeML": "src/lib/native-ml/canonical-engine.ts",
